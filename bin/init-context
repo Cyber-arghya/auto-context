@@ -26,24 +26,44 @@ NEW_RULE=""
 NEW_SKILL=""
 IS_GLOBAL=false
 
+# MCP Defaults
+ADD_MCP=""
+REMOVE_MCP=""
+LIST_MCP=false
+MCP_PRESET=""
+MCP_COMMAND=""
+MCP_ARGS=""
+MCP_URL=""
+MCP_ENV=""
+
 show_help() {
-    printf "%binit-context%b - Autonomous Context & Instruction Manager for AI Coding Agents\n\n" "$BOLD" "$NC"
+    printf "%binit-context%b - Autonomous Context, Instruction & Tool Manager for AI Coding Agents\n\n" "$BOLD" "$NC"
     printf "%bUSAGE:%b\n" "$BOLD" "$NC"
     printf "    init-context [OPTIONS] [DIRECTORY]\n\n"
-    printf "%bOPTIONS:%b\n" "$BOLD" "$NC"
+    printf "%bOPTIONS (CONTEXT & RULES):%b\n" "$BOLD" "$NC"
     printf "    -r, --new-rule <NAME>     Scaffold a new agent rule (.agents/rules/<name>.md)\n"
     printf "    -s, --new-skill <NAME>    Scaffold a new skill (.agents/skills/<name>/SKILL.md)\n"
-    printf "    -g, --global              Create the rule/skill globally in ~/.gemini/config/plugins/auto-context/\n"
+    printf "    -g, --global              Target global plugin scope (~/.gemini/config/plugins/auto-context/)\n"
     printf "    -f, --force               Overwrite existing files\n"
     printf "    -d, --dry-run             Preview generated files without writing to disk\n"
     printf "    -v, --version             Display current version (%s)\n" "$VERSION"
     printf "    -h, --help                Show this help message\n\n"
+    printf "%bOPTIONS (MCP TOOLING):%b\n" "$BOLD" "$NC"
+    printf "    --add-mcp <NAME>          Add or update an MCP server configuration\n"
+    printf "    --remove-mcp <NAME>       Remove an MCP server configuration\n"
+    printf "    --list-mcp                List all active MCP server tools\n"
+    printf "    --preset <PRESET>         Preset template (sqlite, postgres, github, filesystem, brave, fetch)\n"
+    printf "    --command <CMD>           Executable command for stdio server (e.g. npx, uvx, python3)\n"
+    printf "    --args <ARGS>             Arguments to pass to command (e.g. 'path/to/db.sqlite')\n"
+    printf "    --url <URL>               Streamable HTTP endpoint URL for remote MCP server\n"
+    printf "    --env <KEY=VAL,...>       Environment variables (e.g. 'GITHUB_TOKEN=xyz')\n\n"
     printf "%bEXAMPLES:%b\n" "$BOLD" "$NC"
-    printf "    init-context                          # Initialize current project\n"
-    printf "    init-context /path/to/my-project      # Initialize specified project\n"
-    printf "    init-context -r code-standards        # Create a new local rule\n"
-    printf "    init-context -s deploy-docker         # Create a new local skill\n"
-    printf "    init-context -s security-audit -g     # Create a new GLOBAL skill\n\n"
+    printf "    init-context                              # Initialize current project\n"
+    printf "    init-context -r code-standards            # Create a new local rule\n"
+    printf "    init-context -s deploy-docker             # Create a new local skill\n"
+    printf "    init-context --add-mcp sqlite             # Add SQLite MCP server\n"
+    printf "    init-context --add-mcp github -g          # Add GitHub MCP server globally\n"
+    printf "    init-context --list-mcp                   # List all configured MCP tools\n\n"
     printf "%bDOCUMENTATION:%b\n" "$BOLD" "$NC"
     printf "    https://github.com/Cyber-arghya/auto-context\n"
 }
@@ -85,6 +105,46 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             NEW_SKILL="$2"
+            shift 2
+            ;;
+        --add-mcp)
+            if [ -z "${2:-}" ] || [[ "$2" == -* ]]; then
+                echo -e "${RED}[✗] Error: --add-mcp requires a server name${NC}"
+                exit 1
+            fi
+            ADD_MCP="$2"
+            shift 2
+            ;;
+        --remove-mcp|--delete-mcp)
+            if [ -z "${2:-}" ] || [[ "$2" == -* ]]; then
+                echo -e "${RED}[✗] Error: --remove-mcp requires a server name${NC}"
+                exit 1
+            fi
+            REMOVE_MCP="$2"
+            shift 2
+            ;;
+        --list-mcp)
+            LIST_MCP=true
+            shift
+            ;;
+        --preset)
+            MCP_PRESET="$2"
+            shift 2
+            ;;
+        --command)
+            MCP_COMMAND="$2"
+            shift 2
+            ;;
+        --args)
+            MCP_ARGS="$2"
+            shift 2
+            ;;
+        --url)
+            MCP_URL="$2"
+            shift 2
+            ;;
+        --env)
+            MCP_ENV="$2"
             shift 2
             ;;
         -*)
@@ -232,6 +292,224 @@ SKILL_TPL_EOF
     echo -e "   Scope:  ${CYAN}${SCOPE_LABEL}${NC}"
     echo -e "   File:   ${GREEN}${DEST_FILE}${NC}"
     echo -e "${CYAN}=====================================================================${NC}\n"
+    exit 0
+fi
+
+# ------------------------------------------------------------------------------
+# Action 3: List MCP Servers
+# ------------------------------------------------------------------------------
+if [ "$LIST_MCP" = true ]; then
+    if [ "$IS_GLOBAL" = true ]; then
+        MCP_FILE="$HOME/.gemini/config/mcp_config.json"
+        SCOPE_LABEL="GLOBAL (~/.gemini/config/mcp_config.json)"
+    else
+        MCP_FILE="$TARGET_DIR/.gemini/mcp_config.json"
+        [ -f "$MCP_FILE" ] || MCP_FILE="$TARGET_DIR/.agents/mcp_config.json"
+        SCOPE_LABEL="LOCAL ($MCP_FILE)"
+    fi
+
+    echo -e "\n${CYAN}=====================================================================${NC}"
+    echo -e "${BOLD}${GREEN}🔌 Registered MCP Servers: ${YELLOW}${SCOPE_LABEL}${NC}"
+    echo -e "${CYAN}=====================================================================${NC}"
+
+    if [ ! -f "$MCP_FILE" ]; then
+        echo -e "   ${YELLOW}[!] No MCP configuration found at: $MCP_FILE${NC}"
+        echo -e "   Run 'init-context --add-mcp <name>' to register an MCP tool.\n"
+        exit 0
+    fi
+
+    python3 -c "
+import json, sys
+try:
+    with open('$MCP_FILE', 'r') as f:
+        data = json.load(f)
+    servers = data.get('mcpServers', {})
+    if not servers:
+        print('   No MCP servers registered.')
+        sys.exit(0)
+    print(f'   {\"NAME\":<20} {\"TYPE\":<8} {\"ENDPOINT / COMMAND\"}')
+    print('   ' + '-'*60)
+    for name, cfg in servers.items():
+        if 'url' in cfg:
+            print(f'   {name:<20} {\"http\":<8} {cfg[\"url\"]}')
+        elif 'command' in cfg:
+            cmd = cfg['command'] + ' ' + ' '.join(cfg.get('args', []))
+            if len(cmd) > 40: cmd = cmd[:37] + '...'
+            print(f'   {name:<20} {\"stdio\":<8} {cmd}')
+        else:
+            print(f'   {name:<20} {\"unknown\":<8}')
+except Exception as e:
+    print(f'Error reading MCP file: {e}')
+"
+    echo -e "${CYAN}=====================================================================${NC}\n"
+    exit 0
+fi
+
+# ------------------------------------------------------------------------------
+# Action 4: Remove MCP Server
+# ------------------------------------------------------------------------------
+if [ -n "$REMOVE_MCP" ]; then
+    if [ "$IS_GLOBAL" = true ]; then
+        MCP_FILES=("$HOME/.gemini/config/mcp_config.json" "$HOME/.gemini/config/plugins/auto-context/mcp_config.json")
+        SCOPE_LABEL="GLOBAL"
+    else
+        MCP_FILES=("$TARGET_DIR/.gemini/mcp_config.json" "$TARGET_DIR/.agents/mcp_config.json")
+        SCOPE_LABEL="LOCAL"
+    fi
+
+    FOUND=false
+    for f in "${MCP_FILES[@]}"; do
+        if [ -f "$f" ]; then
+            python3 -c "
+import json
+with open('$f', 'r') as fp:
+    d = json.load(fp)
+if 'mcpServers' in d and '$REMOVE_MCP' in d['mcpServers']:
+    del d['mcpServers']['$REMOVE_MCP']
+    with open('$f', 'w') as fp:
+        json.dump(d, fp, indent=2)
+"
+            FOUND=true
+        fi
+    done
+
+    echo -e "\n${CYAN}=====================================================================${NC}"
+    if [ "$FOUND" = true ]; then
+        echo -e "${GREEN}🗑️  Removed MCP Server: ${YELLOW}$REMOVE_MCP${GREEN} (${SCOPE_LABEL})${NC}"
+    else
+        echo -e "${YELLOW}[!] MCP Server '$REMOVE_MCP' was not found in $SCOPE_LABEL configuration.${NC}"
+    fi
+    echo -e "${CYAN}=====================================================================${NC}\n"
+    exit 0
+fi
+
+# ------------------------------------------------------------------------------
+# Action 5: Add or Update MCP Server
+# ------------------------------------------------------------------------------
+if [ -n "$ADD_MCP" ]; then
+    SERVER_NAME=$(echo "$ADD_MCP" | tr '[:upper:]' '[:lower:]' | tr ' _' '-')
+
+    PRESET="${MCP_PRESET:-$SERVER_NAME}"
+    CMD=""
+    ARGS_JSON="[]"
+    ENV_JSON="{}"
+    URL=""
+
+    if [ "$PRESET" = "sqlite" ]; then
+        CMD="npx"
+        DB_PATH="${MCP_ARGS:-database.db}"
+        ARGS_JSON="[\"-y\", \"@modelcontextprotocol/server-sqlite\", \"$DB_PATH\"]"
+    elif [ "$PRESET" = "postgres" ] || [ "$PRESET" = "postgresql" ]; then
+        CMD="npx"
+        DB_URL="${MCP_ARGS:-postgresql://localhost/mydb}"
+        ARGS_JSON="[\"-y\", \"@modelcontextprotocol/server-postgres\", \"$DB_URL\"]"
+    elif [ "$PRESET" = "github" ]; then
+        CMD="npx"
+        ARGS_JSON="[\"-y\", \"@modelcontextprotocol/server-github\"]"
+        TOKEN="${MCP_ARGS:-}"
+        if [ -n "$TOKEN" ]; then
+            ENV_JSON="{\"GITHUB_PERSONAL_ACCESS_TOKEN\": \"$TOKEN\"}"
+        fi
+    elif [ "$PRESET" = "filesystem" ]; then
+        CMD="npx"
+        DIR_PATH="${MCP_ARGS:-$TARGET_DIR}"
+        ARGS_JSON="[\"-y\", \"@modelcontextprotocol/server-filesystem\", \"$DIR_PATH\"]"
+    elif [ "$PRESET" = "brave" ] || [ "$PRESET" = "brave-search" ]; then
+        CMD="npx"
+        ARGS_JSON="[\"-y\", \"@modelcontextprotocol/server-brave-search\"]"
+        API_KEY="${MCP_ARGS:-}"
+        if [ -n "$API_KEY" ]; then
+            ENV_JSON="{\"BRAVE_API_KEY\": \"$API_KEY\"}"
+        fi
+    elif [ "$PRESET" = "fetch" ]; then
+        CMD="npx"
+        ARGS_JSON="[\"-y\", \"@modelcontextprotocol/server-fetch\"]"
+    elif [ -n "$MCP_URL" ]; then
+        URL="$MCP_URL"
+    elif [ -n "$MCP_COMMAND" ]; then
+        CMD="$MCP_COMMAND"
+        if [ -n "$MCP_ARGS" ]; then
+            ARGS_JSON=$(python3 -c "import json; print(json.dumps('$MCP_ARGS'.split()))")
+        fi
+    else
+        CMD="npx"
+        ARGS_JSON="[\"-y\", \"@modelcontextprotocol/server-$SERVER_NAME\"]"
+    fi
+
+    if [ -n "$MCP_ENV" ]; then
+        ENV_JSON=$(python3 -c "
+import json
+env_str = '$MCP_ENV'
+env_dict = {}
+for item in env_str.split(','):
+    if '=' in item:
+        k, v = item.split('=', 1)
+        env_dict[k.strip()] = v.strip()
+print(json.dumps(env_dict))
+")
+    fi
+
+    if [ "$IS_GLOBAL" = true ]; then
+        TARGET_MCP_DIRS=("$HOME/.gemini/config" "$HOME/.gemini/config/plugins/auto-context")
+        SCOPE_LABEL="GLOBAL (~/.gemini/config/mcp_config.json)"
+    else
+        TARGET_MCP_DIRS=("$TARGET_DIR/.gemini" "$TARGET_DIR/.agents")
+        SCOPE_LABEL="LOCAL ($TARGET_DIR/.gemini/mcp_config.json)"
+    fi
+
+    for d in "${TARGET_MCP_DIRS[@]}"; do
+        mkdir -p "$d"
+        CFG_PATH="$d/mcp_config.json"
+        python3 -c "
+import json, os
+
+cfg_path = '$CFG_PATH'
+name = '$SERVER_NAME'
+url = '$URL'
+cmd = '$CMD'
+args = json.loads('''$ARGS_JSON''')
+env = json.loads('''$ENV_JSON''')
+
+data = {'mcpServers': {}}
+if os.path.exists(cfg_path):
+    try:
+        with open(cfg_path, 'r') as fp:
+            data = json.load(fp)
+    except:
+        pass
+
+if 'mcpServers' not in data:
+    data['mcpServers'] = {}
+
+server_cfg = {}
+if url:
+    server_cfg['url'] = url
+else:
+    server_cfg['command'] = cmd
+    if args:
+        server_cfg['args'] = args
+    if env:
+        server_cfg['env'] = env
+
+data['mcpServers'][name] = server_cfg
+
+with open(cfg_path, 'w') as fp:
+    json.dump(data, fp, indent=2)
+"
+    done
+
+    echo -e "\n${CYAN}=====================================================================${NC}"
+    echo -e "${GREEN}🔌 MCP Server Configured Successfully!${NC}"
+    echo -e "   Server Name: ${YELLOW}${SERVER_NAME}${NC}"
+    echo -e "   Scope:       ${CYAN}${SCOPE_LABEL}${NC}"
+    if [ -n "$URL" ]; then
+        echo -e "   Transport:   ${GREEN}Streamable HTTP ($URL)${NC}"
+    else
+        echo -e "   Transport:   ${GREEN}Stdio ($CMD)${NC}"
+        echo -e "   Arguments:   ${YELLOW}$ARGS_JSON${NC}"
+    fi
+    echo -e "${CYAN}=====================================================================${NC}"
+    echo -e "   The AI assistant can now discover and invoke this MCP tool natively!\n"
     exit 0
 fi
 

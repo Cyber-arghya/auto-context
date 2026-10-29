@@ -26,6 +26,15 @@ param(
     [Alias("s")]
     [string]$NewSkill,
 
+    [string]$AddMcp,
+    [string]$RemoveMcp,
+    [switch]$ListMcp,
+    [string]$Preset,
+    [string]$Command,
+    [string]$Args,
+    [string]$Url,
+    [string]$Env,
+
     [Alias("g")]
     [switch]$Global,
 
@@ -43,12 +52,12 @@ $Version = "1.0.0"
 
 if ($Help) {
     Write-Host @"
-init-context - Autonomous Context & Instruction Manager for AI Coding Agents
+init-context - Autonomous Context, Instruction & Tool Manager for AI Coding Agents
 
 USAGE:
     init-context [-TargetDir <path>] [OPTIONS]
 
-OPTIONS:
+OPTIONS (RULES & SKILLS):
     -NewRule, -r <name>    Scaffold a new agent rule (.agents/rules/<name>.md)
     -NewSkill, -s <name>   Scaffold a new skill (.agents/skills/<name>/SKILL.md)
     -Global, -g            Create the rule or skill globally for all projects
@@ -56,11 +65,23 @@ OPTIONS:
     -DryRun, -d            Preview generated files without writing to disk
     -Help, -h              Show this help message
 
+OPTIONS (MCP TOOLING):
+    -AddMcp <name>         Add or update an MCP server configuration
+    -RemoveMcp <name>      Remove an MCP server from configuration
+    -ListMcp               List all active MCP server tools
+    -Preset <preset>       Preset template (sqlite, postgres, github, filesystem, brave, fetch)
+    -Command <cmd>         Executable command for stdio server (e.g. npx, uvx, python)
+    -Args <args>           Arguments to pass to command
+    -Url <url>             Streamable HTTP endpoint URL for remote MCP server
+    -Env <key=val,...>     Environment variables (e.g. 'GITHUB_TOKEN=xyz')
+
 EXAMPLES:
     init-context
     init-context -NewRule code-standards
     init-context -NewSkill deploy-docker
-    init-context -NewSkill security-audit -Global
+    init-context -AddMcp sqlite
+    init-context -AddMcp github -Global
+    init-context -ListMcp
 
 DOCUMENTATION:
     https://github.com/Cyber-arghya/auto-context
@@ -214,6 +235,205 @@ Briefly summarize the procedure, workflows, or runbooks taught by this skill.
     Write-Host "   Scope:  $ScopeLabel" -ForegroundColor Cyan
     Write-Host "   File:   $DestFile" -ForegroundColor Green
     Write-Host "=====================================================================" -ForegroundColor Cyan
+    Write-Host ""
+    exit 0
+}
+
+# ------------------------------------------------------------------------------
+# Action 3: List MCP Servers
+# ------------------------------------------------------------------------------
+if ($ListMcp) {
+    if ($Global) {
+        $McpFile = Join-Path $HOME ".gemini\config\mcp_config.json"
+        $ScopeLabel = "GLOBAL (~/.gemini/config/mcp_config.json)"
+    } else {
+        $McpFile = Join-Path $TargetDir ".gemini\mcp_config.json"
+        if (-not (Test-Path $McpFile)) {
+            $McpFile = Join-Path $TargetDir ".agents\mcp_config.json"
+        }
+        $ScopeLabel = "LOCAL ($McpFile)"
+    }
+
+    Write-Host ""
+    Write-Host "=====================================================================" -ForegroundColor Cyan
+    Write-Host "🔌 Registered MCP Servers: $ScopeLabel" -ForegroundColor Green
+    Write-Host "=====================================================================" -ForegroundColor Cyan
+
+    if (-not (Test-Path $McpFile)) {
+        Write-Host "   [!] No MCP configuration found at: $McpFile" -ForegroundColor Yellow
+        Write-Host "   Run 'init-context -AddMcp <name>' to register an MCP tool."
+        Write-Host ""
+        exit 0
+    }
+
+    try {
+        $json = Get-Content -Path $McpFile -Raw | ConvertFrom-Json
+        $servers = $json.mcpServers
+        if (-not $servers -or ($servers.psobject.properties.Count -eq 0)) {
+            Write-Host "   No MCP servers registered." -ForegroundColor Yellow
+        } else {
+            Write-Host ("   {0,-20} {1,-8} {2}" -f "NAME", "TYPE", "ENDPOINT / COMMAND") -ForegroundColor Cyan
+            Write-Host ("   " + ("-" * 60))
+            foreach ($prop in $servers.psobject.properties) {
+                $name = $prop.Name
+                $cfg = $prop.Value
+                if ($cfg.url) {
+                    Write-Host ("   {0,-20} {1,-8} {2}" -f $name, "http", $cfg.url)
+                } elseif ($cfg.command) {
+                    $cmdStr = $cfg.command + " " + ($cfg.args -join " ")
+                    if ($cmdStr.Length -gt 40) { $cmdStr = $cmdStr.Substring(0, 37) + "..." }
+                    Write-Host ("   {0,-20} {1,-8} {2}" -f $name, "stdio", $cmdStr)
+                }
+            }
+        }
+    } catch {
+        Write-Host "   Error parsing MCP file: $_" -ForegroundColor Red
+    }
+    Write-Host "=====================================================================" -ForegroundColor Cyan
+    Write-Host ""
+    exit 0
+}
+
+# ------------------------------------------------------------------------------
+# Action 4: Remove MCP Server
+# ------------------------------------------------------------------------------
+if ($RemoveMcp) {
+    if ($Global) {
+        $McpFiles = @(Join-Path $HOME ".gemini\config\mcp_config.json", Join-Path $HOME ".gemini\config\plugins\auto-context\mcp_config.json")
+        $ScopeLabel = "GLOBAL"
+    } else {
+        $McpFiles = @(Join-Path $TargetDir ".gemini\mcp_config.json", Join-Path $TargetDir ".agents\mcp_config.json")
+        $ScopeLabel = "LOCAL"
+    }
+
+    $found = $false
+    foreach ($f in $McpFiles) {
+        if (Test-Path $f) {
+            try {
+                $json = Get-Content -Path $f -Raw | ConvertFrom-Json
+                if ($json.mcpServers -and $json.mcpServers.$RemoveMcp) {
+                    $json.mcpServers.PSObject.Properties.Remove($RemoveMcp)
+                    $json | ConvertTo-Json -Depth 10 | Set-Content -Path $f -Encoding UTF8
+                    $found = $true
+                }
+            } catch {}
+        }
+    }
+
+    Write-Host ""
+    Write-Host "=====================================================================" -ForegroundColor Cyan
+    if ($found) {
+        Write-Host "🗑️  Removed MCP Server: $RemoveMcp ($ScopeLabel)" -ForegroundColor Green
+    } else {
+        Write-Host "[!] MCP Server '$RemoveMcp' was not found in $ScopeLabel configuration." -ForegroundColor Yellow
+    }
+    Write-Host "=====================================================================" -ForegroundColor Cyan
+    Write-Host ""
+    exit 0
+}
+
+# ------------------------------------------------------------------------------
+# Action 5: Add or Update MCP Server
+# ------------------------------------------------------------------------------
+if ($AddMcp) {
+    $ServerName = ($AddMcp.ToLower() -replace '[ _]', '-')
+    $ChosenPreset = if ($Preset) { $Preset } else { $ServerName }
+
+    $CmdVal = ""
+    $ArgsArr = @()
+    $EnvObj = @{}
+    $UrlVal = ""
+
+    if ($ChosenPreset -eq "sqlite") {
+        $CmdVal = "npx"
+        $dbPath = if ($Args) { $Args } else { "database.db" }
+        $ArgsArr = @("-y", "@modelcontextprotocol/server-sqlite", $dbPath)
+    } elseif ($ChosenPreset -in @("postgres", "postgresql")) {
+        $CmdVal = "npx"
+        $dbUrl = if ($Args) { $Args } else { "postgresql://localhost/mydb" }
+        $ArgsArr = @("-y", "@modelcontextprotocol/server-postgres", $dbUrl)
+    } elseif ($ChosenPreset -eq "github") {
+        $CmdVal = "npx"
+        $ArgsArr = @("-y", "@modelcontextprotocol/server-github")
+        if ($Args) { $EnvObj["GITHUB_PERSONAL_ACCESS_TOKEN"] = $Args }
+    } elseif ($ChosenPreset -eq "filesystem") {
+        $CmdVal = "npx"
+        $dirPath = if ($Args) { $Args } else { $TargetDir }
+        $ArgsArr = @("-y", "@modelcontextprotocol/server-filesystem", $dirPath)
+    } elseif ($ChosenPreset -in @("brave", "brave-search")) {
+        $CmdVal = "npx"
+        $ArgsArr = @("-y", "@modelcontextprotocol/server-brave-search")
+        if ($Args) { $EnvObj["BRAVE_API_KEY"] = $Args }
+    } elseif ($ChosenPreset -eq "fetch") {
+        $CmdVal = "npx"
+        $ArgsArr = @("-y", "@modelcontextprotocol/server-fetch")
+    } elseif ($Url) {
+        $UrlVal = $Url
+    } elseif ($Command) {
+        $CmdVal = $Command
+        if ($Args) { $ArgsArr = $Args -split " " }
+    } else {
+        $CmdVal = "npx"
+        $ArgsArr = @("-y", "@modelcontextprotocol/server-$ServerName")
+    }
+
+    if ($Env) {
+        foreach ($item in ($Env -split ",")) {
+            if ($item -match "=") {
+                $parts = $item -split "=", 2
+                $EnvObj[$parts[0].Trim()] = $parts[1].Trim()
+            }
+        }
+    }
+
+    if ($Global) {
+        $TargetDirs = @(Join-Path $HOME ".gemini\config", Join-Path $HOME ".gemini\config\plugins\auto-context")
+        $ScopeLabel = "GLOBAL (~/.gemini/config/mcp_config.json)"
+    } else {
+        $TargetDirs = @(Join-Path $TargetDir ".gemini", Join-Path $TargetDir ".agents")
+        $ScopeLabel = "LOCAL ($TargetDir/.gemini/mcp_config.json)"
+    }
+
+    foreach ($d in $TargetDirs) {
+        if (-not (Test-Path $d)) {
+            New-Item -ItemType Directory -Path $d -Force | Out-Null
+        }
+        $cfgPath = Join-Path $d "mcp_config.json"
+        $data = [PSCustomObject]@{ mcpServers = [PSCustomObject]@{} }
+
+        if (Test-Path $cfgPath) {
+            try {
+                $existing = Get-Content -Path $cfgPath -Raw | ConvertFrom-Json
+                if ($existing.mcpServers) { $data = $existing }
+            } catch {}
+        }
+
+        $serverCfg = [ordered]@{}
+        if ($UrlVal) {
+            $serverCfg["url"] = $UrlVal
+        } else {
+            $serverCfg["command"] = $CmdVal
+            if ($ArgsArr.Count -gt 0) { $serverCfg["args"] = $ArgsArr }
+            if ($EnvObj.Count -gt 0) { $serverCfg["env"] = $EnvObj }
+        }
+
+        $data.mcpServers | Add-Member -MemberType NoteProperty -Name $ServerName -Value ([PSCustomObject]$serverCfg) -Force
+        $data | ConvertTo-Json -Depth 10 | Set-Content -Path $cfgPath -Encoding UTF8
+    }
+
+    Write-Host ""
+    Write-Host "=====================================================================" -ForegroundColor Cyan
+    Write-Host "🔌 MCP Server Configured Successfully!" -ForegroundColor Green
+    Write-Host "   Server Name: $ServerName" -ForegroundColor Yellow
+    Write-Host "   Scope:       $ScopeLabel" -ForegroundColor Cyan
+    if ($UrlVal) {
+        Write-Host "   Transport:   Streamable HTTP ($UrlVal)" -ForegroundColor Green
+    } else {
+        Write-Host "   Transport:   Stdio ($CmdVal)" -ForegroundColor Green
+        Write-Host "   Arguments:   $($ArgsArr -join ' ')" -ForegroundColor Yellow
+    }
+    Write-Host "=====================================================================" -ForegroundColor Cyan
+    Write-Host "   The AI assistant can now discover and invoke this MCP tool natively!" -ForegroundColor White
     Write-Host ""
     exit 0
 }

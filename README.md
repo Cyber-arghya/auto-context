@@ -51,7 +51,7 @@ init-context
 ```text
 init-context [OPTIONS] [DIRECTORY]
 
-OPTIONS:
+OPTIONS (CONTEXT & RULES):
   -r, --new-rule <NAME>     Scaffold a new rule file (.agents/rules/<name>.md)
   -s, --new-skill <NAME>    Scaffold a new skill folder (.agents/skills/<name>/SKILL.md)
   -g, --global              Target global plugin scope (~/.gemini/config/plugins/auto-context/)
@@ -59,6 +59,60 @@ OPTIONS:
   -d, --dry-run             Preview generated structure without writing to disk
   -v, --version             Display current version
   -h, --help                Show help documentation
+
+OPTIONS (MCP TOOLING):
+  --add-mcp <NAME>          Add or update an MCP server configuration
+  --remove-mcp <NAME>       Remove an MCP server from configuration
+  --list-mcp                List all active MCP server tools
+  --preset <PRESET>         Preset template (sqlite, postgres, github, filesystem, brave, fetch)
+  --command <CMD>           Executable command for stdio server (e.g. npx, uvx, python3)
+  --args <ARGS>             Arguments to pass to command
+  --url <URL>               Streamable HTTP endpoint URL for remote MCP server
+  --env <KEY=VAL,...>       Environment variables (e.g. 'GITHUB_TOKEN=xyz')
+```
+
+---
+
+## 🔌 MCP (Model Context Protocol) Tooling Management (টুল ম্যানেজমেন্ট)
+
+Auto-Context allows you and your AI agents to seamlessly install, update, list, and delete **MCP servers** with single commands:
+
+### 1️⃣ Add Popular Pre-configured MCP Servers
+```bash
+# Add SQLite database query tool
+init-context --add-mcp sqlite --args "database.db"
+
+# Add PostgreSQL database query tool
+init-context --add-mcp postgres --args "postgresql://user:pass@localhost:5432/mydb"
+
+# Add GitHub API tool (issues, PRs, repos)
+init-context --add-mcp github --args "YOUR_GITHUB_TOKEN" -g
+
+# Add Filesystem access tool
+init-context --add-mcp filesystem --args "/path/to/directory"
+
+# Add Brave Search web browsing tool
+init-context --add-mcp brave --args "YOUR_BRAVE_API_KEY" -g
+```
+
+### 2️⃣ Add Custom Stdio or Remote HTTP MCP Servers
+```bash
+# Add custom Python/Node MCP server
+init-context --add-mcp my-tool --command "python3" --args "server.py"
+
+# Add remote Streamable HTTP MCP server
+init-context --add-mcp remote-api --url "https://mcp.mycompany.com/mcp"
+```
+
+### 3️⃣ List and Delete MCP Tools
+```bash
+# List all active project or global MCP tools
+init-context --list-mcp
+init-context --list-mcp -g
+
+# Remove an MCP tool
+init-context --remove-mcp sqlite
+init-context --remove-mcp github -g
 ```
 
 ---
