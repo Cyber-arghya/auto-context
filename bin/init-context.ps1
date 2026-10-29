@@ -34,6 +34,7 @@ param(
     [string]$Args,
     [string]$Url,
     [string]$Env,
+    [string]$EnvVar,
 
     [Alias("g")]
     [switch]$Global,
@@ -333,7 +334,7 @@ if ($RemoveMcp) {
 }
 
 # ------------------------------------------------------------------------------
-# Action 5: Add or Update MCP Server
+# Action 5: Add or Update MCP Server (Secure Secret-Handling via .env / Env Vars)
 # ------------------------------------------------------------------------------
 if ($AddMcp) {
     $ServerName = ($AddMcp.ToLower() -replace '[ _]', '-')
@@ -343,6 +344,9 @@ if ($AddMcp) {
     $ArgsArr = @()
     $EnvObj = @{}
     $UrlVal = ""
+    $SecureVarName = ""
+    $EnvPlaceholder = ""
+    $RawSecretPassed = ""
 
     if ($ChosenPreset -eq "sqlite") {
         $CmdVal = "npx"
@@ -350,12 +354,17 @@ if ($AddMcp) {
         $ArgsArr = @("-y", "@modelcontextprotocol/server-sqlite", $dbPath)
     } elseif ($ChosenPreset -in @("postgres", "postgresql")) {
         $CmdVal = "npx"
-        $dbUrl = if ($Args) { $Args } else { "postgresql://localhost/mydb" }
-        $ArgsArr = @("-y", "@modelcontextprotocol/server-postgres", $dbUrl)
+        $SecureVarName = if ($EnvVar) { $EnvVar } else { "DATABASE_URL" }
+        $EnvPlaceholder = "postgresql://username:password@localhost:5432/mydb"
+        if ($Args -and ($Args -like "postgres*")) { $RawSecretPassed = $Args }
+        $ArgsArr = @("-y", "@modelcontextprotocol/server-postgres", "`${$SecureVarName}")
     } elseif ($ChosenPreset -eq "github") {
         $CmdVal = "npx"
         $ArgsArr = @("-y", "@modelcontextprotocol/server-github")
-        if ($Args) { $EnvObj["GITHUB_PERSONAL_ACCESS_TOKEN"] = $Args }
+        $SecureVarName = if ($EnvVar) { $EnvVar } else { "GITHUB_PERSONAL_ACCESS_TOKEN" }
+        $EnvPlaceholder = "ghp_yourPersonalAccessTokenHere"
+        if ($Args) { $RawSecretPassed = $Args }
+        $EnvObj["GITHUB_PERSONAL_ACCESS_TOKEN"] = "`${$SecureVarName}"
     } elseif ($ChosenPreset -eq "filesystem") {
         $CmdVal = "npx"
         $dirPath = if ($Args) { $Args } else { $TargetDir }
@@ -363,7 +372,10 @@ if ($AddMcp) {
     } elseif ($ChosenPreset -in @("brave", "brave-search")) {
         $CmdVal = "npx"
         $ArgsArr = @("-y", "@modelcontextprotocol/server-brave-search")
-        if ($Args) { $EnvObj["BRAVE_API_KEY"] = $Args }
+        $SecureVarName = if ($EnvVar) { $EnvVar } else { "BRAVE_API_KEY" }
+        $EnvPlaceholder = "your_brave_api_key_here"
+        if ($Args) { $RawSecretPassed = $Args }
+        $EnvObj["BRAVE_API_KEY"] = "`${$SecureVarName}"
     } elseif ($ChosenPreset -eq "fetch") {
         $CmdVal = "npx"
         $ArgsArr = @("-y", "@modelcontextprotocol/server-fetch")
@@ -372,9 +384,19 @@ if ($AddMcp) {
     } elseif ($Command) {
         $CmdVal = $Command
         if ($Args) { $ArgsArr = $Args -split " " }
+        if ($EnvVar) {
+            $SecureVarName = $EnvVar
+            $EnvPlaceholder = "your_${SecureVarName}_secret_here"
+            $EnvObj[$SecureVarName] = "`${$SecureVarName}"
+        }
     } else {
         $CmdVal = "npx"
         $ArgsArr = @("-y", "@modelcontextprotocol/server-$ServerName")
+        if ($EnvVar) {
+            $SecureVarName = $EnvVar
+            $EnvPlaceholder = "your_${SecureVarName}_secret_here"
+            $EnvObj[$SecureVarName] = "`${$SecureVarName}"
+        }
     }
 
     if ($Env) {
@@ -383,6 +405,41 @@ if ($AddMcp) {
                 $parts = $item -split "=", 2
                 $EnvObj[$parts[0].Trim()] = $parts[1].Trim()
             }
+        }
+    }
+
+    # Secret-handling .env and .gitignore
+    if ($SecureVarName -and -not $Global) {
+        $DotEnv = Join-Path $TargetDir ".env"
+        $DotEnvExample = Join-Path $TargetDir ".env.example"
+        $GitIgnore = Join-Path $TargetDir ".gitignore"
+
+        if (-not (Test-Path $DotEnvExample)) {
+            Set-Content -Path $DotEnvExample -Value "$SecureVarName=$EnvPlaceholder" -Encoding UTF8
+            Write-Host "   [✓] Added placeholder to: .env.example" -ForegroundColor Green
+        } else {
+            $exContent = Get-Content -Path $DotEnvExample -Raw -ErrorAction SilentlyContinue
+            if ($exContent -notmatch "^$SecureVarName=") {
+                Add-Content -Path $DotEnvExample -Value "$SecureVarName=$EnvPlaceholder"
+                Write-Host "   [✓] Added placeholder to: .env.example" -ForegroundColor Green
+            }
+        }
+
+        if ($RawSecretPassed) {
+            Add-Content -Path $DotEnv -Value "$SecureVarName=$RawSecretPassed"
+            Write-Host "   [🔒 Security Hardening] Raw secret safely saved to .env." -ForegroundColor Yellow
+            Write-Host "       Plaintext secret was NOT stored in mcp_config.json." -ForegroundColor Yellow
+        }
+
+        if (Test-Path $GitIgnore) {
+            $giContent = Get-Content -Path $GitIgnore -Raw -ErrorAction SilentlyContinue
+            if ($giContent -notmatch "\.env") {
+                Add-Content -Path $GitIgnore -Value "`n# Security: Environment secrets`n.env`n.env.local`n.env.*.local"
+                Write-Host "   [✓] Protected .env from Git in: .gitignore" -ForegroundColor Green
+            }
+        } else {
+            Set-Content -Path $GitIgnore -Value "# Security: Environment secrets`n.env`n.env.local`n.env.*.local`nnode_modules/" -Encoding UTF8
+            Write-Host "   [✓] Created .gitignore with .env protection." -ForegroundColor Green
         }
     }
 
@@ -431,6 +488,12 @@ if ($AddMcp) {
     } else {
         Write-Host "   Transport:   Stdio ($CmdVal)" -ForegroundColor Green
         Write-Host "   Arguments:   $($ArgsArr -join ' ')" -ForegroundColor Yellow
+        if ($EnvObj.Count -gt 0) {
+            Write-Host "   Environment: $(($EnvObj.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ', ')" -ForegroundColor Cyan
+        }
+    }
+    if ($SecureVarName) {
+        Write-Host "   🔒 Secret Safety: Token referenced via `${$SecureVarName} (stored in .env / env vars)" -ForegroundColor Green
     }
     Write-Host "=====================================================================" -ForegroundColor Cyan
     Write-Host "   The AI assistant can now discover and invoke this MCP tool natively!" -ForegroundColor White

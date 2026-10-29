@@ -35,6 +35,8 @@ MCP_COMMAND=""
 MCP_ARGS=""
 MCP_URL=""
 MCP_ENV=""
+MCP_ENV_VAR=""
+MCP_ENV_FILE=""
 
 show_help() {
     printf "%binit-context%b - Autonomous Context, Instruction & Tool Manager for AI Coding Agents\n\n" "$BOLD" "$NC"
@@ -48,21 +50,24 @@ show_help() {
     printf "    -d, --dry-run             Preview generated files without writing to disk\n"
     printf "    -v, --version             Display current version (%s)\n" "$VERSION"
     printf "    -h, --help                Show this help message\n\n"
-    printf "%bOPTIONS (MCP TOOLING):%b\n" "$BOLD" "$NC"
+    printf "%bOPTIONS (MCP TOOLING & SECRETS):%b\n" "$BOLD" "$NC"
     printf "    --add-mcp <NAME>          Add or update an MCP server configuration\n"
     printf "    --remove-mcp <NAME>       Remove an MCP server configuration\n"
     printf "    --list-mcp                List all active MCP server tools\n"
     printf "    --preset <PRESET>         Preset template (sqlite, postgres, github, filesystem, brave, fetch)\n"
+    printf "    --env-var <NAME>          Environment variable holding secret (e.g. GITHUB_TOKEN)\n"
+    printf "    --env-file <PATH>         Path to .env file (default: .env)\n"
     printf "    --command <CMD>           Executable command for stdio server (e.g. npx, uvx, python3)\n"
     printf "    --args <ARGS>             Arguments to pass to command (e.g. 'path/to/db.sqlite')\n"
     printf "    --url <URL>               Streamable HTTP endpoint URL for remote MCP server\n"
-    printf "    --env <KEY=VAL,...>       Environment variables (e.g. 'GITHUB_TOKEN=xyz')\n\n"
+    printf "    --env <KEY=VAL,...>       Explicit environment variable mapping\n\n"
     printf "%bEXAMPLES:%b\n" "$BOLD" "$NC"
     printf "    init-context                              # Initialize current project\n"
     printf "    init-context -r code-standards            # Create a new local rule\n"
     printf "    init-context -s deploy-docker             # Create a new local skill\n"
     printf "    init-context --add-mcp sqlite             # Add SQLite MCP server\n"
-    printf "    init-context --add-mcp github -g          # Add GitHub MCP server globally\n"
+    printf "    init-context --add-mcp github             # Add GitHub MCP server (references .env)\n"
+    printf "    init-context --add-mcp postgres           # Add Postgres MCP server (references .env)\n"
     printf "    init-context --list-mcp                   # List all configured MCP tools\n\n"
     printf "%bDOCUMENTATION:%b\n" "$BOLD" "$NC"
     printf "    https://github.com/Cyber-arghya/auto-context\n"
@@ -145,6 +150,22 @@ while [[ $# -gt 0 ]]; do
             ;;
         --env)
             MCP_ENV="$2"
+            shift 2
+            ;;
+        --env-var)
+            if [ -z "${2:-}" ] || [[ "$2" == -* ]]; then
+                echo -e "${RED}[✗] Error: --env-var requires a variable name${NC}"
+                exit 1
+            fi
+            MCP_ENV_VAR="$2"
+            shift 2
+            ;;
+        --env-file)
+            if [ -z "${2:-}" ] || [[ "$2" == -* ]]; then
+                echo -e "${RED}[✗] Error: --env-file requires a file path${NC}"
+                exit 1
+            fi
+            MCP_ENV_FILE="$2"
             shift 2
             ;;
         -*)
@@ -384,7 +405,7 @@ if 'mcpServers' in d and '$REMOVE_MCP' in d['mcpServers']:
 fi
 
 # ------------------------------------------------------------------------------
-# Action 5: Add or Update MCP Server
+# Action 5: Add or Update MCP Server (Secure Secret-Handling via .env / Env Vars)
 # ------------------------------------------------------------------------------
 if [ -n "$ADD_MCP" ]; then
     SERVER_NAME=$(echo "$ADD_MCP" | tr '[:upper:]' '[:lower:]' | tr ' _' '-')
@@ -394,6 +415,9 @@ if [ -n "$ADD_MCP" ]; then
     ARGS_JSON="[]"
     ENV_JSON="{}"
     URL=""
+    SECURE_VAR_NAME=""
+    ENV_PLACEHOLDER=""
+    RAW_SECRET_PASSED=""
 
     if [ "$PRESET" = "sqlite" ]; then
         CMD="npx"
@@ -401,15 +425,21 @@ if [ -n "$ADD_MCP" ]; then
         ARGS_JSON="[\"-y\", \"@modelcontextprotocol/server-sqlite\", \"$DB_PATH\"]"
     elif [ "$PRESET" = "postgres" ] || [ "$PRESET" = "postgresql" ]; then
         CMD="npx"
-        DB_URL="${MCP_ARGS:-postgresql://localhost/mydb}"
-        ARGS_JSON="[\"-y\", \"@modelcontextprotocol/server-postgres\", \"$DB_URL\"]"
+        SECURE_VAR_NAME="${MCP_ENV_VAR:-DATABASE_URL}"
+        ENV_PLACEHOLDER="postgresql://username:password@localhost:5432/mydb"
+        if [ -n "$MCP_ARGS" ] && [[ "$MCP_ARGS" == postgres* ]]; then
+            RAW_SECRET_PASSED="$MCP_ARGS"
+        fi
+        ARGS_JSON="[\"-y\", \"@modelcontextprotocol/server-postgres\", \"\${${SECURE_VAR_NAME}}\"]"
     elif [ "$PRESET" = "github" ]; then
         CMD="npx"
         ARGS_JSON="[\"-y\", \"@modelcontextprotocol/server-github\"]"
-        TOKEN="${MCP_ARGS:-}"
-        if [ -n "$TOKEN" ]; then
-            ENV_JSON="{\"GITHUB_PERSONAL_ACCESS_TOKEN\": \"$TOKEN\"}"
+        SECURE_VAR_NAME="${MCP_ENV_VAR:-GITHUB_PERSONAL_ACCESS_TOKEN}"
+        ENV_PLACEHOLDER="ghp_yourPersonalAccessTokenHere"
+        if [ -n "$MCP_ARGS" ]; then
+            RAW_SECRET_PASSED="$MCP_ARGS"
         fi
+        ENV_JSON="{\"GITHUB_PERSONAL_ACCESS_TOKEN\": \"\${${SECURE_VAR_NAME}}\"}"
     elif [ "$PRESET" = "filesystem" ]; then
         CMD="npx"
         DIR_PATH="${MCP_ARGS:-$TARGET_DIR}"
@@ -417,10 +447,12 @@ if [ -n "$ADD_MCP" ]; then
     elif [ "$PRESET" = "brave" ] || [ "$PRESET" = "brave-search" ]; then
         CMD="npx"
         ARGS_JSON="[\"-y\", \"@modelcontextprotocol/server-brave-search\"]"
-        API_KEY="${MCP_ARGS:-}"
-        if [ -n "$API_KEY" ]; then
-            ENV_JSON="{\"BRAVE_API_KEY\": \"$API_KEY\"}"
+        SECURE_VAR_NAME="${MCP_ENV_VAR:-BRAVE_API_KEY}"
+        ENV_PLACEHOLDER="your_brave_api_key_here"
+        if [ -n "$MCP_ARGS" ]; then
+            RAW_SECRET_PASSED="$MCP_ARGS"
         fi
+        ENV_JSON="{\"BRAVE_API_KEY\": \"\${${SECURE_VAR_NAME}}\"}"
     elif [ "$PRESET" = "fetch" ]; then
         CMD="npx"
         ARGS_JSON="[\"-y\", \"@modelcontextprotocol/server-fetch\"]"
@@ -431,22 +463,75 @@ if [ -n "$ADD_MCP" ]; then
         if [ -n "$MCP_ARGS" ]; then
             ARGS_JSON=$(python3 -c "import json; print(json.dumps('$MCP_ARGS'.split()))")
         fi
+        if [ -n "$MCP_ENV_VAR" ]; then
+            SECURE_VAR_NAME="$MCP_ENV_VAR"
+            ENV_PLACEHOLDER="your_${SECURE_VAR_NAME}_secret_here"
+            ENV_JSON="{\"${SECURE_VAR_NAME}\": \"\${${SECURE_VAR_NAME}}\"}"
+        fi
     else
         CMD="npx"
         ARGS_JSON="[\"-y\", \"@modelcontextprotocol/server-$SERVER_NAME\"]"
+        if [ -n "$MCP_ENV_VAR" ]; then
+            SECURE_VAR_NAME="$MCP_ENV_VAR"
+            ENV_PLACEHOLDER="your_${SECURE_VAR_NAME}_secret_here"
+            ENV_JSON="{\"${SECURE_VAR_NAME}\": \"\${${SECURE_VAR_NAME}}\"}"
+        fi
     fi
 
     if [ -n "$MCP_ENV" ]; then
         ENV_JSON=$(python3 -c "
 import json
 env_str = '$MCP_ENV'
-env_dict = {}
+base_env = json.loads('''$ENV_JSON''')
 for item in env_str.split(','):
     if '=' in item:
         k, v = item.split('=', 1)
-        env_dict[k.strip()] = v.strip()
-print(json.dumps(env_dict))
+        base_env[k.strip()] = v.strip()
+print(json.dumps(base_env))
 ")
+    fi
+
+    # --------------------------------------------------------------------------
+    # Secret-Handling Security: .env, .env.example, and .gitignore Protection
+    # --------------------------------------------------------------------------
+    if [ -n "$SECURE_VAR_NAME" ] && [ "$IS_GLOBAL" = false ]; then
+        DOTENV="$TARGET_DIR/.env"
+        DOTENV_EXAMPLE="$TARGET_DIR/.env.example"
+        GITIGNORE="$TARGET_DIR/.gitignore"
+
+        # 1. Populate .env.example with safe placeholder
+        if [ ! -f "$DOTENV_EXAMPLE" ] || ! grep -q "^${SECURE_VAR_NAME}=" "$DOTENV_EXAMPLE" 2>/dev/null; then
+            echo "${SECURE_VAR_NAME}=${ENV_PLACEHOLDER}" >> "$DOTENV_EXAMPLE"
+            echo -e "   ${GREEN}[✓] Added placeholder to:${NC} .env.example"
+        fi
+
+        # 2. If raw secret was passed via CLI, migrate to .env (chmod 600)
+        if [ -n "$RAW_SECRET_PASSED" ]; then
+            touch "$DOTENV"
+            chmod 600 "$DOTENV"
+            if ! grep -q "^${SECURE_VAR_NAME}=" "$DOTENV" 2>/dev/null; then
+                echo "${SECURE_VAR_NAME}=${RAW_SECRET_PASSED}" >> "$DOTENV"
+                echo -e "   ${YELLOW}[🔒 Security Hardening]${NC} Raw secret safely saved to ${YELLOW}.env${NC} (chmod 600)."
+                echo -e "       Plaintext secret was NOT stored in mcp_config.json."
+            fi
+        fi
+
+        # 3. Ensure .env is protected in .gitignore
+        if [ -f "$GITIGNORE" ]; then
+            if ! grep -q "^\.env$" "$GITIGNORE" 2>/dev/null; then
+                printf "\n# Security: Environment secrets\n.env\n.env.local\n.env.*.local\n" >> "$GITIGNORE"
+                echo -e "   ${GREEN}[✓] Protected .env from Git in:${NC} .gitignore"
+            fi
+        else
+            cat << 'GI_EOF' > "$GITIGNORE"
+# Security: Environment secrets
+.env
+.env.local
+.env.*.local
+node_modules/
+GI_EOF
+            echo -e "   ${GREEN}[✓] Created .gitignore with .env protection.${NC}"
+        fi
     fi
 
     if [ "$IS_GLOBAL" = true ]; then
@@ -507,6 +592,12 @@ with open(cfg_path, 'w') as fp:
     else
         echo -e "   Transport:   ${GREEN}Stdio ($CMD)${NC}"
         echo -e "   Arguments:   ${YELLOW}$ARGS_JSON${NC}"
+        if [ "$ENV_JSON" != "{}" ]; then
+            echo -e "   Environment: ${CYAN}$ENV_JSON${NC}"
+        fi
+    fi
+    if [ -n "$SECURE_VAR_NAME" ]; then
+        echo -e "   ${GREEN}🔒 Secret Safety:${NC} Token referenced via ${YELLOW}\${${SECURE_VAR_NAME}}${NC} (stored in .env / env vars)"
     fi
     echo -e "${CYAN}=====================================================================${NC}"
     echo -e "   The AI assistant can now discover and invoke this MCP tool natively!\n"

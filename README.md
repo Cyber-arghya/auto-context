@@ -77,22 +77,24 @@ OPTIONS (MCP TOOLING):
 
 Auto-Context allows you and your AI agents to seamlessly install, update, list, and delete **MCP servers** with single commands:
 
-### 1️⃣ Add Popular Pre-configured MCP Servers
+### 1️⃣ Add Popular Pre-configured MCP Servers (Secure Secret Pattern)
+Tokens and connection strings are **never stored as plaintext** in config files or committed to Git. Instead, they reference environment variables (`${VAR_NAME}`), automatically create safe placeholders in `.env.example`, and protect `.env` in `.gitignore`:
+
 ```bash
-# Add SQLite database query tool
+# Add SQLite database query tool (local file)
 init-context --add-mcp sqlite --args "database.db"
 
-# Add PostgreSQL database query tool
-init-context --add-mcp postgres --args "postgresql://user:pass@localhost:5432/mydb"
+# Add PostgreSQL tool (securely references ${DATABASE_URL} from .env)
+init-context --add-mcp postgres
 
-# Add GitHub API tool (issues, PRs, repos)
-init-context --add-mcp github --args "YOUR_GITHUB_TOKEN" -g
+# Add GitHub API tool (securely references ${GITHUB_PERSONAL_ACCESS_TOKEN} from .env)
+init-context --add-mcp github
 
-# Add Filesystem access tool
-init-context --add-mcp filesystem --args "/path/to/directory"
+# Add Brave Search tool (securely references ${BRAVE_API_KEY} from .env)
+init-context --add-mcp brave
 
-# Add Brave Search web browsing tool
-init-context --add-mcp brave --args "YOUR_BRAVE_API_KEY" -g
+# Customize which environment variable holds the secret
+init-context --add-mcp github --env-var MY_CUSTOM_GH_TOKEN
 ```
 
 ### 2️⃣ Add Custom Stdio or Remote HTTP MCP Servers
@@ -293,6 +295,20 @@ Whenever an AI coding assistant operates in an `auto-context` repository:
   ```bash
   init-context -s my-skill-name      # বর্তমান প্রজেক্টের জন্য
   init-context -s my-skill-name -g   # সকল প্রজেক্টের জন্য গ্লোবালি
+  ```
+
+### নিরাপদ MCP টুল ম্যানেজমেন্ট (Secure Secrets via .env):
+টোকেন বা পাসওয়ার্ড কখনোই কনফিগ ফাইলে ওপেন টেক্সটে সেভ হয় না, বরং `.env` এবং `.gitignore`-এর মাধ্যমে নিরাপদ থাকে:
+* **টুল যুক্ত করতে:**
+  ```bash
+  init-context --add-mcp sqlite             # SQLite লোকাল ডাটাবেজ
+  init-context --add-mcp github             # GitHub API (.env থেকে টোকেন পড়বে)
+  init-context --add-mcp postgres           # PostgreSQL (.env থেকে DATABASE_URL পড়বে)
+  ```
+* **টুল তালিকা দেখতে ও মুছতে:**
+  ```bash
+  init-context --list-mcp                   # সক্রিয় টুল দেখতে
+  init-context --remove-mcp github          # টুল মুছে ফেলতে
   ```
 
 ---
