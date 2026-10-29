@@ -1,0 +1,295 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Script: init-context
+# Repository: https://github.com/Cyber-arghya/auto-context
+# Author: Arghya Biswas (@Cyber-arghya)
+# License: MIT
+# Purpose: Autonomous context & instruction management scaffolding for AI coding assistants
+# ==============================================================================
+set -euo pipefail
+
+VERSION="1.0.0"
+
+# Colors
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+# Defaults
+FORCE=false
+DRY_RUN=false
+TARGET_DIR="$(pwd)"
+
+show_help() {
+    printf "%binit-context%b - Autonomous Context & Instruction Manager for AI Coding Agents\n\n" "$BOLD" "$NC"
+    printf "%bUSAGE:%b\n" "$BOLD" "$NC"
+    printf "    init-context [OPTIONS] [DIRECTORY]\n\n"
+    printf "%bOPTIONS:%b\n" "$BOLD" "$NC"
+    printf "    -f, --force       Overwrite existing context.md and rule files\n"
+    printf "    -d, --dry-run     Preview generated files without writing to disk\n"
+    printf "    -v, --version     Display current version (%s)\n" "$VERSION"
+    printf "    -h, --help        Show this help message\n\n"
+    printf "%bEXAMPLES:%b\n" "$BOLD" "$NC"
+    printf "    cd /path/to/my-project && init-context\n"
+    printf "    init-context /path/to/my-project\n"
+    printf "    init-context --force\n\n"
+    printf "%bDOCUMENTATION:%b\n" "$BOLD" "$NC"
+    printf "    https://github.com/Cyber-arghya/auto-context\n"
+}
+
+# Parse flags
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -v|--version)
+            echo "init-context version $VERSION"
+            exit 0
+            ;;
+        -f|--force)
+            FORCE=true
+            shift
+            ;;
+        -d|--dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        -*)
+            echo -e "${RED}[✗] Unknown option: $1${NC}"
+            show_help
+            exit 1
+            ;;
+        *)
+            TARGET_DIR="$1"
+            shift
+            ;;
+    esac
+done
+
+if [ ! -d "$TARGET_DIR" ]; then
+    mkdir -p "$TARGET_DIR"
+fi
+
+cd "$TARGET_DIR"
+PROJECT_DIR="$(pwd)"
+PROJECT_NAME="$(basename "$PROJECT_DIR")"
+DATE_NOW="$(date +"%Y-%m-%d")"
+
+# Tech stack detector
+STACK="General / Multi-stack"
+FRAMEWORK="Not detected"
+
+if [ -f "package.json" ]; then
+    STACK="Node.js / JavaScript / TypeScript"
+    if grep -q "next" package.json 2>/dev/null; then FRAMEWORK="Next.js";
+    elif grep -q "react" package.json 2>/dev/null; then FRAMEWORK="React";
+    elif grep -q "vue" package.json 2>/dev/null; then FRAMEWORK="Vue.js";
+    elif grep -q "express" package.json 2>/dev/null; then FRAMEWORK="Express.js";
+    elif grep -q "fastify" package.json 2>/dev/null; then FRAMEWORK="Fastify";
+    elif grep -q "nest" package.json 2>/dev/null; then FRAMEWORK="NestJS"; fi
+elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ] || [ -f "Pipfile" ]; then
+    STACK="Python"
+    if [ -f "manage.py" ]; then FRAMEWORK="Django";
+    elif grep -q -i "fastapi" requirements.txt pyproject.toml 2>/dev/null; then FRAMEWORK="FastAPI";
+    elif grep -q -i "flask" requirements.txt pyproject.toml 2>/dev/null; then FRAMEWORK="Flask"; fi
+elif [ -f "go.mod" ]; then
+    STACK="Go (Golang)"
+    FRAMEWORK="Standard Go Modules"
+elif [ -f "Cargo.toml" ]; then
+    STACK="Rust"
+    FRAMEWORK="Cargo Package"
+elif [ -f "pom.xml" ] || [ -f "build.gradle" ]; then
+    STACK="Java / Kotlin"
+    FRAMEWORK="Maven / Gradle"
+elif [ -f "docker-compose.yml" ] || [ -f "Dockerfile" ]; then
+    STACK="Dockerized Container"
+fi
+
+echo -e "\n${CYAN}=====================================================================${NC}"
+echo -e "${BOLD}${GREEN}🚀 Auto-Context: Initializing Autonomous Context Manager${NC}"
+echo -e "   Target Project: ${YELLOW}$PROJECT_NAME${NC} ($PROJECT_DIR)"
+echo -e "   Detected Stack: ${CYAN}$STACK${NC} (Framework: $FRAMEWORK)"
+echo -e "${CYAN}=====================================================================${NC}\n"
+
+if [ "$DRY_RUN" = true ]; then
+    echo -e "${YELLOW}[!] Dry-run mode: No files will be modified.${NC}\n"
+fi
+
+# 1. Rules directory
+if [ "$DRY_RUN" = false ]; then
+    mkdir -p "$PROJECT_DIR/.agents/rules"
+fi
+
+# 2. .agents/rules/maintain_context.md
+RULE_FILE="$PROJECT_DIR/.agents/rules/maintain_context.md"
+if [ ! -f "$RULE_FILE" ] || [ "$FORCE" = true ]; then
+    if [ "$DRY_RUN" = false ]; then
+cat << 'RULE_EOF' > "$RULE_FILE"
+---
+name: maintain_context
+description: Mandates autonomous, continuous synchronization of context.md on any repository or server configuration change without requiring user prompting.
+trigger: always_on
+---
+
+# Autonomous Context Maintenance Rule
+
+1. **Mandatory Synchronization**: Every agent working in this workspace MUST inspect and update `context.md` before finishing their turn whenever any of the following occur:
+   - Script or configuration edits (environment variables, docker-compose, configs, network parameters).
+   - Problem diagnosis, debugging steps, and technical solutions.
+   - User credentials, tokens, secrets, or permissions changes.
+   - Architectural decisions or operational runbooks.
+
+2. **No User Reminder Needed**: The user must never need to ask the agent to update `context.md`. This is a strict automated post-condition for all actions.
+
+3. **Content Quality**: Maintain the structured sections in `context.md`:
+   - Section 1: Credentials & Configuration Vault
+   - Section 2: Chronological Problem Log & Technical Solutions (with Mermaid diagrams)
+   - Section 3: Architecture & Component Layout
+   - Section 4: Operations Runbook & Setup Instructions
+RULE_EOF
+    fi
+    echo -e "  ${GREEN}[✓] Generated:${NC} .agents/rules/maintain_context.md"
+else
+    echo -e "  ${YELLOW}[*] Preserved:${NC} .agents/rules/maintain_context.md (use --force to overwrite)"
+fi
+
+# 3. GEMINI.md
+GEMINI_FILE="$PROJECT_DIR/GEMINI.md"
+if [ ! -f "$GEMINI_FILE" ] || [ "$FORCE" = true ]; then
+    if [ "$DRY_RUN" = false ]; then
+cat << GEMINI_EOF > "$GEMINI_FILE"
+# Standing Agent Rules for $PROJECT_NAME
+
+## Critical Mandate: Autonomous \`context.md\` Synchronization
+As an AI coding assistant working in this repository (\`$PROJECT_DIR\`), you are **strictly mandated** to keep \`$PROJECT_DIR/context.md\` continuously up to date. The user must **never** need to remind or instruct you to update it.
+
+### 1. Mandatory Post-Action Protocol
+Whenever ANY of the following events occur in any session or conversation turn:
+- A configuration file or script is created, edited, moved, or deleted.
+- A problem, bug, or error is encountered and diagnosed.
+- Credentials, tokens, user accounts, or security keys are generated or updated.
+- Architectural decisions or operational steps are modified.
+
+**You MUST immediately update \`$PROJECT_DIR/context.md\` before finalizing your response.**
+
+### 2. Required Content & Structure in \`context.md\`
+1. **Master Credentials & Configuration Vault (Section 1):** Keep all ports, IPs, secrets, tokens, and endpoints synchronized.
+2. **Chronological Problem Log & Technical Solutions (Section 2):** Document symptom, root cause, exact commands/code used, and update Mermaid diagram.
+3. **Architecture & Component Layout (Section 3):** Keep stack overview and directory maps accurate.
+4. **Operations Runbook (Section 4):** Ensure 1-step reproduction instructions remain functional.
+GEMINI_EOF
+    fi
+    echo -e "  ${GREEN}[✓] Generated:${NC} GEMINI.md"
+else
+    echo -e "  ${YELLOW}[*] Preserved:${NC} GEMINI.md"
+fi
+
+# 4. AGENTS.md
+AGENTS_FILE="$PROJECT_DIR/AGENTS.md"
+if [ ! -f "$AGENTS_FILE" ] || [ "$FORCE" = true ]; then
+    if [ "$DRY_RUN" = false ]; then
+        cp "$GEMINI_FILE" "$AGENTS_FILE"
+    fi
+    echo -e "  ${GREEN}[✓] Generated:${NC} AGENTS.md"
+else
+    echo -e "  ${YELLOW}[*] Preserved:${NC} AGENTS.md"
+fi
+
+# 5. context.md
+CONTEXT_FILE="$PROJECT_DIR/context.md"
+if [ ! -f "$CONTEXT_FILE" ] || [ "$FORCE" = true ]; then
+    if [ "$DRY_RUN" = false ]; then
+cat << CTX_EOF > "$CONTEXT_FILE"
+# $PROJECT_NAME — Master Architectural Context, Problem Log & Operations Manual
+
+> **Last Updated:** $DATE_NOW  
+> **Project Directory:** \`$PROJECT_DIR\`  
+> **Repository Name:** \`$PROJECT_NAME\`  
+> **Primary Stack:** $STACK ($FRAMEWORK)  
+
+---
+
+## 1. Master Credentials & Configuration Vault
+
+| Property | Value / Setting | Description |
+| :--- | :--- | :--- |
+| **Project Name** | \`$PROJECT_NAME\` | Active project identifier |
+| **Environment** | Development / Production | Current runtime environment |
+| **Base Port** | TBD | Application listening port |
+| **API Endpoints** | TBD | Service URL / Domains |
+| **Secrets / Keys** | Secured in Vault | Credentials, API tokens, passwords |
+
+---
+
+## 2. Chronological Problem Log & Technical Solutions
+
+\`\`\`mermaid
+flowchart TD
+    Init["1. Project Initialized"] --> Ready["Ready for development"]
+\`\`\`
+
+| # | Symptom / Error Message | Root Cause | Exact CLI Solution & Code Patch |
+| :-: | :--- | :--- | :--- |
+| 1 | Initial setup | Clean repository initialization | Generated autonomous context framework |
+
+---
+
+## 3. System Architecture & Tech Stack
+
+* **Primary Stack:** $STACK
+* **Framework:** $FRAMEWORK
+* **Database / Cache:** TBD
+* **Deployment Target:** TBD
+
+```
+$PROJECT_NAME/
+├── .agents/
+│   └── rules/maintain_context.md
+├── AGENTS.md
+├── GEMINI.md
+└── context.md
+```
+
+---
+
+## 4. Setup, Reproduction & Operations Runbook
+
+### Prerequisites
+* Operating System: Linux / WSL2 / Windows / macOS
+* Runtime / Package Manager: TBD
+
+### Quick Start
+\`\`\`bash
+# Setup instructions will be populated automatically by AI assistant
+\`\`\`
+
+---
+
+## 5. Autonomous Documentation Policy
+* Maintained automatically by AI assistants (Antigravity, Cursor, Claude Code, Copilot, Cline, Windsurf) on every code or configuration change.
+* Governed by [\`GEMINI.md\`](file://$PROJECT_DIR/GEMINI.md) and [\`.agents/rules/maintain_context.md\`](file://$PROJECT_DIR/.agents/rules/maintain_context.md).
+CTX_EOF
+    fi
+    echo -e "  ${GREEN}[✓] Generated:${NC} context.md"
+else
+    echo -e "  ${YELLOW}[*] Preserved:${NC} context.md (existing context intact)"
+fi
+
+# 6. Git Initialization
+if [ ! -d "$PROJECT_DIR/.git" ]; then
+    if [ "$DRY_RUN" = false ]; then
+        git init "$PROJECT_DIR" >/dev/null 2>&1 || true
+    fi
+    echo -e "  ${GREEN}[✓] Initialized:${NC} Git repository"
+fi
+
+echo -e "\n${CYAN}=====================================================================${NC}"
+echo -e "${BOLD}${GREEN}🎉 Autonomous Context Management is now ACTIVE for: ${YELLOW}$PROJECT_NAME${NC}"
+echo -e "${CYAN}=====================================================================${NC}"
+echo -e "   Any AI assistant (Antigravity, Cursor, Claude Code, Copilot) operating"
+echo -e "   in this workspace will now automatically maintain context.md.\n"

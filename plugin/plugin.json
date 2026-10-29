@@ -1,0 +1,14 @@
+{
+  "name": "auto-context",
+  "version": "1.0.0",
+  "description": "Autonomous Context & Instruction Manager for AI coding agents. Automatically keeps context.md updated with credentials, architecture, and problem/solution logs.",
+  "author": {
+    "name": "Arghya Biswas",
+    "url": "https://github.com/Cyber-arghya"
+  },
+  "homepage": "https://github.com/Cyber-arghya/auto-context",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cyber-arghya/auto-context.git"
+  }
+}

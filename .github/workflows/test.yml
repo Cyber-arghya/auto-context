@@ -1,0 +1,29 @@
+name: CI Quality & Syntax Check
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ShellCheck Bash Scripts
+        run: |
+          bash -n bin/init-context
+          bash -n install.sh
+          bash -n uninstall.sh
+
+      - name: Test init-context execution
+        run: |
+          mkdir /tmp/ci-test-project
+          bin/init-context /tmp/ci-test-project
+          test -f /tmp/ci-test-project/context.md
+          test -f /tmp/ci-test-project/GEMINI.md
+          test -f /tmp/ci-test-project/AGENTS.md
+          test -f /tmp/ci-test-project/.agents/rules/maintain_context.md
+          echo "All scaffolding tests passed!"
