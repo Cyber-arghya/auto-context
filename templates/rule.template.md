@@ -16,3 +16,4 @@ Define the goal and purpose of this rule.
 
 ## Enforcement
 AI coding agents (Antigravity, Cursor, Claude Code, Copilot) operating in this workspace must adhere strictly to these instructions.
+

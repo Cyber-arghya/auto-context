@@ -1,26 +1,30 @@
 ---
 name: auto-context
-description: Scaffolds or updates a comprehensive context.md file and project agent rules (GEMINI.md, AGENTS.md, .agents/rules/) in the active workspace.
+description: Scaffolds or updates a comprehensive context.md file, manages project agent rules, and provides tools for learning and codifying new skills and rules with init-context.
 ---
 
-# Auto Context Scaffolding Skill
+# Auto Context Skill
 
-When invoked, this skill automatically sets up or audits the context tracking infrastructure of any project.
+Use this skill when initializing context for a project, scaffolding new agent rules, or learning and crystallizing custom skills.
 
-## Workflow
+## Capabilities & Workflows
 
-1. **Workspace Inspection:**
-   - Detect project root and primary language/framework (Node.js, Python, Go, Rust, Java, Bash, Docker, etc.).
-   - Scan for existing configuration files (`.env.example`, `config.*`, `docker-compose.yml`, `package.json`, etc.).
+1. **Scaffold or Repair Project Context:**
+   Run `init-context` in any workspace directory to generate:
+   - `context.md` (5-tier single source of truth)
+   - `GEMINI.md` and `AGENTS.md` (Standing rules)
+   - `.agents/rules/maintain_context.md` (Always-on rule)
 
-2. **Scaffold `context.md`:**
-   - If `context.md` does not exist, create it with standard template sections:
-     - Section 1: Master Credentials & Configuration Vault
-     - Section 2: Chronological Problem Log & Technical Solutions (with Mermaid diagrams)
-     - Section 3: Architecture & Tech Stack Map
-     - Section 4: Operational Setup & Runbook
-   - If `context.md` exists, review it and synchronize any missing items.
+2. **Codify a New Rule (Constraints, Styles, Security):**
+   ```bash
+   init-context -r <rule-name> [--global]
+   ```
+   * Creates `.agents/rules/<rule-name>.md` with YAML frontmatter.
+   * Populate with guidelines, constraints, and prohibited patterns.
 
-3. **Scaffold Rules (`GEMINI.md`, `AGENTS.md`, `.agents/rules/`):**
-   - Ensure local rule files exist so all subagents and IDE sessions unconditionally enforce real-time `context.md` maintenance.
-
+3. **Codify a New Skill (Workflows, Runbooks, Multi-Step Tasks):**
+   ```bash
+   init-context -s <skill-name> [--global]
+   ```
+   * Creates `.agents/skills/<skill-name>/SKILL.md` with YAML frontmatter.
+   * Populate with when-to-activate triggers, step-by-step procedure, and verification steps.

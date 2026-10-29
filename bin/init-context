@@ -296,11 +296,11 @@ if [ ! -f "$RULE_FILE" ] || [ "$FORCE" = true ]; then
 cat << 'RULE_EOF' > "$RULE_FILE"
 ---
 name: maintain_context
-description: Mandates autonomous, continuous synchronization of context.md on any repository or server configuration change without requiring user prompting.
+description: Mandates autonomous, continuous synchronization of context.md and proactive rule/skill learning on any repository or server configuration change without requiring user prompting.
 trigger: always_on
 ---
 
-# Autonomous Context Maintenance Rule
+# Autonomous Context Maintenance & Self-Evolution Rule
 
 1. **Mandatory Synchronization**: Every agent working in this workspace MUST inspect and update `context.md` before finishing their turn whenever any of the following occur:
    - Script or configuration edits (environment variables, docker-compose, configs, network parameters).
@@ -308,13 +308,19 @@ trigger: always_on
    - User credentials, tokens, secrets, or permissions changes.
    - Architectural decisions or operational runbooks.
 
-2. **No User Reminder Needed**: The user must never need to ask the agent to update `context.md`. This is a strict automated post-condition for all actions.
+2. **Autonomous Learning & Skill Crystallization**:
+   - Whenever a new pattern, user preference, architectural guideline, or multi-step procedure is discovered or instructed:
+     - Scaffolds a **Rule** (`init-context -r <name> [-g]`) if it is a constraint, coding standard, or guideline.
+     - Scaffolds a **Skill** (`init-context -s <name> [-g]`) if it is a multi-step procedure or deployment runbook.
+     - Populates the file with clear instructions and notifies the user.
 
-3. **Content Quality**: Maintain the structured sections in `context.md`:
-   - Section 1: Credentials & Configuration Vault
-   - Section 2: Chronological Problem Log & Technical Solutions (with Mermaid diagrams)
-   - Section 3: Architecture & Component Layout
-   - Section 4: Operations Runbook & Setup Instructions
+3. **CLI Tool Availability**:
+   - The agent has full access to run `init-context` directly via terminal:
+     - `init-context`: Initialize/repair context.
+     - `init-context -r <name> [-g]`: Create rule.
+     - `init-context -s <name> [-g]`: Create skill.
+
+4. **No User Reminder Needed**: The user must never need to ask the agent to update `context.md` or learn rules. This is a strict automated post-condition for all actions.
 RULE_EOF
     fi
     echo -e "  ${GREEN}[✓] Generated:${NC} .agents/rules/maintain_context.md"
@@ -329,8 +335,8 @@ if [ ! -f "$GEMINI_FILE" ] || [ "$FORCE" = true ]; then
 cat << GEMINI_EOF > "$GEMINI_FILE"
 # Standing Agent Rules for $PROJECT_NAME
 
-## Critical Mandate: Autonomous \`context.md\` Synchronization
-As an AI coding assistant working in this repository (\`$PROJECT_DIR\`), you are **strictly mandated** to keep \`$PROJECT_DIR/context.md\` continuously up to date. The user must **never** need to remind or instruct you to update it.
+## Critical Mandate: Autonomous \`context.md\` Synchronization & Self-Evolution
+As an AI coding assistant working in this repository (\`$PROJECT_DIR\`), you are **strictly mandated** to keep \`$PROJECT_DIR/context.md\` continuously up to date and autonomously learn, persist, and crystallize new rules and skills. The user must **never** need to remind or instruct you.
 
 ### 1. Mandatory Post-Action Protocol
 Whenever ANY of the following events occur in any session or conversation turn:
@@ -341,7 +347,26 @@ Whenever ANY of the following events occur in any session or conversation turn:
 
 **You MUST immediately update \`$PROJECT_DIR/context.md\` before finalizing your response.**
 
-### 2. Required Content & Structure in \`context.md\`
+### 2. Autonomous Learning & Self-Evolution Protocol
+Whenever you learn a new pattern, receive a correction, observe a coding preference, or resolve a complex repeatable problem:
+1. **Identify the Type:**
+   - **Rule:** If it is a constraint, coding standard, safety boundary, or architectural preference -> Create a Rule (\`init-context -r <name>\`).
+   - **Skill:** If it is a multi-step procedure, deployment workflow, diagnosis runbook, or CLI sequence -> Create a Skill (\`init-context -s <name>\`).
+2. **Scope Decision:**
+   - **Project-Specific:** Save in \`.agents/rules/\` or \`.agents/skills/\`.
+   - **Machine-Wide / Global:** If it applies to all projects, use \`--global\` (\`-g\`) to register in \`~/.gemini/config/plugins/auto-context/\`.
+3. **Execution:**
+   - Use the \`init-context\` CLI tool to scaffold the file.
+   - Populate it with clear objectives, constraints, or step-by-step instructions.
+   - Inform the user of the new rule or skill codified.
+
+### 3. Tool Access: \`init-context\`
+You have native access to run \`init-context\` via terminal commands:
+- \`init-context\`: Scaffolds or repairs project context.
+- \`init-context -r <rule-name> [-g]\`: Creates a new rule with frontmatter.
+- \`init-context -s <skill-name> [-g]\`: Creates a new skill with frontmatter.
+
+### 4. Required Content & Structure in \`context.md\`
 1. **Master Credentials & Configuration Vault (Section 1):** Keep all ports, IPs, secrets, tokens, and endpoints synchronized.
 2. **Chronological Problem Log & Technical Solutions (Section 2):** Document symptom, root cause, exact commands/code used, and update Mermaid diagram.
 3. **Architecture & Component Layout (Section 3):** Keep stack overview and directory maps accurate.

@@ -1,8 +1,8 @@
 # Autonomous Global Context & Instruction Management Protocol
 
-## Critical Mandate: Universal `context.md` Synchronization
+## Critical Mandate: Universal `context.md` Synchronization & Self-Evolution
 As an AI coding assistant, whenever operating in ANY workspace or project:
-You are **strictly mandated** to maintain a comprehensive `context.md` file at the root of the active workspace. The user must **never** need to remind or instruct you to update it.
+You are **strictly mandated** to maintain a comprehensive `context.md` file at the root of the active workspace and autonomously crystallize new rules and skills. The user must **never** need to remind or instruct you.
 
 ### 1. Automatic Workspace Initialization
 - If `context.md` does not exist in the root of the active workspace:
@@ -22,8 +22,26 @@ Whenever ANY of the following occur during a session:
 
 **You MUST immediately update `context.md` before concluding your response.**
 
-### 3. Documentation Integrity
+### 3. Autonomous Learning & Self-Evolution (Pattern & Skill Crystallization)
+Whenever you learn a new pattern, receive a correction, observe a user preference, or resolve a complex repeatable problem:
+1. **Identify the Type:**
+   - **Rule (`init-context -r <name>`):** If it is a constraint, coding standard, safety boundary, or architectural preference.
+   - **Skill (`init-context -s <name>`):** If it is a multi-step procedure, deployment workflow, diagnosis runbook, or CLI sequence.
+2. **Scope Decision:**
+   - **Project-Specific:** Save in `.agents/rules/` or `.agents/skills/`.
+   - **Machine-Wide / Global:** If it applies to all projects, use `--global` (`-g`) to register in `~/.gemini/config/plugins/auto-context/`.
+3. **Execution:**
+   - Execute `init-context -r <name>` or `init-context -s <name>`.
+   - Populate the generated markdown file with clear objectives, constraints, or step-by-step instructions.
+   - Inform the user of the new rule or skill codified so they are aware of the persistent learning.
+
+### 4. CLI Tooling: `init-context`
+You have native access to run `init-context` via terminal commands:
+- `init-context`: Scaffolds or repairs 5-tier context in the active project.
+- `init-context -r <rule-name> [--global]`: Creates a compliant rule with frontmatter.
+- `init-context -s <skill-name> [--global]`: Creates a compliant skill with frontmatter.
+
+### 5. Documentation Integrity
 - Never truncate or erase previously logged solutions. Append each new challenge chronologically.
 - Keep commands, file paths, and credentials 100% executable and synchronized with reality.
 - Maintain clear formatting, line references, and user manuals so any developer can reproduce the project state instantly.
-
