@@ -27,3 +27,4 @@ jobs:
           test -f /tmp/ci-test-project/AGENTS.md
           test -f /tmp/ci-test-project/.agents/rules/maintain_context.md
           echo "All scaffolding tests passed!"
+

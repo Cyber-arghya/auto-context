@@ -66,3 +66,4 @@ flowchart TD
 ## 5. Autonomous Documentation Policy
 * Maintained automatically by AI assistants (Antigravity, Cursor, Claude Code, Copilot, Cline, Windsurf) on every code or configuration change.
 * Governed by [`GEMINI.md`](file://{{PROJECT_DIR}}/GEMINI.md) and [`.agents/rules/maintain_context.md`](file://{{PROJECT_DIR}}/.agents/rules/maintain_context.md).
+

@@ -19,3 +19,4 @@ trigger: always_on
    - Section 2: Chronological Problem Log & Technical Solutions (with Mermaid diagrams)
    - Section 3: Architecture & Component Layout
    - Section 4: Operations Runbook & Setup Instructions
+

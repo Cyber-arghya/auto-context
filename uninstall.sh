@@ -22,3 +22,4 @@ rm -rf "$HOME/.gemini/config/plugins/auto-context" 2>/dev/null || true
 echo -e "  ${GREEN}[✓] Removed global plugin directory.${NC}"
 
 echo -e "\n${GREEN}Auto-Context uninstalled successfully.${NC}\n"
+

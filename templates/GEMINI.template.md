@@ -17,3 +17,4 @@ Whenever ANY of the following events occur in any session or conversation turn:
 2. **Chronological Problem Log & Technical Solutions (Section 2):** Document symptom, root cause, exact commands/code used, and update Mermaid diagram.
 3. **Architecture & Component Layout (Section 3):** Keep stack overview and directory maps accurate.
 4. **Operations Runbook (Section 4):** Ensure 1-step reproduction instructions remain functional.
+

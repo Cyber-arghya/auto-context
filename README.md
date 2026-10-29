@@ -52,11 +52,108 @@ init-context
 init-context [OPTIONS] [DIRECTORY]
 
 OPTIONS:
-  -f, --force      Overwrite existing context.md and standing rule files
-  -d, --dry-run    Preview generated structure without writing to disk
-  -v, --version    Display current version
-  -h, --help       Show help documentation
+  -r, --new-rule <NAME>     Scaffold a new rule file (.agents/rules/<name>.md)
+  -s, --new-skill <NAME>    Scaffold a new skill folder (.agents/skills/<name>/SKILL.md)
+  -g, --global              Target global plugin scope (~/.gemini/config/plugins/auto-context/)
+  -f, --force               Overwrite existing context.md and standing rule files
+  -d, --dry-run             Preview generated structure without writing to disk
+  -v, --version             Display current version
+  -h, --help                Show help documentation
 ```
+
+---
+
+## 🛠️ Adding Custom Skills & Rules (কাস্টম স্কিল ও রুল যুক্ত করার নিয়ম)
+
+You can easily teach your AI assistants new abilities (**Skills**) or enforce custom guidelines (**Rules**), either for a **single project (Local)** or across your **entire computer (Global)**.
+
+### 🧠 Skills vs. Rules: What is the Difference?
+
+| Type | Purpose | When Active | Format / Location |
+| :--- | :--- | :--- | :--- |
+| **Rule** | Behavioral constraints, coding standards, security boundaries, or test requirements. | Always active (`trigger: always_on`) or context-triggered. | `.agents/rules/<name>.md` or `GEMINI.md` |
+| **Skill** | Step-by-step procedures, deployment runbooks, debugging steps, or CLI tool guides. | Activated on-demand when relevant task is requested. | `.agents/skills/<name>/SKILL.md` |
+
+---
+
+### 1️⃣ How to Add a New Rule
+
+#### Method A: Using 1-Command CLI (Recommended)
+```bash
+# In Bash / WSL2 / macOS:
+init-context -r code-style              # Create local rule for active project
+init-context -r security-policy --global # Create global rule for ALL projects
+
+# In Windows PowerShell:
+init-context -NewRule code-style
+init-context -NewRule security-policy -Global
+```
+
+#### Method B: Manual File Creation
+Create a file at `.agents/rules/my-rule.md`:
+```markdown
+---
+name: my-rule
+description: Enforce TypeScript strict null checks and ESLint formatting.
+trigger: always_on
+---
+
+# Rule: TypeScript & Formatting Standards
+
+## Guidelines
+- Never use 'any' type in production code.
+- Run 'npm run lint' before finalizing any changes.
+```
+
+---
+
+### 2️⃣ How to Add a New Skill
+
+#### Method A: Using 1-Command CLI (Recommended)
+```bash
+# In Bash / WSL2 / macOS:
+init-context -s deploy-docker           # Create local skill for active project
+init-context -s server-diagnostics -g   # Create global skill for ALL projects
+
+# In Windows PowerShell:
+init-context -NewSkill deploy-docker
+init-context -NewSkill server-diagnostics -Global
+```
+
+#### Method B: Manual File Creation
+Create a folder and file at `.agents/skills/deploy-docker/SKILL.md`:
+```markdown
+---
+name: deploy-docker
+description: Step-by-step procedure to build and deploy dockerized containers.
+---
+
+# Skill: Docker Deployment Runbook
+
+## When to Activate
+- When the user asks to build, run, or deploy Docker containers.
+
+## Step-by-Step Procedure
+1. Build the production image:
+   ```bash
+   docker compose build --no-cache
+   ```
+2. Run health check on containers:
+   ```bash
+   docker compose ps
+   ```
+```
+
+---
+
+### 3️⃣ Local vs. Global Scopes
+
+* **Local Scope (`.agents/`):**
+  * Stored inside your project folder (`.agents/rules/` and `.agents/skills/`).
+  * Can be committed to Git so teammates and CI/CD share the exact same rules.
+* **Global Scope (`~/.gemini/config/plugins/auto-context/`):**
+  * Stored machine-wide.
+  * Every single project opened in Antigravity automatically inherits these skills and rules.
 
 ---
 
@@ -132,6 +229,18 @@ Whenever an AI coding assistant operates in an `auto-context` repository:
   ```
   ব্যস! আপনার প্রজেক্টে স্বয়ংক্রিয় কনটেক্সট ট্র্যাকিং চালু হয়ে যাবে।
 
+### নতুন স্কিল বা রুল তৈরি করার নিয়ম:
+* **নতুন রুল (Rule) তৈরি করতে:**
+  ```bash
+  init-context -r my-rule-name       # বর্তমান প্রজেক্টের জন্য
+  init-context -r my-rule-name -g    # সকল প্রজেক্টের জন্য গ্লোবালি
+  ```
+* **নতুন স্কিল (Skill) তৈরি করতে:**
+  ```bash
+  init-context -s my-skill-name      # বর্তমান প্রজেক্টের জন্য
+  init-context -s my-skill-name -g   # সকল প্রজেক্টের জন্য গ্লোবালি
+  ```
+
 ---
 
 ## 📦 Repository Structure
@@ -172,3 +281,4 @@ auto-context/
 ## 📄 License
 
 This project is open-source and licensed under the [MIT License](./LICENSE). Contributions and pull requests are warmly welcomed!
+

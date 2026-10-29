@@ -23,3 +23,4 @@ When invoked, this skill automatically sets up or audits the context tracking in
 
 3. **Scaffold Rules (`GEMINI.md`, `AGENTS.md`, `.agents/rules/`):**
    - Ensure local rule files exist so all subagents and IDE sessions unconditionally enforce real-time `context.md` maintenance.
+

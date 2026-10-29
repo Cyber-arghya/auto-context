@@ -103,3 +103,4 @@ Write-Host "To initialize autonomous context tracking in any project, simply run
 Write-Host "  cd C:\path\to\your-project" -ForegroundColor Yellow
 Write-Host "  init-context" -ForegroundColor Green
 Write-Host ""
+

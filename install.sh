@@ -81,3 +81,4 @@ echo -e "${CYAN}================================================================
 echo -e "To initialize autonomous context tracking in any project, simply run:"
 echo -e "  ${YELLOW}cd /path/to/any/project${NC}"
 echo -e "  ${GREEN}init-context${NC}\n"
+

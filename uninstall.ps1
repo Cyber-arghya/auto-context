@@ -18,3 +18,4 @@ Remove-Item $WinPluginDir -Recurse -Force -ErrorAction SilentlyContinue
 Write-Host "  [✓] Removed global plugin directory" -ForegroundColor Green
 
 Write-Host "Auto-Context uninstalled successfully." -ForegroundColor Green
+

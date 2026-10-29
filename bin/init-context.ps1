@@ -20,6 +20,15 @@ param(
     [Parameter(Position = 0)]
     [string]$TargetDir = (Get-Location).Path,
 
+    [Alias("r")]
+    [string]$NewRule,
+
+    [Alias("s")]
+    [string]$NewSkill,
+
+    [Alias("g")]
+    [switch]$Global,
+
     [Alias("f")]
     [switch]$Force,
 
@@ -37,21 +46,175 @@ if ($Help) {
 init-context - Autonomous Context & Instruction Manager for AI Coding Agents
 
 USAGE:
-    init-context [-TargetDir <path>] [-Force] [-DryRun] [-Help]
+    init-context [-TargetDir <path>] [OPTIONS]
 
 OPTIONS:
-    -Force, -f       Overwrite existing context.md and rule files
-    -DryRun, -d      Preview generated files without writing to disk
-    -Help, -h        Show this help message
+    -NewRule, -r <name>    Scaffold a new agent rule (.agents/rules/<name>.md)
+    -NewSkill, -s <name>   Scaffold a new skill (.agents/skills/<name>/SKILL.md)
+    -Global, -g            Create the rule or skill globally for all projects
+    -Force, -f             Overwrite existing files
+    -DryRun, -d            Preview generated files without writing to disk
+    -Help, -h              Show this help message
 
 EXAMPLES:
     init-context
-    init-context -Force
-    init-context "D:\Projects\MyApp"
+    init-context -NewRule code-standards
+    init-context -NewSkill deploy-docker
+    init-context -NewSkill security-audit -Global
 
 DOCUMENTATION:
     https://github.com/Cyber-arghya/auto-context
 "@
+    exit 0
+}
+
+# ------------------------------------------------------------------------------
+# Action 1: Scaffold a New Rule
+# ------------------------------------------------------------------------------
+if ($NewRule) {
+    $CleanRuleName = ($NewRule.ToLower() -replace '[ _]', '-') -replace '\.md$', ''
+    $RuleTitle = (Get-Culture).TextInfo.ToTitleCase($CleanRuleName.Replace('-', ' '))
+
+    if ($Global) {
+        $DestDir = Join-Path $HOME ".gemini\config\plugins\auto-context\rules"
+        $ScopeLabel = "GLOBAL Plugin (~/.gemini/config/plugins/auto-context/rules)"
+    } else {
+        $DestDir = Join-Path $TargetDir ".agents\rules"
+        $ScopeLabel = "LOCAL Project ($DestDir)"
+    }
+
+    $DestFile = Join-Path $DestDir "$CleanRuleName.md"
+
+    if ((Test-Path $DestFile) -and -not $Force) {
+        Write-Host "[!] Rule already exists at: $DestFile" -ForegroundColor Yellow
+        Write-Host "    Use -Force to overwrite." -ForegroundColor Cyan
+        exit 1
+    }
+
+    if ($DryRun) {
+        Write-Host "[!] Dry-run: Would create rule at: $DestFile" -ForegroundColor Yellow
+        exit 0
+    }
+
+    if (-not (Test-Path $DestDir)) {
+        New-Item -ItemType Directory -Path $DestDir -Force | Out-Null
+    }
+
+    $RuleTemplate = @"
+---
+name: $CleanRuleName
+description: Rule guidelines and constraints for $CleanRuleName. Explain when and how the agent should apply this rule.
+trigger: always_on
+---
+
+# Rule: $RuleTitle
+
+## Objective
+Define the goal and purpose of this rule.
+
+## Guidelines & Constraints
+- **Constraint 1:** Specific coding standards, naming conventions, or prohibited patterns.
+- **Constraint 2:** Security protocols, credential management, or access boundaries.
+- **Constraint 3:** Testing or documentation requirements.
+
+## Enforcement
+AI coding agents (Antigravity, Cursor, Claude Code, Copilot) operating in this workspace must adhere strictly to these instructions.
+"@
+
+    [System.IO.File]::WriteAllText($DestFile, $RuleTemplate, [System.Text.Encoding]::UTF8)
+
+    Write-Host ""
+    Write-Host "=====================================================================" -ForegroundColor Cyan
+    Write-Host "✨ New Rule Created Successfully!" -ForegroundColor Green
+    Write-Host "   Name:   $CleanRuleName" -ForegroundColor Yellow
+    Write-Host "   Scope:  $ScopeLabel" -ForegroundColor Cyan
+    Write-Host "   File:   $DestFile" -ForegroundColor Green
+    Write-Host "=====================================================================" -ForegroundColor Cyan
+    Write-Host ""
+    exit 0
+}
+
+# ------------------------------------------------------------------------------
+# Action 2: Scaffold a New Skill
+# ------------------------------------------------------------------------------
+if ($NewSkill) {
+    $CleanSkillName = $NewSkill.ToLower() -replace '[ _]', '-'
+    $SkillTitle = (Get-Culture).TextInfo.ToTitleCase($CleanSkillName.Replace('-', ' '))
+
+    if ($Global) {
+        $DestDir = Join-Path $HOME ".gemini\config\plugins\auto-context\skills\$CleanSkillName"
+        $ScopeLabel = "GLOBAL Plugin (~/.gemini/config/plugins/auto-context/skills)"
+    } else {
+        $DestDir = Join-Path $TargetDir ".agents\skills\$CleanSkillName"
+        $ScopeLabel = "LOCAL Project ($DestDir)"
+    }
+
+    $DestFile = Join-Path $DestDir "SKILL.md"
+
+    if ((Test-Path $DestFile) -and -not $Force) {
+        Write-Host "[!] Skill already exists at: $DestFile" -ForegroundColor Yellow
+        Write-Host "    Use -Force to overwrite." -ForegroundColor Cyan
+        exit 1
+    }
+
+    if ($DryRun) {
+        Write-Host "[!] Dry-run: Would create skill at: $DestFile" -ForegroundColor Yellow
+        exit 0
+    }
+
+    if (-not (Test-Path $DestDir)) {
+        New-Item -ItemType Directory -Path $DestDir -Force | Out-Null
+    }
+
+    $SkillTemplate = @"
+---
+name: $CleanSkillName
+description: Describe what this skill accomplishes and the specific keywords or conditions under which the agent should activate it.
+---
+
+# Skill: $SkillTitle
+
+## Overview
+Briefly summarize the procedure, workflows, or runbooks taught by this skill.
+
+## When to Activate
+- When the user asks to perform task X.
+- When working on subsystem Y or diagnosing error Z.
+
+## Workflow & Step-by-Step Instructions
+
+### Step 1: Pre-flight & Checks
+* Validate prerequisites, environment variables, or dependencies:
+  ````bash
+  # Check command
+  ````
+
+### Step 2: Core Execution
+* Follow this exact procedure:
+  ````bash
+  # Execution command
+  ````
+
+### Step 3: Verification
+* Verify the expected outcome:
+  ````bash
+  # Verification command
+  ````
+
+## Reference & Troubleshooting
+* Common pitfalls and their solutions.
+"@
+
+    [System.IO.File]::WriteAllText($DestFile, $SkillTemplate, [System.Text.Encoding]::UTF8)
+
+    Write-Host ""
+    Write-Host "=====================================================================" -ForegroundColor Cyan
+    Write-Host "🎯 New Skill Created Successfully!" -ForegroundColor Green
+    Write-Host "   Name:   $CleanSkillName" -ForegroundColor Yellow
+    Write-Host "   Scope:  $ScopeLabel" -ForegroundColor Cyan
+    Write-Host "   File:   $DestFile" -ForegroundColor Green
+    Write-Host "=====================================================================" -ForegroundColor Cyan
+    Write-Host ""
     exit 0
 }
 
@@ -294,3 +457,4 @@ Write-Host "====================================================================
 Write-Host "   Any AI assistant (Antigravity, Cursor, Claude Code, Copilot)" -ForegroundColor White
 Write-Host "   operating in this workspace will now automatically maintain context.md." -ForegroundColor White
 Write-Host ""
+

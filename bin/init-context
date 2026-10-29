@@ -22,20 +22,28 @@ NC='\033[0m'
 FORCE=false
 DRY_RUN=false
 TARGET_DIR="$(pwd)"
+NEW_RULE=""
+NEW_SKILL=""
+IS_GLOBAL=false
 
 show_help() {
     printf "%binit-context%b - Autonomous Context & Instruction Manager for AI Coding Agents\n\n" "$BOLD" "$NC"
     printf "%bUSAGE:%b\n" "$BOLD" "$NC"
     printf "    init-context [OPTIONS] [DIRECTORY]\n\n"
     printf "%bOPTIONS:%b\n" "$BOLD" "$NC"
-    printf "    -f, --force       Overwrite existing context.md and rule files\n"
-    printf "    -d, --dry-run     Preview generated files without writing to disk\n"
-    printf "    -v, --version     Display current version (%s)\n" "$VERSION"
-    printf "    -h, --help        Show this help message\n\n"
+    printf "    -r, --new-rule <NAME>     Scaffold a new agent rule (.agents/rules/<name>.md)\n"
+    printf "    -s, --new-skill <NAME>    Scaffold a new skill (.agents/skills/<name>/SKILL.md)\n"
+    printf "    -g, --global              Create the rule/skill globally in ~/.gemini/config/plugins/auto-context/\n"
+    printf "    -f, --force               Overwrite existing files\n"
+    printf "    -d, --dry-run             Preview generated files without writing to disk\n"
+    printf "    -v, --version             Display current version (%s)\n" "$VERSION"
+    printf "    -h, --help                Show this help message\n\n"
     printf "%bEXAMPLES:%b\n" "$BOLD" "$NC"
-    printf "    cd /path/to/my-project && init-context\n"
-    printf "    init-context /path/to/my-project\n"
-    printf "    init-context --force\n\n"
+    printf "    init-context                          # Initialize current project\n"
+    printf "    init-context /path/to/my-project      # Initialize specified project\n"
+    printf "    init-context -r code-standards        # Create a new local rule\n"
+    printf "    init-context -s deploy-docker         # Create a new local skill\n"
+    printf "    init-context -s security-audit -g     # Create a new GLOBAL skill\n\n"
     printf "%bDOCUMENTATION:%b\n" "$BOLD" "$NC"
     printf "    https://github.com/Cyber-arghya/auto-context\n"
 }
@@ -59,6 +67,26 @@ while [[ $# -gt 0 ]]; do
             DRY_RUN=true
             shift
             ;;
+        -g|--global)
+            IS_GLOBAL=true
+            shift
+            ;;
+        -r|--new-rule)
+            if [ -z "${2:-}" ] || [[ "$2" == -* ]]; then
+                echo -e "${RED}[✗] Error: --new-rule requires a rule name${NC}"
+                exit 1
+            fi
+            NEW_RULE="$2"
+            shift 2
+            ;;
+        -s|--new-skill)
+            if [ -z "${2:-}" ] || [[ "$2" == -* ]]; then
+                echo -e "${RED}[✗] Error: --new-skill requires a skill name${NC}"
+                exit 1
+            fi
+            NEW_SKILL="$2"
+            shift 2
+            ;;
         -*)
             echo -e "${RED}[✗] Unknown option: $1${NC}"
             show_help
@@ -70,6 +98,142 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# ------------------------------------------------------------------------------
+# Action 1: Scaffold a New Rule
+# ------------------------------------------------------------------------------
+if [ -n "$NEW_RULE" ]; then
+    CLEAN_RULE_NAME=$(echo "$NEW_RULE" | tr '[:upper:]' '[:lower:]' | tr ' _' '-' | sed 's/\.md$//')
+    RULE_TITLE=$(echo "$CLEAN_RULE_NAME" | tr '-' ' ' | awk '{for(i=1;i<=NF;i++)sub(/./,toupper(substr($i,1,1)),$i)}1')
+
+    if [ "$IS_GLOBAL" = true ]; then
+        DEST_DIR="$HOME/.gemini/config/plugins/auto-context/rules"
+        SCOPE_LABEL="GLOBAL Plugin (~/.gemini/config/plugins/auto-context/rules)"
+    else
+        DEST_DIR="$TARGET_DIR/.agents/rules"
+        SCOPE_LABEL="LOCAL Project ($DEST_DIR)"
+    fi
+
+    DEST_FILE="$DEST_DIR/${CLEAN_RULE_NAME}.md"
+
+    if [ -f "$DEST_FILE" ] && [ "$FORCE" = false ]; then
+        echo -e "${YELLOW}[!] Rule already exists at: $DEST_FILE${NC}"
+        echo -e "    Use ${CYAN}--force${NC} to overwrite."
+        exit 1
+    fi
+
+    if [ "$DRY_RUN" = true ]; then
+        echo -e "${YELLOW}[!] Dry-run: Would create rule at: $DEST_FILE${NC}"
+        exit 0
+    fi
+
+    mkdir -p "$DEST_DIR"
+    cat << RULE_TPL_EOF > "$DEST_FILE"
+---
+name: ${CLEAN_RULE_NAME}
+description: Rule guidelines and constraints for ${CLEAN_RULE_NAME}. Explain when and how the agent should apply this rule.
+trigger: always_on
+---
+
+# Rule: ${RULE_TITLE}
+
+## Objective
+Define the goal and purpose of this rule.
+
+## Guidelines & Constraints
+- **Constraint 1:** Specific coding standards, naming conventions, or prohibited patterns.
+- **Constraint 2:** Security protocols, credential management, or access boundaries.
+- **Constraint 3:** Testing or documentation requirements.
+
+## Enforcement
+AI coding agents (Antigravity, Cursor, Claude Code, Copilot) operating in this workspace must adhere strictly to these instructions.
+RULE_TPL_EOF
+
+    echo -e "\n${CYAN}=====================================================================${NC}"
+    echo -e "${GREEN}✨ New Rule Created Successfully!${NC}"
+    echo -e "   Name:   ${YELLOW}${CLEAN_RULE_NAME}${NC}"
+    echo -e "   Scope:  ${CYAN}${SCOPE_LABEL}${NC}"
+    echo -e "   File:   ${GREEN}${DEST_FILE}${NC}"
+    echo -e "${CYAN}=====================================================================${NC}\n"
+    exit 0
+fi
+
+# ------------------------------------------------------------------------------
+# Action 2: Scaffold a New Skill
+# ------------------------------------------------------------------------------
+if [ -n "$NEW_SKILL" ]; then
+    CLEAN_SKILL_NAME=$(echo "$NEW_SKILL" | tr '[:upper:]' '[:lower:]' | tr ' _' '-')
+    SKILL_TITLE=$(echo "$CLEAN_SKILL_NAME" | tr '-' ' ' | awk '{for(i=1;i<=NF;i++)sub(/./,toupper(substr($i,1,1)),$i)}1')
+
+    if [ "$IS_GLOBAL" = true ]; then
+        DEST_DIR="$HOME/.gemini/config/plugins/auto-context/skills/${CLEAN_SKILL_NAME}"
+        SCOPE_LABEL="GLOBAL Plugin (~/.gemini/config/plugins/auto-context/skills)"
+    else
+        DEST_DIR="$TARGET_DIR/.agents/skills/${CLEAN_SKILL_NAME}"
+        SCOPE_LABEL="LOCAL Project ($DEST_DIR)"
+    fi
+
+    DEST_FILE="$DEST_DIR/SKILL.md"
+
+    if [ -f "$DEST_FILE" ] && [ "$FORCE" = false ]; then
+        echo -e "${YELLOW}[!] Skill already exists at: $DEST_FILE${NC}"
+        echo -e "    Use ${CYAN}--force${NC} to overwrite."
+        exit 1
+    fi
+
+    if [ "$DRY_RUN" = true ]; then
+        echo -e "${YELLOW}[!] Dry-run: Would create skill at: $DEST_FILE${NC}"
+        exit 0
+    fi
+
+    mkdir -p "$DEST_DIR"
+    cat << SKILL_TPL_EOF > "$DEST_FILE"
+---
+name: ${CLEAN_SKILL_NAME}
+description: Describe what this skill accomplishes and the specific keywords or conditions under which the agent should activate it.
+---
+
+# Skill: ${SKILL_TITLE}
+
+## Overview
+Briefly summarize the procedure, workflows, or runbooks taught by this skill.
+
+## When to Activate
+- When the user asks to perform task X.
+- When working on subsystem Y or diagnosing error Z.
+
+## Workflow & Step-by-Step Instructions
+
+### Step 1: Pre-flight & Checks
+* Validate prerequisites, environment variables, or dependencies:
+  \`\`\`bash
+  # Check command
+  \`\`\`
+
+### Step 2: Core Execution
+* Follow this exact procedure:
+  \`\`\`bash
+  # Execution command
+  \`\`\`
+
+### Step 3: Verification
+* Verify the expected outcome:
+  \`\`\`bash
+  # Verification command
+  \`\`\`
+
+## Reference & Troubleshooting
+* Common pitfalls and their solutions.
+SKILL_TPL_EOF
+
+    echo -e "\n${CYAN}=====================================================================${NC}"
+    echo -e "${GREEN}🎯 New Skill Created Successfully!${NC}"
+    echo -e "   Name:   ${YELLOW}${CLEAN_SKILL_NAME}${NC}"
+    echo -e "   Scope:  ${CYAN}${SCOPE_LABEL}${NC}"
+    echo -e "   File:   ${GREEN}${DEST_FILE}${NC}"
+    echo -e "${CYAN}=====================================================================${NC}\n"
+    exit 0
+fi
 
 if [ ! -d "$TARGET_DIR" ]; then
     mkdir -p "$TARGET_DIR"
