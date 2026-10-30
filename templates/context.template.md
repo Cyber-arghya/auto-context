@@ -9,6 +9,8 @@
 
 ## 1. Master Credentials & Configuration Vault
 
+> 🔒 **Local Sandbox Isolation:** Mock test logins, seed users, and local dev ports are stored in [`context.local.md`](file://{{PROJECT_DIR}}/context.local.md) (strictly protected by `.gitignore` and `chmod 600`). Real secrets reside exclusively in `.env`.
+
 | Property | Value / Setting | Description |
 | :--- | :--- | :--- |
 | **Project Name** | `{{PROJECT_NAME}}` | Active project identifier |
@@ -16,6 +18,7 @@
 | **Base Port** | TBD | Application listening port |
 | **API Endpoints** | TBD | Service URL / Domains |
 | **Secrets / Keys** | Secured in Vault | Credentials, API tokens, passwords |
+| **Test Fixtures** | `context.local.md` | Local dummy test credentials (git-ignored) |
 
 ---
 

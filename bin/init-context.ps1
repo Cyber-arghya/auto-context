@@ -651,6 +651,11 @@ trigger: always_on
      - `init-context -s <name> [-g]`: Create skill.
 
 4. **No User Reminder Needed**: The user must never need to ask the agent to update `context.md` or learn rules. This is a strict automated post-condition for all actions.
+
+5. **Local Sandbox Test Credentials (`context.local.md`)**:
+   - For local dev logins, automated browser testing, and mock fixtures, inspect and update `context.local.md`.
+   - Never store real production secrets or payment tokens in markdown files. Real secrets belong in `.env`.
+   - Ensure `context.local.md` is strictly git-ignored.
 '@
     if (-not $DryRun) {
         [System.IO.File]::WriteAllText($RuleFile, $RuleContent, [System.Text.Encoding]::UTF8)
@@ -702,6 +707,12 @@ You have native access to run \`init-context\` via terminal commands:
 2. **Chronological Problem Log & Technical Solutions (Section 2):** Document symptom, root cause, exact commands/code used, and update Mermaid diagram.
 3. **Architecture & Component Layout (Section 3):** Keep stack overview and directory maps accurate.
 4. **Operations Runbook (Section 4):** Ensure 1-step reproduction instructions remain functional.
+
+### 5. Local Sandbox Credentials & Dummy Test Fixtures (``context.local.md``)
+- **Inspection Mandate:** When testing local dev servers, performing browser automation (Playwright/Puppeteer), or authenticating API endpoints, ALWAYS read ``context.local.md`` first before prompting the user for credentials.
+- **Strict Mock Boundary:** ONLY store dummy test credentials, mock accounts (\`admin@test.local\`), seed users, and local dev ports in ``context.local.md``.
+- **Zero Real Secrets:** Real production secrets, payment keys, or personal tokens MUST NEVER be stored in ``context.local.md`` or ``context.md``; reference them via \`.env\` or system environment variables.
+- **Git Protection:** Ensure ``context.local.md`` remains strictly ignored by Git (\`.gitignore\`).
 "@
     if (-not $DryRun) {
         [System.IO.File]::WriteAllText($GeminiFile, $GeminiContent, [System.Text.Encoding]::UTF8)
@@ -737,6 +748,8 @@ if (-not (Test-Path $ContextFile) -or $Force) {
 
 ## 1. Master Credentials & Configuration Vault
 
+> 🔒 **Local Sandbox Isolation:** Mock test logins, seed users, and local dev ports are stored in [``context.local.md``](file://$ProjectDir/context.local.md) (strictly protected by ``.gitignore``). Real secrets reside exclusively in ``.env``.
+
 | Property | Value / Setting | Description |
 | :--- | :--- | :--- |
 | **Project Name** | ``$ProjectName`` | Active project identifier |
@@ -744,6 +757,7 @@ if (-not (Test-Path $ContextFile) -or $Force) {
 | **Base Port** | TBD | Application listening port |
 | **API Endpoints** | TBD | Service URL / Domains |
 | **Secrets / Keys** | Secured in Vault | Credentials, API tokens, passwords |
+| **Test Fixtures** | ``context.local.md`` | Local dummy test credentials (git-ignored) |
 
 ---
 
@@ -773,6 +787,7 @@ $ProjectName/
 │   └── rules/maintain_context.md
 ├── AGENTS.md
 ├── GEMINI.md
+├── context.local.md
 └── context.md
 ```
 
@@ -803,7 +818,96 @@ $ProjectName/
     Write-Host "  [*] Preserved: context.md (existing context intact)" -ForegroundColor Yellow
 }
 
-# 6. Git
+# 6. context.local.md (Local Sandbox & Dummy Test Fixtures Vault)
+$LocalVaultFile = Join-Path $ProjectDir "context.local.md"
+if (-not (Test-Path $LocalVaultFile) -or $Force) {
+    $LocalVaultContent = @"
+# ⚠️ LOCAL SANDBOX & DUMMY TEST FIXTURES ONLY
+# ==============================================================================
+# SECURITY GUARDRAIL:
+# DO NOT STORE REAL PRODUCTION SECRETS, PAYMENT KEYS, OR LIVE PASSWORDS HERE.
+# This file is strictly for mock logins, seed users, localhost ports, and dev test data.
+# Real secrets MUST stay in .env (protected by system environment variables).
+#
+# GIT STATUS: STRICTLY GIT-IGNORED (*.local.md, context.local.md)
+# ==============================================================================
+
+> **Project:** ``$ProjectName``  
+> **Purpose:** Local mock credentials & test logins for AI browser testing and dev automation.  
+> **Notice to AI Assistant:** Check this file before asking user for test login credentials. Never commit this file to Git.
+
+---
+
+## 1. Local Dev Endpoints & Test Ports
+
+| Service | Local URL / Port | Status / Description |
+| :--- | :--- | :--- |
+| **Frontend Web** | ``http://localhost:3000`` | Dev server |
+| **Backend API** | ``http://localhost:8000`` | Local API endpoint |
+| **Local Mock DB** | ``localhost:5432`` / ``database.db`` | Non-production dev database |
+
+---
+
+## 2. Seed Accounts & Dummy Test Logins (Browser Automation)
+
+Use these mock accounts when performing automated UI testing, Playwright / Puppeteer workflows, or manual verification.
+
+| Role | Username / Email | Mock Password | Notes / Permissions |
+| :--- | :--- | :--- | :--- |
+| **Super Admin** | ``admin@test.local`` | ``adminpass123`` | Full admin privileges |
+| **Standard User** | ``user@test.local`` | ``userpass123`` | Default user permissions |
+| **Guest / Demo** | ``guest@test.local`` | ``guestpass123`` | Read-only access |
+
+---
+
+## 3. Local Mock Tokens & Test Headers
+
+\`\`\`http
+Authorization: Bearer dev-mock-token-12345
+X-Test-Bypass: true
+\`\`\`
+
+---
+
+## 4. Local Test Notes & Scratch Data
+<!-- AI and developer can jot temporary test notes, cookie values, or scratch session tokens here -->
+- Test session initialized: $DateNow
+"@
+    if (-not $DryRun) {
+        [System.IO.File]::WriteAllText($LocalVaultFile, $LocalVaultContent, [System.Text.Encoding]::UTF8)
+    }
+    Write-Host "  [✓] Generated: context.local.md (Local Sandbox Vault)" -ForegroundColor Green
+} else {
+    Write-Host "  [*] Preserved: context.local.md" -ForegroundColor Yellow
+}
+
+# 7. Gitignore Hardening for context.local.md and .env
+$GitIgnoreFile = Join-Path $ProjectDir ".gitignore"
+if (-not $DryRun) {
+    if (-not (Test-Path $GitIgnoreFile)) {
+        $GiContent = @"
+# Security: Local AI sandbox vault (dummy test logins & secrets)
+context.local.md
+*.local.md
+
+# Security: Environment secrets
+.env
+.env.local
+.env.*.local
+node_modules/
+"@
+        Set-Content -Path $GitIgnoreFile -Value $GiContent -Encoding UTF8
+        Write-Host "  [✓] Generated: .gitignore (protected context.local.md & .env)" -ForegroundColor Green
+    } else {
+        $giRaw = Get-Content -Path $GitIgnoreFile -Raw -ErrorAction SilentlyContinue
+        if ($giRaw -notmatch "context\.local\.md") {
+            Add-Content -Path $GitIgnoreFile -Value "`n# Security: Local AI sandbox vault (dummy test logins & secrets)`ncontext.local.md`n*.local.md"
+            Write-Host "  [✓] Hardened: .gitignore with context.local.md protection" -ForegroundColor Green
+        }
+    }
+}
+
+# 8. Git
 $GitDir = Join-Path $ProjectDir ".git"
 if (-not (Test-Path $GitDir)) {
     if (-not $DryRun) {

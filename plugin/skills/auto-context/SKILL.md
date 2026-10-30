@@ -37,3 +37,8 @@ Use this skill when initializing context for a project, scaffolding new agent ru
    ```
    * Automatically aligns stdio tools to `uvx` (Python) or `npx` (Node) based on project markers.
    * Tokens and secrets reference `${VAR_NAME}` from `.env` and are protected from Git.
+
+5. **Local Sandbox Test Fixtures (`context.local.md`):**
+   * Automatically generated with `chmod 600` and protected by `.gitignore`.
+   * Holds mock logins, seed users (`admin@test.local`), and local dev ports for browser testing.
+   * Real production secrets are strictly prohibited (they reside in `.env`).

@@ -756,6 +756,11 @@ trigger: always_on
      - `init-context -s <name> [-g]`: Create skill.
 
 4. **No User Reminder Needed**: The user must never need to ask the agent to update `context.md` or learn rules. This is a strict automated post-condition for all actions.
+
+5. **Local Sandbox Test Credentials (`context.local.md`)**:
+   - For local dev logins, automated browser testing, and mock fixtures, inspect and update `context.local.md`.
+   - Never store real production secrets or payment tokens in markdown files. Real secrets belong in `.env`.
+   - Ensure `context.local.md` is strictly git-ignored and protected with `chmod 600`.
 RULE_EOF
     fi
     echo -e "  ${GREEN}[✓] Generated:${NC} .agents/rules/maintain_context.md"
@@ -806,6 +811,12 @@ You have native access to run \`init-context\` via terminal commands:
 2. **Chronological Problem Log & Technical Solutions (Section 2):** Document symptom, root cause, exact commands/code used, and update Mermaid diagram.
 3. **Architecture & Component Layout (Section 3):** Keep stack overview and directory maps accurate.
 4. **Operations Runbook (Section 4):** Ensure 1-step reproduction instructions remain functional.
+
+### 5. Local Sandbox Credentials & Dummy Test Fixtures (\`context.local.md\`)
+- **Inspection Mandate:** When testing local dev servers, performing browser automation (Playwright/Puppeteer), or authenticating API endpoints, ALWAYS read \`context.local.md\` first before prompting the user for credentials.
+- **Strict Mock Boundary:** ONLY store dummy test credentials, mock accounts (\`admin@test.local\`), seed users, and local dev ports in \`context.local.md\`.
+- **Zero Real Secrets:** Real production secrets, payment keys, or personal tokens MUST NEVER be stored in \`context.local.md\` or \`context.md\`; reference them via \`.env\` or system environment variables.
+- **Git Protection:** Ensure \`context.local.md\` remains strictly ignored by Git (\`.gitignore\`) and protected with \`chmod 600\`.
 GEMINI_EOF
     fi
     echo -e "  ${GREEN}[✓] Generated:${NC} GEMINI.md"
@@ -840,6 +851,8 @@ cat << CTX_EOF > "$CONTEXT_FILE"
 
 ## 1. Master Credentials & Configuration Vault
 
+> 🔒 **Local Sandbox Isolation:** Mock test logins, seed users, and local dev ports are stored in [\`context.local.md\`](file://$PROJECT_DIR/context.local.md) (strictly protected by \`.gitignore\` and \`chmod 600\`). Real secrets reside exclusively in \`.env\`.
+
 | Property | Value / Setting | Description |
 | :--- | :--- | :--- |
 | **Project Name** | \`$PROJECT_NAME\` | Active project identifier |
@@ -847,6 +860,7 @@ cat << CTX_EOF > "$CONTEXT_FILE"
 | **Base Port** | TBD | Application listening port |
 | **API Endpoints** | TBD | Service URL / Domains |
 | **Secrets / Keys** | Secured in Vault | Credentials, API tokens, passwords |
+| **Test Fixtures** | \`context.local.md\` | Local dummy test credentials (git-ignored) |
 
 ---
 
@@ -870,14 +884,15 @@ flowchart TD
 * **Database / Cache:** TBD
 * **Deployment Target:** TBD
 
-```
+\`\`\`
 $PROJECT_NAME/
 ├── .agents/
 │   └── rules/maintain_context.md
 ├── AGENTS.md
 ├── GEMINI.md
+├── context.local.md
 └── context.md
-```
+\`\`\`
 
 ---
 
@@ -904,7 +919,95 @@ else
     echo -e "  ${YELLOW}[*] Preserved:${NC} context.md (existing context intact)"
 fi
 
-# 6. Git Initialization
+# 6. context.local.md (Local Sandbox & Dummy Test Fixtures Vault)
+LOCAL_VAULT_FILE="$PROJECT_DIR/context.local.md"
+if [ ! -f "$LOCAL_VAULT_FILE" ] || [ "$FORCE" = true ]; then
+    if [ "$DRY_RUN" = false ]; then
+cat << LOCAL_EOF > "$LOCAL_VAULT_FILE"
+# ⚠️ LOCAL SANDBOX & DUMMY TEST FIXTURES ONLY
+# ==============================================================================
+# SECURITY GUARDRAIL:
+# DO NOT STORE REAL PRODUCTION SECRETS, PAYMENT KEYS, OR LIVE PASSWORDS HERE.
+# This file is strictly for mock logins, seed users, localhost ports, and dev test data.
+# Real secrets MUST stay in .env (protected by system environment variables).
+#
+# GIT STATUS: STRICTLY GIT-IGNORED (*.local.md, context.local.md)
+# FILE PERMISSIONS: chmod 600
+# ==============================================================================
+
+> **Project:** \`$PROJECT_NAME\`  
+> **Purpose:** Local mock credentials & test logins for AI browser testing and dev automation.  
+> **Notice to AI Assistant:** Check this file before asking user for test login credentials. Never commit this file to Git.
+
+---
+
+## 1. Local Dev Endpoints & Test Ports
+
+| Service | Local URL / Port | Status / Description |
+| :--- | :--- | :--- |
+| **Frontend Web** | \`http://localhost:3000\` | Dev server |
+| **Backend API** | \`http://localhost:8000\` | Local API endpoint |
+| **Local Mock DB** | \`localhost:5432\` / \`database.db\` | Non-production dev database |
+
+---
+
+## 2. Seed Accounts & Dummy Test Logins (Browser Automation)
+
+Use these mock accounts when performing automated UI testing, Playwright / Puppeteer workflows, or manual verification.
+
+| Role | Username / Email | Mock Password | Notes / Permissions |
+| :--- | :--- | :--- | :--- |
+| **Super Admin** | \`admin@test.local\` | \`adminpass123\` | Full admin privileges |
+| **Standard User** | \`user@test.local\` | \`userpass123\` | Default user permissions |
+| **Guest / Demo** | \`guest@test.local\` | \`guestpass123\` | Read-only access |
+
+---
+
+## 3. Local Mock Tokens & Test Headers
+
+\`\`\`http
+Authorization: Bearer dev-mock-token-12345
+X-Test-Bypass: true
+\`\`\`
+
+---
+
+## 4. Local Test Notes & Scratch Data
+<!-- AI and developer can jot temporary test notes, cookie values, or scratch session tokens here -->
+- Test session initialized: $DATE_NOW
+LOCAL_EOF
+        chmod 600 "$LOCAL_VAULT_FILE" 2>/dev/null || true
+    fi
+    echo -e "  ${GREEN}[✓] Generated:${NC} context.local.md (Local Sandbox Vault, chmod 600)"
+else
+    echo -e "  ${YELLOW}[*] Preserved:${NC} context.local.md"
+fi
+
+# 7. Gitignore Hardening for context.local.md and .env
+GITIGNORE_FILE="$PROJECT_DIR/.gitignore"
+if [ "$DRY_RUN" = false ]; then
+    if [ ! -f "$GITIGNORE_FILE" ]; then
+        cat << 'GI_EOF' > "$GITIGNORE_FILE"
+# Security: Local AI sandbox vault (dummy test logins & secrets)
+context.local.md
+*.local.md
+
+# Security: Environment secrets
+.env
+.env.local
+.env.*.local
+node_modules/
+GI_EOF
+        echo -e "  ${GREEN}[✓] Generated:${NC} .gitignore (protected context.local.md & .env)"
+    else
+        if ! grep -q "context\.local\.md" "$GITIGNORE_FILE" 2>/dev/null; then
+            printf "\n# Security: Local AI sandbox vault (dummy test logins & secrets)\ncontext.local.md\n*.local.md\n" >> "$GITIGNORE_FILE"
+            echo -e "  ${GREEN}[✓] Hardened:${NC} .gitignore with context.local.md protection"
+        fi
+    fi
+fi
+
+# 8. Git Initialization
 if [ ! -d "$PROJECT_DIR/.git" ]; then
     if [ "$DRY_RUN" = false ]; then
         git init "$PROJECT_DIR" >/dev/null 2>&1 || true

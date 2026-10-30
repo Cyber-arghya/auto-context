@@ -25,3 +25,8 @@ trigger: always_on
      - `init-context -s <name> [-g]`: Create skill.
 
 4. **No User Reminder Needed**: The user must never need to ask the agent to update `context.md` or learn rules. This is a strict automated post-condition for all actions.
+
+5. **Local Sandbox Test Credentials (`context.local.md`)**:
+   - For local dev logins, automated browser testing, and mock fixtures, inspect and update `context.local.md`.
+   - Never store real production secrets or payment tokens in markdown files. Real secrets belong in `.env`.
+   - Ensure `context.local.md` is strictly git-ignored and protected with `chmod 600`.

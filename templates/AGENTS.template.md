@@ -36,3 +36,9 @@ You have native access to run `init-context` via terminal commands:
 2. **Chronological Problem Log & Technical Solutions (Section 2):** Document symptom, root cause, exact commands/code used, and update Mermaid diagram.
 3. **Architecture & Component Layout (Section 3):** Keep stack overview and directory maps accurate.
 4. **Operations Runbook (Section 4):** Ensure 1-step reproduction instructions remain functional.
+
+### 5. Local Sandbox Credentials & Dummy Test Fixtures (`context.local.md`)
+- **Inspection Mandate:** When testing local dev servers, performing browser automation (Playwright/Puppeteer), or authenticating API endpoints, ALWAYS read `context.local.md` first before prompting the user for credentials.
+- **Strict Mock Boundary:** ONLY store dummy test credentials, mock accounts (`admin@test.local`), seed users, and local dev ports in `context.local.md`.
+- **Zero Real Secrets:** Real production secrets, payment keys, or personal tokens MUST NEVER be stored in `context.local.md` or `context.md`; reference them via `.env` or system environment variables.
+- **Git Protection:** Ensure `context.local.md` remains strictly ignored by Git (`.gitignore`) and protected with `chmod 600`.

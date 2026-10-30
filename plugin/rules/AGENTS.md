@@ -45,3 +45,8 @@ You have native access to run `init-context` via terminal commands:
 - Never truncate or erase previously logged solutions. Append each new challenge chronologically.
 - Keep commands, file paths, and credentials 100% executable and synchronized with reality.
 - Maintain clear formatting, line references, and user manuals so any developer can reproduce the project state instantly.
+
+### 6. Local Sandbox Credentials & Dummy Test Fixtures (`context.local.md`)
+- Inspect `context.local.md` before prompting the user for test logins, seed accounts, or local ports during browser testing or dev execution.
+- Strictly forbid storing real production secrets or payment keys in `context.local.md` (mock data only; real secrets stay in `.env`).
+- Ensure `context.local.md` remains strictly git-ignored and protected with `chmod 600`.
