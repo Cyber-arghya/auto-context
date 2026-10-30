@@ -9,9 +9,11 @@ set -euo pipefail
 echo ">>> Uninstalling Auto-Context..."
 
 if command -v uv &>/dev/null; then
+    uv tool uninstall auto-context-cli 2>/dev/null || true
     uv tool uninstall auto-context 2>/dev/null || true
 fi
 if command -v pipx &>/dev/null; then
+    pipx uninstall auto-context-cli 2>/dev/null || true
     pipx uninstall auto-context 2>/dev/null || true
 fi
 

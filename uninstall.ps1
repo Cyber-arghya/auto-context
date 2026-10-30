@@ -9,9 +9,11 @@ param()
 Write-Host ">>> Uninstalling Auto-Context..." -ForegroundColor Yellow
 
 if (Get-Command "uv" -ErrorAction SilentlyContinue) {
+    uv tool uninstall auto-context-cli 2>$null
     uv tool uninstall auto-context 2>$null
 }
 if (Get-Command "pipx" -ErrorAction SilentlyContinue) {
+    pipx uninstall auto-context-cli 2>$null
     pipx uninstall auto-context 2>$null
 }
 

@@ -60,9 +60,12 @@ def root(
     """
     if version:
         try:
-            v = pkg_version("auto-context")
+            v = pkg_version("auto-context-cli")
         except Exception:
-            v = "1.0.0"
+            try:
+                v = pkg_version("auto-context")
+            except Exception:
+                v = "1.0.0"
         console.print(f"init-context v{v}")
         raise typer.Exit()
 

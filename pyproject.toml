@@ -1,5 +1,5 @@
 [project]
-name = "auto-context"
+name = "auto-context-cli"
 version = "1.0.0"
 description = "Autonomous context & instruction manager for AI coding assistants"
 readme = "README.md"
