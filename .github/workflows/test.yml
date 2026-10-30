@@ -1,4 +1,4 @@
-name: CI Quality & Syntax Check
+name: CI Quality & Test Suite
 
 on:
   push:
@@ -7,24 +7,59 @@ on:
     branches: [ "main" ]
 
 jobs:
-  lint-and-test:
-    runs-on: ubuntu-latest
+  test:
+    name: Test CLI on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.11", "3.12"]
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: ShellCheck Bash Scripts
-        run: |
-          bash -n bin/init-context
-          bash -n install.sh
-          bash -n uninstall.sh
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          version: "latest"
 
-      - name: Test init-context execution
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install auto-context globally via uv tool
+        run: uv tool install . --force
+
+      - name: Verify CLI availability & version
+        run: init-context --version
+
+      - name: Test Project Scaffolding
+        shell: bash
         run: |
-          mkdir /tmp/ci-test-project
-          bin/init-context /tmp/ci-test-project
+          mkdir -p /tmp/ci-test-project
+          init-context init /tmp/ci-test-project
           test -f /tmp/ci-test-project/context.md
+          test -f /tmp/ci-test-project/context.local.md
           test -f /tmp/ci-test-project/GEMINI.md
           test -f /tmp/ci-test-project/AGENTS.md
           test -f /tmp/ci-test-project/.agents/rules/maintain_context.md
-          echo "All scaffolding tests passed!"
+          echo "Scaffolding verification passed!"
 
+      - name: Test Custom Rule & Skill Scaffolding
+        shell: bash
+        run: |
+          init-context -r test-rule --target /tmp/ci-test-project
+          test -f /tmp/ci-test-project/.agents/rules/test-rule.md
+          init-context -s test-skill --target /tmp/ci-test-project
+          test -f /tmp/ci-test-project/.agents/skills/test-skill/SKILL.md
+          echo "Rule and Skill scaffolding passed!"
+
+      - name: Test MCP Tool Registry
+        shell: bash
+        run: |
+          init-context mcp add sqlite --target /tmp/ci-test-project
+          init-context mcp list --target /tmp/ci-test-project
+          init-context mcp remove sqlite --target /tmp/ci-test-project
+          echo "MCP configuration engine passed!"
