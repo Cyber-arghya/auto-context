@@ -194,7 +194,9 @@ if ($NewSkill) {
     $SkillTemplate = @"
 ---
 name: $CleanSkillName
+version: 1.0.0
 description: Describe what this skill accomplishes and the specific keywords or conditions under which the agent should activate it.
+triggers: ["$CleanSkillName"]
 ---
 
 # Skill: $SkillTitle
@@ -656,6 +658,10 @@ trigger: always_on
    - For local dev logins, automated browser testing, and mock fixtures, inspect and update `context.local.md`.
    - Never store real production secrets or payment tokens in markdown files. Real secrets belong in `.env`.
    - Ensure `context.local.md` is strictly git-ignored.
+
+6. **Two-Tier Progressive Disclosure**:
+   - Never load full `SKILL.md` bodies into the initial context. Use Section 5 of `context.md` for routing.
+   - Dynamically load specific skills via `read_file` only when a user prompt matches their triggers.
 '@
     if (-not $DryRun) {
         [System.IO.File]::WriteAllText($RuleFile, $RuleContent, [System.Text.Encoding]::UTF8)
@@ -663,6 +669,77 @@ trigger: always_on
     Write-Host "  [✓] Generated: .agents\rules\maintain_context.md" -ForegroundColor Green
 } else {
     Write-Host "  [*] Preserved: .agents\rules\maintain_context.md (use -Force to overwrite)" -ForegroundColor Yellow
+}
+
+# 2b. .agents/rules/security-boundaries.md
+$SecRuleFile = Join-Path $ProjectDir ".agents\rules\security-boundaries.md"
+if (-not (Test-Path $SecRuleFile) -or $Force) {
+    $SecRuleContent = @"
+---
+name: security-boundaries
+description: Enforces zero plaintext secrets in Git, strict .env protection, and isolated mock data in context.local.md.
+trigger: always_on
+---
+
+# Rule: Security Boundaries & Secret Safety
+
+## Objective
+Prevent credential leakage, indirect prompt injection, and unauthorized network exposure across all code, configuration files, and git commits.
+
+## Guidelines & Constraints
+1. **Zero Hardcoded Secrets:**
+   - API keys, tokens, database passwords, and private keys must NEVER be hardcoded into source code, committed configs, or git history.
+   - All runtime secrets must be loaded via `.env` or system environment variables.
+2. **Local Sandbox Test Data Isolation (`context.local.md`):**
+   - Only dummy/mock credentials (e.g. `admin@test.local`) belong in `context.local.md`.
+   - Real production credentials or live payment keys are strictly prohibited in markdown files.
+   - `context.local.md` must remain strictly git-ignored.
+3. **Public Exposure Boundaries:**
+   - Raw database and internal service ports must bind to `127.0.0.1` unless encapsulated by secure tunneling.
+"@
+    if (-not $DryRun) {
+        [System.IO.File]::WriteAllText($SecRuleFile, $SecRuleContent, [System.Text.Encoding]::UTF8)
+    }
+    Write-Host "  [✓] Generated: .agents\rules\security-boundaries.md" -ForegroundColor Green
+} else {
+    Write-Host "  [*] Preserved: .agents\rules\security-boundaries.md" -ForegroundColor Yellow
+}
+
+# 2c. .agents/rules/code-standards.md
+$CodeRuleFile = Join-Path $ProjectDir ".agents\rules\code-standards.md"
+if (-not (Test-Path $CodeRuleFile) -or $Force) {
+    $CodeRuleContent = @"
+---
+name: code-standards
+description: Enforces clean code principles, DRY architecture, early return patterns, and defensive error handling.
+trigger: always_on
+---
+
+# Rule: Code Quality & Architecture Standards
+
+## Objective
+Maintain readable, maintainable, modular, and type-safe codebases with clear error handling.
+
+## Guidelines & Constraints
+1. **Defensive Coding & Early Return:**
+   - Prefer guard clauses and early returns to reduce nested indentation.
+   - Always validate inputs and handle edge cases at the beginning of functions.
+2. **Clean Code & Self-Documenting Logic:**
+   - Keep functions focused on a single responsibility (SRP).
+   - Write descriptive variable and function names; avoid cryptic abbreviations.
+   - Preserve existing comments and docstrings.
+3. **Structured Error Handling:**
+   - Never suppress exceptions with empty `catch` or `except` blocks.
+   - Log actionable error messages that include relevant context (e.g. invalid inputs, resource identifiers).
+4. **Conventional Git Commits:**
+   - Write semantic commit messages (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`).
+"@
+    if (-not $DryRun) {
+        [System.IO.File]::WriteAllText($CodeRuleFile, $CodeRuleContent, [System.Text.Encoding]::UTF8)
+    }
+    Write-Host "  [✓] Generated: .agents\rules\code-standards.md" -ForegroundColor Green
+} else {
+    Write-Host "  [*] Preserved: .agents\rules\code-standards.md" -ForegroundColor Yellow
 }
 
 # 3. GEMINI.md
@@ -713,6 +790,11 @@ You have native access to run \`init-context\` via terminal commands:
 - **Strict Mock Boundary:** ONLY store dummy test credentials, mock accounts (\`admin@test.local\`), seed users, and local dev ports in ``context.local.md``.
 - **Zero Real Secrets:** Real production secrets, payment keys, or personal tokens MUST NEVER be stored in ``context.local.md`` or ``context.md``; reference them via \`.env\` or system environment variables.
 - **Git Protection:** Ensure ``context.local.md`` remains strictly ignored by Git (\`.gitignore\`).
+
+### 6. Two-Tier Progressive Disclosure Protocol (Token Optimization)
+- **Initial Boot Budget:** NEVER read full \`SKILL.md\` files into the initial context. Use Section 5 of \`context.md\` for lightweight routing (< 800 tokens).
+- **Dynamic On-Demand Loading:** Only when a user prompt matches a skill's triggers (e.g. "docker", "rebase", "diagnostics", "browser"), dynamically inspect the file using \`read_file\`.
+- **Zero Session Bloat:** Once the task concludes, do not keep the full skill body in persistent memory.
 "@
     if (-not $DryRun) {
         [System.IO.File]::WriteAllText($GeminiFile, $GeminiContent, [System.Text.Encoding]::UTF8)
@@ -784,7 +866,15 @@ flowchart TD
 ```
 $ProjectName/
 ├── .agents/
-│   └── rules/maintain_context.md
+│   ├── rules/
+│   │   ├── code-standards.md
+│   │   ├── maintain_context.md
+│   │   └── security-boundaries.md
+│   └── skills/
+│       ├── browser-testing/
+│       ├── docker-ops/
+│       ├── git-workflow/
+│       └── server-diagnostics/
 ├── AGENTS.md
 ├── GEMINI.md
 ├── context.local.md
@@ -806,7 +896,20 @@ $ProjectName/
 
 ---
 
-## 5. Autonomous Documentation Policy
+## 5. Skills & Progressive Disclosure Catalog
+
+> 💡 **Progressive Disclosure Protocol:** Agents must NOT read full \`SKILL.md\` files upfront. When user prompts match any triggers, dynamically inspect the skill file using \`read_file\`.
+
+| Skill | Version | Purpose & Scope | Triggers | Location |
+| :--- | :---: | :--- | :--- | :--- |
+| **\`docker-ops\`** | 1.0.0 | Production Dockerfile & Compose orchestration | \`docker\`, \`container\`, \`compose\` | [SKILL.md](file://$ProjectDir/.agents/skills/docker-ops/SKILL.md) |
+| **\`git-workflow\`** | 1.0.0 | Conventional commits & merge conflict resolution | \`git\`, \`commit\`, \`branch\`, \`rebase\` | [SKILL.md](file://$ProjectDir/.agents/skills/git-workflow/SKILL.md) |
+| **\`server-diagnostics\`** | 1.0.0 | System health, RAM/swap, CPU, ports & sockets | \`health\`, \`ram\`, \`cpu\`, \`swap\`, \`port\` | [SKILL.md](file://$ProjectDir/.agents/skills/server-diagnostics/SKILL.md) |
+| **\`browser-testing\`** | 1.0.0 | UI testing & mock logins using \`context.local.md\` | \`browser\`, \`playwright\`, \`puppeteer\`, \`ui-test\` | [SKILL.md](file://$ProjectDir/.agents/skills/browser-testing/SKILL.md) |
+
+---
+
+## 6. Autonomous Documentation Policy
 * Maintained automatically by AI assistants (Antigravity, Cursor, Claude Code, Copilot, Cline, Windsurf) on every code or configuration change.
 * Governed by [\`GEMINI.md\`](file://$ProjectDir/GEMINI.md) and [\`.agents/rules/maintain_context.md\`](file://$ProjectDir/.agents/rules/maintain_context.md).
 "@
@@ -881,7 +984,123 @@ X-Test-Bypass: true
     Write-Host "  [*] Preserved: context.local.md" -ForegroundColor Yellow
 }
 
-# 7. Gitignore Hardening for context.local.md and .env
+# 7. Default Starter Skills Library (Two-Tier Progressive Disclosure)
+$StarterSkills = @("docker-ops", "git-workflow", "server-diagnostics", "browser-testing")
+foreach ($s in $StarterSkills) {
+    $sDir = Join-Path $ProjectDir ".agents\skills\$s"
+    $sFile = Join-Path $sDir "SKILL.md"
+    if (-not (Test-Path $sFile) -or $Force) {
+        if (-not $DryRun) {
+            if (-not (Test-Path $sDir)) { New-Item -ItemType Directory -Path $sDir -Force | Out-Null }
+            $content = ""
+            if ($s -eq "docker-ops") {
+                $content = @"
+---
+name: docker-ops
+version: 1.0.0
+description: Production multi-stage Dockerfile and Compose setup, container diagnostics, cleanup, and logging.
+triggers: ["docker", "container", "compose", "dockerfile", "entrypoint"]
+---
+
+# Skill: Docker Operations & Container Management
+
+## Overview
+Standard operating procedures for containerizing applications, writing secure multi-stage Dockerfiles, managing docker-compose stacks, and diagnosing container failures.
+
+## When to Activate
+- When creating or modifying Dockerfile or docker-compose.yml.
+- When diagnosing crashed, restarting, or unhealthy containers.
+- When cleaning up dangling images, unused volumes, or container build cache.
+
+## Workflows & Procedures
+1. Multi-Stage Builds: Separate build environment from lean production runtime.
+2. Non-Root Users: Run container processes as non-root (USER appuser).
+3. Secret Decoupling: Reference secrets dynamically via .env (`${VAR_NAME}`).
+4. Resource Bounds: Limit CPU and memory in compose configurations.
+"@
+            } elseif ($s -eq "git-workflow") {
+                $content = @"
+---
+name: git-workflow
+version: 1.0.0
+description: Conventional commit standards, branch management, safe rebasing, and merge conflict resolution.
+triggers: ["git", "commit", "branch", "pr", "pull-request", "merge", "conflict", "rebase"]
+---
+
+# Skill: Git Workflow & Release Management
+
+## Overview
+Standard procedures for feature branching, atomic conventional commits, interactive rebasing, merge conflict resolution, and safe remote synchronization.
+
+## When to Activate
+- When staging, committing, or pushing code changes to remote repositories.
+- When creating pull requests, managing feature branches, or tagging releases.
+- When resolving git merge or rebase conflicts.
+
+## Workflows & Procedures
+1. Conventional Commits: Use feat:, fix:, docs:, refactor:, chore: prefixes.
+2. Safe Rebasing: Always rebase against main branch (git fetch origin && git rebase origin/main).
+3. Conflict Resolution: Inspect conflict markers, decide ours vs theirs, resolve, test, and continue.
+"@
+            } elseif ($s -eq "server-diagnostics") {
+                $content = @"
+---
+name: server-diagnostics
+version: 1.0.0
+description: Real-time system health checks, RAM/swap usage, CPU load, open ports, and network connectivity diagnostics.
+triggers: ["health", "ram", "cpu", "swap", "diagnostics", "server", "port", "disk", "uptime"]
+---
+
+# Skill: Server Diagnostics & Resource Health
+
+## Overview
+Comprehensive runbook for assessing server stability, inspecting hardware memory buffers, verifying swap allocation, auditing listening network ports, and monitoring active background processes.
+
+## When to Activate
+- When experiencing system slowdowns, high latency, or OOM kill events.
+- When checking server resource headroom before running heavy builds or containers.
+- When verifying open ports, firewall status, or Cloudflare tunnel connectivity.
+
+## Workflows & Procedures
+1. RAM & Swap: free -h (alert if available memory < 200MB).
+2. CPU & Load: uptime, ps aux --sort=-%cpu | head -n 6.
+3. Disk & Inodes: df -h /, df -i /.
+4. Ports: sudo ss -tulpn.
+"@
+            } elseif ($s -eq "browser-testing") {
+                $content = @"
+---
+name: browser-testing
+version: 1.0.0
+description: Automated web UI verification, Playwright/Puppeteer automation, and dev endpoint testing using context.local.md.
+triggers: ["browser", "playwright", "puppeteer", "ui-test", "login-test", "headless", "screenshot"]
+---
+
+# Skill: Browser Testing & Local UI Verification
+
+## Overview
+Automated procedures for conducting browser testing, verifying web UI flows, performing login checks using mock fixtures from context.local.md, and preventing credential amnesia.
+
+## When to Activate
+- When verifying frontend web pages, UI components, forms, or authentication flows.
+- When running Playwright, Puppeteer, or Chrome DevTools automated actions.
+- When capturing screenshots or checking console errors on local dev servers.
+
+## Workflows & Procedures
+1. Read context.local.md for mock accounts (admin@test.local) and local ports.
+2. Launch test automation script or browser action.
+3. Capture error screenshots in local scratch directory if assertions fail.
+"@
+            }
+            [System.IO.File]::WriteAllText($sFile, $content, [System.Text.Encoding]::UTF8)
+        }
+        Write-Host "  [✓] Generated: .agents\skills\$s\SKILL.md (Two-Tier Progressive)" -ForegroundColor Green
+    } else {
+        Write-Host "  [*] Preserved: .agents\skills\$s\SKILL.md" -ForegroundColor Yellow
+    }
+}
+
+# 8. Gitignore Hardening for context.local.md and .env
 $GitIgnoreFile = Join-Path $ProjectDir ".gitignore"
 if (-not $DryRun) {
     if (-not (Test-Path $GitIgnoreFile)) {
@@ -907,7 +1126,7 @@ node_modules/
     }
 }
 
-# 8. Git
+# 9. Git
 $GitDir = Join-Path $ProjectDir ".git"
 if (-not (Test-Path $GitDir)) {
     if (-not $DryRun) {

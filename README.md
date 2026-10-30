@@ -201,11 +201,13 @@ init-context -NewSkill server-diagnostics -Global
 ```
 
 #### Method B: Manual File Creation
-Create a folder and file at `.agents/skills/deploy-docker/SKILL.md`:
+Create a folder and file at `.agents/skills/deploy-docker/SKILL.md` with standard YAML frontmatter:
 ```markdown
 ---
 name: deploy-docker
+version: 1.0.0
 description: Step-by-step procedure to build and deploy dockerized containers.
+triggers: ["docker", "container", "compose", "dockerfile"]
 ---
 
 # Skill: Docker Deployment Runbook
@@ -223,6 +225,40 @@ description: Step-by-step procedure to build and deploy dockerized containers.
    docker compose ps
    ```
 ```
+
+---
+
+## ⚡ Two-Tier Progressive Disclosure (Token-Optimized Architecture)
+
+To avoid context window bloat and burning 20k–30k tokens at session startup, Auto-Context enforces a **Two-Tier Progressive Disclosure Protocol**:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Tier 1: Lightweight Index in context.md (~150 Tokens)                       │
+│ - Lists: Skill Name, Version, One-line Description, Trigger Keywords       │
+│ - Target Token Budget: < 800 tokens at boot                                 │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ When user prompt matches trigger
+                                       ▼ (e.g. "build docker container")
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Tier 2: On-Demand Dynamic Loading (read_file)                               │
+│ - Agent inspects .agents/skills/<skill-name>/SKILL.md                       │
+│ - Executes the step-by-step procedure and concludes                         │
+│ - Future chats remain clean and unbloated!                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 📦 Default Starter Pack (Built-in Rules & Skills)
+Every initialized project automatically comes equipped with:
+* **Default Rules:**
+  1. `maintain_context.md`: Autonomous context sync, self-evolution, and progressive disclosure protocol.
+  2. `security-boundaries.md`: Zero plaintext secrets in Git, strict `.env` isolation.
+  3. `code-standards.md`: Clean code, DRY principles, early returns, and conventional commits.
+* **Default Skills:**
+  1. `docker-ops`: Multi-stage Dockerfiles, compose setups, container diagnostics, cleanup.
+  2. `git-workflow`: Conventional commits, branch hygiene, safe rebasing, merge conflict resolution.
+  3. `server-diagnostics`: RAM/swap health checks, CPU load, open sockets, disk utilization.
+  4. `browser-testing`: UI and mock API automation using `context.local.md` without credential amnesia.
 
 ---
 
@@ -333,6 +369,9 @@ To prevent **Prompt Injection Leaks** and keep production secrets safe:
   init-context -s my-skill-name      # বর্তমান প্রজেক্টের জন্য
   init-context -s my-skill-name -g   # সকল প্রজেক্টের জন্য গ্লোবালি
   ```
+
+### ⚡ টু-টায়ার প্রোগ্রেসিভ ডিসক্লোজার (টোকেন সাশ্রয়ী আর্কিটেকচার):
+শুরুতেই সব স্কিলের বড় ফাইল লোড করে চ্যাট ভারী করা হয় না। এআই শুরুতে মাত্র ১৫০–২০০ টোকেনের একটি ইনডেক্স (`context.md` Section 5) পড়ে। যখন নির্দিষ্ট টাস্কের কিওয়ার্ড মিলবে (যেমন: "docker", "rebase", "diagnostics", "ui test"), কেবল তখনই সংশ্লিষ্ট পূর্ণাঙ্গ স্কিলটি অন-ডিমান্ড মেমরিতে লোড হয়। ফলে টোকেন খরচ প্রায় ৮০% হ্রাস পায়!
 
 ### নিরাপদ MCP টুল ম্যানেজমেন্ট (Secure Secrets via .env):
 টোকেন বা পাসওয়ার্ড কখনোই কনফিগ ফাইলে ওপেন টেক্সটে সেভ হয় না, বরং `.env` এবং `.gitignore`-এর মাধ্যমে নিরাপদ থাকে:

@@ -1,6 +1,8 @@
 ---
 name: {{SKILL_NAME}}
+version: 1.0.0
 description: Describe what this skill accomplishes and the specific keywords or conditions under which the agent should activate it.
+triggers: ["{{SKILL_NAME}}", "keyword1", "keyword2"]
 ---
 
 # Skill: {{SKILL_TITLE}}

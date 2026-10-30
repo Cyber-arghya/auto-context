@@ -42,3 +42,8 @@ You have native access to run `init-context` via terminal commands:
 - **Strict Mock Boundary:** ONLY store dummy test credentials, mock accounts (`admin@test.local`), seed users, and local dev ports in `context.local.md`.
 - **Zero Real Secrets:** Real production secrets, payment keys, or personal tokens MUST NEVER be stored in `context.local.md` or `context.md`; reference them via `.env` or system environment variables.
 - **Git Protection:** Ensure `context.local.md` remains strictly ignored by Git (`.gitignore`) and protected with `chmod 600`.
+
+### 6. Two-Tier Progressive Disclosure Protocol (Token Optimization)
+- **Initial Boot Budget:** NEVER read full `SKILL.md` files into the initial context. Use Section 5 of `context.md` for lightweight routing (< 800 tokens).
+- **Dynamic On-Demand Loading:** Only when a user prompt matches a skill's triggers (e.g. "docker", "rebase", "diagnostics", "browser"), dynamically inspect the file using `read_file`.
+- **Zero Session Bloat:** Once the task concludes, do not keep the full skill body in persistent memory.

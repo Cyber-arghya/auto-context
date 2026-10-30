@@ -30,3 +30,7 @@ trigger: always_on
    - For local dev logins, automated browser testing, and mock fixtures, inspect and update `context.local.md`.
    - Never store real production secrets or payment tokens in markdown files. Real secrets belong in `.env`.
    - Ensure `context.local.md` is strictly git-ignored and protected with `chmod 600`.
+
+6. **Two-Tier Progressive Disclosure**:
+   - Never load full `SKILL.md` bodies into the initial context. Use Section 5 of `context.md` for routing.
+   - Dynamically load specific skills via `read_file` only when a user prompt matches their triggers.
