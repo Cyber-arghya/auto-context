@@ -21,12 +21,17 @@
 
 No manual downloads or complex PATH configurations required. Run the command matching your terminal:
 
-### 🪟 Windows (PowerShell / `pwsh`):
+### 📦 Universal via `uv` (Fastest, Windows / Mac / Linux / WSL2):
+```bash
+uv tool install git+https://github.com/Cyber-arghya/auto-context.git
+```
+
+### 🪟 Windows (PowerShell / `pwsh` 1-Click):
 ```powershell
 irm https://raw.githubusercontent.com/Cyber-arghya/auto-context/main/install.ps1 | iex
 ```
 
-### 🐧 Linux / WSL2 / macOS (Bash / Zsh):
+### 🐧 Linux / WSL2 / macOS (Bash / Zsh 1-Click):
 ```bash
 curl -sSL https://raw.githubusercontent.com/Cyber-arghya/auto-context/main/install.sh | bash
 ```
@@ -516,22 +521,27 @@ To prevent **Prompt Injection Leaks** and keep production secrets safe:
 
 ```text
 auto-context/
-├── bin/
-│   ├── init-context                 # POSIX Bash CLI executable
-│   ├── init-context.ps1             # PowerShell native script
-│   └── init-context.cmd             # Windows CMD launcher
+├── pyproject.toml                   # Modern PEP 517/621 package & CLI configuration
+├── src/
+│   └── auto_context/
+│       ├── __init__.py
+│       ├── main.py                  # Root Typer CLI & backwards-compatible flag router
+│       ├── config.py                # Centralized paths (~/.auto-context, ~/.gemini, etc.)
+│       ├── security.py              # Zero-Bypass secret scanner & credential auditor
+│       ├── commands/
+│       │   ├── init_cmd.py          # Workspace scaffolding & stack detection
+│       │   ├── memory.py            # Central private git repo brain management
+│       │   ├── mcp.py               # Native JSON MCP registry & runtime selector
+│       │   ├── share.py             # Granular Gist publishing via gh / httpx
+│       │   └── import_cmd.py        # Remote URL / Gist import & collision guard
+│       └── templates/               # Package-bundled Markdown & JSON templates
 ├── plugin/                          # Antigravity Global Plugin bundle
 │   ├── plugin.json                  # Manifest
 │   ├── rules/AGENTS.md              # Global standing rule
 │   └── skills/auto-context/SKILL.md # Progressive disclosure skill
-├── templates/                       # Boilerplate templates
-│   ├── context.template.md
-│   ├── GEMINI.template.md
-│   ├── AGENTS.template.md
-│   └── maintain_context.template.md
-├── install.sh                       # 1-Line remote installer (Linux / WSL2 / macOS)
-├── install.ps1                      # 1-Line remote installer (Windows PowerShell)
-├── setup.bat                        # Offline double-clickable installer
+├── install.sh                       # 1-Click universal installer (Linux / WSL2 / macOS)
+├── install.ps1                      # 1-Click universal installer (Windows PowerShell)
+├── setup.bat                        # Double-clickable Windows setup
 ├── uninstall.sh                     # Clean uninstaller for POSIX
 ├── uninstall.ps1                    # Clean uninstaller for Windows
 ├── LICENSE                          # MIT License

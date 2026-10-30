@@ -6,20 +6,17 @@
 # ==============================================================================
 set -euo pipefail
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+echo ">>> Uninstalling Auto-Context..."
 
-echo -e "\n${YELLOW}>>> Uninstalling Auto-Context...${NC}"
+if command -v uv &>/dev/null; then
+    uv tool uninstall auto-context 2>/dev/null || true
+fi
+if command -v pipx &>/dev/null; then
+    pipx uninstall auto-context 2>/dev/null || true
+fi
 
-# Remove binary
-rm -f "$HOME/.local/bin/init-context" "/usr/local/bin/init-context" 2>/dev/null || true
-echo -e "  ${GREEN}[✓] Removed CLI binary.${NC}"
+PLUGIN_DIR="$HOME/.gemini/config/plugins/auto-context"
+rm -rf "$PLUGIN_DIR"
+echo "  [✓] Removed global plugin directory"
 
-# Remove plugin
-rm -rf "$HOME/.gemini/config/plugins/auto-context" 2>/dev/null || true
-echo -e "  ${GREEN}[✓] Removed global plugin directory.${NC}"
-
-echo -e "\n${GREEN}Auto-Context uninstalled successfully.${NC}\n"
-
+echo "Auto-Context uninstalled successfully."
