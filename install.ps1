@@ -9,7 +9,7 @@
 param()
 
 $RepoRaw = "https://raw.githubusercontent.com/Cyber-arghya/auto-context/main"
-$RepoGit = "git+https://github.com/Cyber-arghya/auto-context.git"
+$PackageName = "auto-context-cli"
 $Version = "1.0.0"
 
 Write-Host ""
@@ -40,7 +40,7 @@ if (Get-Command "uv" -ErrorAction SilentlyContinue) {
     if ($IsLocal) {
         uv tool install $ScriptDir --force
     } else {
-        uv tool install $RepoGit --force
+        uv tool install $PackageName --force
     }
     if ($LASTEXITCODE -eq 0) { $Installed = $true }
 }
@@ -50,7 +50,7 @@ if (-not $Installed -and (Get-Command "pipx" -ErrorAction SilentlyContinue)) {
     if ($IsLocal) {
         pipx install $ScriptDir --force
     } else {
-        pipx install $RepoGit --force
+        pipx install $PackageName --force
     }
     if ($LASTEXITCODE -eq 0) { $Installed = $true }
 }
@@ -60,14 +60,14 @@ if (-not $Installed -and (Get-Command "python" -ErrorAction SilentlyContinue)) {
     if ($IsLocal) {
         python -m pip install $ScriptDir --quiet
     } else {
-        python -m pip install $RepoGit --quiet
+        python -m pip install $PackageName --quiet
     }
     if ($LASTEXITCODE -eq 0) { $Installed = $true }
 }
 
 if (-not $Installed) {
-    Write-Host "`n[✗] Installation failed. Please install uv (https://docs.astral.sh/uv/) and run:" -ForegroundColor Red
-    Write-Host "    uv tool install $RepoGit" -ForegroundColor Yellow
+    Write-Host "`n[✗] Installation failed. Run manually via pip or uv:" -ForegroundColor Red
+    Write-Host "    pip install $PackageName" -ForegroundColor Yellow
     exit 1
 }
 

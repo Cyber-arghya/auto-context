@@ -9,7 +9,7 @@
 set -euo pipefail
 
 REPO_RAW="https://raw.githubusercontent.com/Cyber-arghya/auto-context/main"
-REPO_GIT="git+https://github.com/Cyber-arghya/auto-context.git"
+PACKAGE_NAME="auto-context-cli"
 VERSION="1.0.0"
 
 CYAN='\033[0;36m'
@@ -44,7 +44,7 @@ if command -v uv &>/dev/null; then
     if [ "$IS_LOCAL" = true ]; then
         uv tool install "$SCRIPT_DIR" --force
     else
-        uv tool install "$REPO_GIT" --force
+        uv tool install "$PACKAGE_NAME" --force
     fi
     INSTALLED=true
 elif command -v pipx &>/dev/null; then
@@ -52,7 +52,7 @@ elif command -v pipx &>/dev/null; then
     if [ "$IS_LOCAL" = true ]; then
         pipx install "$SCRIPT_DIR" --force
     else
-        pipx install "$REPO_GIT" --force
+        pipx install "$PACKAGE_NAME" --force
     fi
     INSTALLED=true
 elif command -v python3 &>/dev/null; then
@@ -60,14 +60,14 @@ elif command -v python3 &>/dev/null; then
     if [ "$IS_LOCAL" = true ]; then
         python3 -m pip install "$SCRIPT_DIR" --quiet
     else
-        python3 -m pip install "$REPO_GIT" --quiet
+        python3 -m pip install "$PACKAGE_NAME" --quiet
     fi
     INSTALLED=true
 fi
 
 if [ "$INSTALLED" = false ]; then
-    echo -e "\n${RED}[✗] Installation failed. Please install uv (https://docs.astral.sh/uv/) and run:${NC}"
-    echo -e "    ${YELLOW}uv tool install $REPO_GIT${NC}"
+    echo -e "\n${RED}[✗] Installation failed. Run manually via pip or uv:${NC}"
+    echo -e "    ${YELLOW}pip install $PACKAGE_NAME${NC}"
     exit 1
 fi
 

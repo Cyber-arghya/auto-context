@@ -4,10 +4,12 @@
 
 **Autonomous Context & Instruction Management Protocol for AI Coding Assistants**
 
+[![PyPI - Version](https://img.shields.io/pypi/v/auto-context-cli.svg?color=blue)](https://pypi.org/project/auto-context-cli/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/auto-context-cli.svg)](https://pypi.org/project/auto-context-cli/)
+[![GitHub Release](https://img.shields.io/github/v/release/Cyber-arghya/auto-context?color=green)](https://github.com/Cyber-arghya/auto-context/releases/tag/v1.0.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20PowerShell%20%7C%20Linux%20WSL2%20%7C%20macOS-success.svg)](#-quick-one-line-install)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux%20WSL2-success.svg)](#-quick-one-line-install)
 [![AI Supported](https://img.shields.io/badge/AI%20Supported-Antigravity%20%7C%20Cursor%20%7C%20Claude%20Code%20%7C%20Copilot%20%7C%20Windsurf-orange.svg)](#-supported-ai-assistants)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Cyber-arghya/auto-context/pulls)
 
 *Never lose context, forgotten architecture decisions, or unlogged bug fixes again.*
 
@@ -19,19 +21,26 @@
 
 ## ⚡ Quick One-Line Install
 
-No manual downloads or complex PATH configurations required. Run the command matching your terminal:
+No manual git clones or complex PATH configurations required. Install directly via PyPI or using our 1-click installer:
 
-### 📦 Universal via `uv` (Fastest, Windows / Mac / Linux / WSL2):
+### 📦 Direct via PyPI (Universal - Windows, macOS, Linux, WSL2):
 ```bash
-uv tool install git+https://github.com/Cyber-arghya/auto-context.git
+# Recommended via uv (fast & isolated):
+uv tool install auto-context-cli
+
+# Or via standard pip:
+pip install auto-context-cli
+
+# Or via pipx:
+pipx install auto-context-cli
 ```
 
-### 🪟 Windows (PowerShell / `pwsh` 1-Click):
+### 🪟 Windows (PowerShell / `pwsh` 1-Click Installer):
 ```powershell
 irm https://raw.githubusercontent.com/Cyber-arghya/auto-context/main/install.ps1 | iex
 ```
 
-### 🐧 Linux / WSL2 / macOS (Bash / Zsh 1-Click):
+### 🐧 Linux / WSL2 / macOS (Bash / Zsh 1-Click Installer):
 ```bash
 curl -sSL https://raw.githubusercontent.com/Cyber-arghya/auto-context/main/install.sh | bash
 ```
@@ -440,11 +449,17 @@ To prevent **Prompt Injection Leaks** and keep production secrets safe:
 3. **পাসওয়ার্ড ও পোর্ট ভল্ট:** সার্ভারের স্ট্যাটিক আইপি, ক্লাউডফ্লেয়ার টানেল আইডি বা ডাটাবেজ পোর্ট সবসময় এক ফাইলে নিখুঁতভাবে থাকবে।
 
 ### ইনস্টলেশন ও ব্যবহার:
-* **উইন্ডোজ পাওয়ারশেল (PowerShell)-এ:**
+* **PyPI থেকে সরাসরি ইনস্টল করতে (সবার জন্য সহজ):**
+  ```bash
+  pip install auto-context-cli
+  # অথবা uv দিয়ে:
+  uv tool install auto-context-cli
+  ```
+* **উইন্ডোজ পাওয়ারশেল (1-Click Installer):**
   ```powershell
   irm https://raw.githubusercontent.com/Cyber-arghya/auto-context/main/install.ps1 | iex
   ```
-* **লিনাক্স / WSL2-এ:**
+* **লিনাক্স / WSL2 / macOS (1-Click Installer):**
   ```bash
   curl -sSL https://raw.githubusercontent.com/Cyber-arghya/auto-context/main/install.sh | bash
   ```
