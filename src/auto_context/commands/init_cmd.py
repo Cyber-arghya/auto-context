@@ -248,7 +248,10 @@ def new_rule(
         )
 
     _write_if_missing(dest_file, content, force=force, dry_run=dry_run)
-    scope = "GLOBAL Plugin" if global_ else f"LOCAL ({dest_dir})"
+    if global_ and config.MEMORY_DIR.exists():
+        mem_dest = config.MEMORY_DIR / "rules" / f"{clean_name}.md"
+        _write_if_missing(mem_dest, content, force=force, dry_run=dry_run)
+    scope = "GLOBAL Plugin & Central Memory" if global_ else f"LOCAL ({dest_dir})"
     console.print(Panel(
         f"[bold green]✨ New Rule Created![/]\n"
         f"[yellow]   Name:[/]  {clean_name}\n"
@@ -293,7 +296,10 @@ def new_skill(
         )
 
     _write_if_missing(dest_file, content, force=force, dry_run=dry_run)
-    scope = "GLOBAL Plugin" if global_ else f"LOCAL ({dest_dir})"
+    if global_ and config.MEMORY_DIR.exists():
+        mem_dest = config.MEMORY_DIR / "skills" / clean_name / "SKILL.md"
+        _write_if_missing(mem_dest, content, force=force, dry_run=dry_run)
+    scope = "GLOBAL Plugin & Central Memory" if global_ else f"LOCAL ({dest_dir})"
     console.print(Panel(
         f"[bold green]🎯 New Skill Created![/]\n"
         f"[yellow]   Name:[/]  {clean_name}\n"
