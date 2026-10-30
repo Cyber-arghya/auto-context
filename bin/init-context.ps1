@@ -496,7 +496,9 @@ if ($AddMcp) {
         Write-Host "   🔒 Secret Safety: Token referenced via `${$SecureVarName} (stored in .env / env vars)" -ForegroundColor Green
     }
     Write-Host "=====================================================================" -ForegroundColor Cyan
-    Write-Host "   The AI assistant can now discover and invoke this MCP tool natively!" -ForegroundColor White
+    Write-Host "   [i] Session Notice: Host clients (Antigravity, Cursor, Claude Desktop) discover MCP tools at session start." -ForegroundColor Yellow
+    Write-Host "       Reload window or start a new chat to activate native MCP tool calls." -ForegroundColor Yellow
+    Write-Host "       For immediate mid-flight execution in this session, use CLI tools (e.g. sqlite3, gh, curl)." -ForegroundColor White
     Write-Host ""
     exit 0
 }

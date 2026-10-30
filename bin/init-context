@@ -600,7 +600,9 @@ with open(cfg_path, 'w') as fp:
         echo -e "   ${GREEN}🔒 Secret Safety:${NC} Token referenced via ${YELLOW}\${${SECURE_VAR_NAME}}${NC} (stored in .env / env vars)"
     fi
     echo -e "${CYAN}=====================================================================${NC}"
-    echo -e "   The AI assistant can now discover and invoke this MCP tool natively!\n"
+    echo -e "   ${YELLOW}[i] Session Notice:${NC} Host clients (Antigravity, Cursor, Claude Desktop) discover MCP tools at session start."
+    echo -e "       ${BOLD}Reload window or start a new chat${NC} to activate native MCP tool calls."
+    echo -e "       For immediate mid-flight execution in this session, use CLI tools (e.g. sqlite3, gh, curl).\n"
     exit 0
 fi
 

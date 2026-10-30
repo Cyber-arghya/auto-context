@@ -117,6 +117,13 @@ init-context --remove-mcp sqlite
 init-context --remove-mcp github -g
 ```
 
+### 💡 Lifecycle Note: Mid-Flight Execution vs. Next-Session MCP (হাইব্রিড মডেল)
+> **Host Client Reality:** Most MCP host environments (Antigravity IDE, Cursor, Claude Desktop) load MCP tools **only during session startup**. Modifying `mcp_config.json` mid-session configures the tool for future turns, but requires a session reload/restart before the LLM's active tool schema updates.
+> 
+> **Recommended Dual-Path Strategy:**
+> 1. **Current Session (Immediate):** The AI uses CLI commands / scripts (`sqlite3`, `gh`, `curl`) to complete the task right now without interruption.
+> 2. **Persistent Setup (Future Sessions):** `init-context --add-mcp <name>` configures the native MCP tool so it is permanently ready upon next session start or window reload.
+
 ---
 
 ## 🛠️ Adding Custom Skills & Rules (কাস্টম স্কিল ও রুল যুক্ত করার নিয়ম)
