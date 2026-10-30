@@ -60,6 +60,17 @@ OPTIONS (CONTEXT & RULES):
   -v, --version             Display current version
   -h, --help                Show help documentation
 
+OPTIONS (CENTRAL MEMORY & GRANULAR SHARING):
+  memory init [REPO]        Initialize private central memory repo (~/.auto-context/memory)
+  memory push               Audit secrets & push memory brain to private GitHub repo
+  memory pull [URL]         Pull & sync central memory brain from remote repo
+  memory status             Show status of central memory brain
+  share <NAME>              Audit & publish skill or rule to GitHub Gist
+  import <URL>              Audit & import skill or rule from GitHub Gist or URL
+  --as <NAME>               Custom name when importing a skill or rule
+  --public                  Publish shared Gist as public (default)
+  --secret, --private       Publish shared Gist as unlisted/secret
+
 OPTIONS (MCP TOOLING):
   --add-mcp <NAME>          Add or update an MCP server configuration
   --remove-mcp <NAME>       Remove an MCP server from configuration
@@ -273,6 +284,87 @@ Every initialized project automatically comes equipped with:
 
 ---
 
+## 🧠 Central Memory Brain & Dotfiles Culture for AI Agents
+
+Developers maintain `.dotfiles` on GitHub to configure any Linux/macOS machine in seconds. **Auto-Context** brings this exact dotfiles paradigm to **AI Coding Agents**:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Developer's Workstations & Cloud VMs                     │
+│  [Ubuntu Server / WSL2]          [Windows Desktop]         [macOS Laptop]   │
+│         │                               │                        │          │
+│         ▼                               ▼                        ▼          │
+│  ~/.auto-context/memory         ~/.auto-context/memory   ~/.auto-context... │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ 🔒 Pre-Push Zero-Bypass Secret Auditor
+                                       ▼ (Rejects tokens, certs, .env)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│               Private GitHub Repository: auto-context-memory                │
+│ - profile.md: Developer communication style, language, & clean code rules   │
+│ - rules/: Machine-wide coding guidelines synced across all projects          │
+│ - skills/: Curated runbooks, workflows, and diagnostics                      │
+│ - Zero Data Loss: Reinstall OS and run 'init-context memory pull' to restore!│
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1️⃣ Initialize Your Private Brain (`memory init`)
+Initializes local storage (`~/.auto-context/memory`), generates `profile.md`, hardens `.gitignore`, and automatically creates a **strictly Private** repository on GitHub:
+
+```bash
+# Initialize with default private repo name (auto-context-memory)
+init-context memory init
+
+# Or customize private repository name
+init-context memory init my-agent-brain
+```
+
+> [!IMPORTANT]
+> **Strictly Private Flag Enforcement:** `memory init` automatically injects the `--private` flag into `gh repo create` without bypass. Your developer habits and server notes will never be published publicly by mistake.
+
+### 2️⃣ Pre-Push Secret Auditor with Zero-Bypass Hard-Block (`memory push`)
+Before committing or pushing to your private memory repository, Auto-Context recursively audits every file:
+* **Prohibited Files:** `.env`, `.env.*`, `id_rsa`, `id_ed25519`, `authorized_keys`, `known_hosts`
+* **Prohibited Keys:** `*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.kdbx`
+* **Prohibited Tokens:** `ghp_`, `sk_live_`, `sk-ant-`, `AIza`, `AKIA`, `BEGIN PRIVATE KEY`, or hardcoded passwords.
+
+If any secret is detected, the script **immediately terminates with Exit 1**, printing the exact file path, line number, pattern, and masked preview. Zero secrets reach remote storage!
+
+```bash
+init-context memory push
+```
+
+### 3️⃣ Granular Sharing via GitHub Gist (`share <name>`)
+Share a single battle-tested skill or rule with the developer community without exposing your private memory brain:
+
+```bash
+# Share a skill as a public GitHub Gist
+init-context share git-workflow
+
+# Or share as an unlisted/secret Gist
+init-context share docker-ops --secret
+```
+
+Outputs a direct shareable Gist link and the exact 1-liner for other developers to import it.
+
+### 4️⃣ Gist Import with Collision Guard (`import <url>`)
+Import any shared skill or rule directly into your local project or global brain:
+
+```bash
+# Import into local project (.agents/skills/<name>/SKILL.md)
+init-context import https://gist.github.com/Cyber-arghya/4d9e7b415a772c91ba2066fa19b8df9c
+
+# Import globally across all projects (~/.gemini/config/plugins/auto-context/skills/)
+init-context import <gist-url> --global
+
+# Import with a custom local name
+init-context import <gist-url> --as custom-deploy-skill
+```
+
+> [!TIP]
+> **Collision Guard (Overwrite Protection):** If an imported skill or rule already exists with the same name, Auto-Context will never silently overwrite it. In an interactive terminal, it prompts you: `[O]verwrite / [R]ename / [C]ancel`. In non-interactive CI/CD, it safely exits with `1` unless `--force` is explicitly provided.
+
+---
+
 ## 💡 How It Works
 
 ```mermaid
@@ -372,6 +464,35 @@ To prevent **Prompt Injection Leaks** and keep production secrets safe:
 
 ### ⚡ টু-টায়ার প্রোগ্রেসিভ ডিসক্লোজার (টোকেন সাশ্রয়ী আর্কিটেকচার):
 শুরুতেই সব স্কিলের বড় ফাইল লোড করে চ্যাট ভারী করা হয় না। এআই শুরুতে মাত্র ১৫০–২০০ টোকেনের একটি ইনডেক্স (`context.md` Section 5) পড়ে। যখন নির্দিষ্ট টাস্কের কিওয়ার্ড মিলবে (যেমন: "docker", "rebase", "diagnostics", "ui test"), কেবল তখনই সংশ্লিষ্ট পূর্ণাঙ্গ স্কিলটি অন-ডিমান্ড মেমরিতে লোড হয়। ফলে টোকেন খরচ প্রায় ৮০% হ্রাস পায়!
+
+### 🧠 সেন্ট্রাল মেমরি ব্রেইন ও ডটফাইলস (Disaster Recovery & Dotfiles):
+যেমনভাবে লিনাক্সে `.dotfiles` দিয়ে চোখের পলকে সব কনফিগারেশন সেটআপ করা যায়, তেমনি Auto-Context দিয়ে আপনার এআই এজেন্টের মেমরি ও স্কিল ক্লাউডে নিরাপদে সেভ থাকে:
+1. **প্রাইভেট মেমরি তৈরি (`memory init`):**
+   ```bash
+   init-context memory init          # স্বয়ংক্রিয়ভাবে গিটহাবে Private রিপোজিটরি তৈরি করবে
+   ```
+2. **জিরো-বাইপাস সিক্রেট অডিটর ও পুশ (`memory push`):**
+   মেমরি পুশ করার আগে স্ক্রিপ্টটি প্রতিটি ফাইল স্ক্যান করে। কোনো ফাইলে ভুলবশত টোকেন (`ghp_`, `sk_live_`, `AIza`, ইত্যাদি) বা `.env` ফাইল থাকলে স্ক্রিপ্ট তৎক্ষণাৎ Exit 1 দিয়ে আটকে দেয় এবং ফাইলের নাম ও লাইন নাম্বার দেখিয়ে দেয়:
+   ```bash
+   init-context memory push          # সিক্রেট অডিট পাস করলে তবেই পুশ হবে
+   ```
+3. **অন্যান্য পিসি বা ওএস-এ মেমরি রিকভারি (`memory pull`):**
+   ```bash
+   init-context memory pull <repo-url> # সম্পূর্ণ মেমরি ও স্কিল নতুন মেশিনে নিমেষেই সচল
+   ```
+
+### 🤝 গ্র্যানুলার শেয়ারিং ও কলিশন গার্ড (Share & Import):
+পুরো প্রাইভেট রিপো না পাঠিয়ে শুধুমাত্র একটি নির্দিষ্ট স্কিল বা রুল বন্ধুদের সাথে গিস্টের মাধ্যমে শেয়ার করতে পারবেন:
+* **স্কিল শেয়ার করতে:**
+  ```bash
+  init-context share git-workflow   # GitHub Gist লিংক তৈরি করে দেবে
+  ```
+* **শেয়ারকৃত স্কিল ইমপোর্ট করতে (ওভাররাইট সুরক্ষা):**
+  ```bash
+  init-context import <gist-url>    # লোকাল প্রজেক্টে যুক্ত করবে
+  init-context import <gist-url> -g # গ্লোবাল এআই প্লাগইনে যুক্ত করবে
+  ```
+  > **কলিশন গার্ড:** যদি একই নামের কোনো স্কিল আগে থেকেই থেকে থাকে, তবে এটি না জানিয়ে কখনো ওভাররাইট করবে না। টার্মিনালে আপনাকে ৩টি অপশন দেবে: `[O]verwrite / [R]ename / [C]ancel`।
 
 ### নিরাপদ MCP টুল ম্যানেজমেন্ট (Secure Secrets via .env):
 টোকেন বা পাসওয়ার্ড কখনোই কনফিগ ফাইলে ওপেন টেক্সটে সেভ হয় না, বরং `.env` এবং `.gitignore`-এর মাধ্যমে নিরাপদ থাকে:

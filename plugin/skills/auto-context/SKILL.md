@@ -42,3 +42,19 @@ Use this skill when initializing context for a project, scaffolding new agent ru
    * Automatically generated with `chmod 600` and protected by `.gitignore`.
    * Holds mock logins, seed users (`admin@test.local`), and local dev ports for browser testing.
    * Real production secrets are strictly prohibited (they reside in `.env`).
+
+6. **Central Memory Brain & Disaster Recovery:**
+   ```bash
+   init-context memory init [repo-name]   # Creates strictly private GitHub brain
+   init-context memory push               # Zero-bypass secret audit & push to GitHub
+   init-context memory pull [repo-url]    # Pull and synchronize brain to new machine
+   ```
+   * Enforces `--private` flag during remote creation.
+   * Scans every file for tokens, keys, and `.env` before pushing (hard-blocks with Exit 1 on secret detection).
+
+7. **Granular Skill Sharing & Safe Import:**
+   ```bash
+   init-context share <name>              # Share skill or rule via GitHub Gist
+   init-context import <url> [--as <name>] # Import external skill with Collision Guard
+   ```
+   * Collision Guard protects against accidental overwrites with `[O]verwrite / [R]ename / [C]ancel`.

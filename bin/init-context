@@ -40,6 +40,14 @@ MCP_ENV=""
 MCP_ENV_VAR=""
 MCP_ENV_FILE=""
 
+# Central Memory & Granular Sharing Defaults
+MEMORY_ACTION=""
+MEMORY_ARG=""
+SHARE_NAME=""
+IMPORT_URL=""
+IMPORT_AS=""
+SHARE_VISIBILITY="public"
+
 show_help() {
     printf "%binit-context%b - Autonomous Context, Instruction & Tool Manager for AI Coding Agents\n\n" "$BOLD" "$NC"
     printf "%bUSAGE:%b\n" "$BOLD" "$NC"
@@ -52,6 +60,16 @@ show_help() {
     printf "    -d, --dry-run             Preview generated files without writing to disk\n"
     printf "    -v, --version             Display current version (%s)\n" "$VERSION"
     printf "    -h, --help                Show this help message\n\n"
+    printf "%bOPTIONS (CENTRAL MEMORY & GRANULAR SHARING):%b\n" "$BOLD" "$NC"
+    printf "    memory init [REPO]        Initialize private central memory repo (~/.auto-context/memory)\n"
+    printf "    memory push               Audit secrets & push memory brain to private GitHub repo\n"
+    printf "    memory pull [URL]         Pull & sync central memory brain from remote repo\n"
+    printf "    memory status             Show status of central memory brain\n"
+    printf "    share <NAME>              Audit & publish skill or rule to GitHub Gist\n"
+    printf "    import <URL>              Audit & import skill or rule from GitHub Gist or URL\n"
+    printf "    --as <NAME>               Custom name when importing a skill or rule\n"
+    printf "    --public                  Publish shared Gist as public (default)\n"
+    printf "    --secret, --private       Publish shared Gist as unlisted/secret\n\n"
     printf "%bOPTIONS (MCP TOOLING & SECRETS):%b\n" "$BOLD" "$NC"
     printf "    --add-mcp <NAME>          Add or update an MCP server configuration\n"
     printf "    --remove-mcp <NAME>       Remove an MCP server configuration\n"
@@ -68,6 +86,11 @@ show_help() {
     printf "    init-context                              # Initialize current project\n"
     printf "    init-context -r code-standards            # Create a new local rule\n"
     printf "    init-context -s deploy-docker             # Create a new local skill\n"
+    printf "    init-context memory init                  # Create private GitHub central memory\n"
+    printf "    init-context memory push                  # Audit secrets and push to GitHub\n"
+    printf "    init-context memory pull                  # Pull and update central memory\n"
+    printf "    init-context share git-workflow           # Share skill via GitHub Gist\n"
+    printf "    init-context import <gist-url>            # Import shared skill (with collision guard)\n"
     printf "    init-context --add-mcp sqlite             # Add SQLite MCP (auto uvx vs npx)\n"
     printf "    init-context --add-mcp sqlite --runtime uvx # Force Python uvx runner\n"
     printf "    init-context --add-mcp git --runtime uvx  # Add Python Git MCP server\n"
@@ -138,6 +161,49 @@ while [[ $# -gt 0 ]]; do
             LIST_MCP=true
             shift
             ;;
+        memory|--memory)
+            shift
+            MEMORY_ACTION="${1:-status}"
+            shift || true
+            if [[ $# -gt 0 && "$1" != -* ]]; then
+                MEMORY_ARG="$1"
+                shift
+            fi
+            ;;
+        share|--share)
+            shift
+            if [ -z "${1:-}" ] || [[ "$1" == -* ]]; then
+                echo -e "${RED}[✗] Error: share requires a skill or rule name${NC}"
+                exit 1
+            fi
+            SHARE_NAME="$1"
+            shift
+            ;;
+        import|--import)
+            shift
+            if [ -z "${1:-}" ] || [[ "$1" == -* ]]; then
+                echo -e "${RED}[✗] Error: import requires a Gist or raw file URL${NC}"
+                exit 1
+            fi
+            IMPORT_URL="$1"
+            shift
+            ;;
+        --as)
+            if [ -z "${2:-}" ] || [[ "$2" == -* ]]; then
+                echo -e "${RED}[✗] Error: --as requires a custom name${NC}"
+                exit 1
+            fi
+            IMPORT_AS="$2"
+            shift 2
+            ;;
+        --public)
+            SHARE_VISIBILITY="public"
+            shift
+            ;;
+        --secret|--private)
+            SHARE_VISIBILITY="secret"
+            shift
+            ;;
         --preset)
             MCP_PRESET="$2"
             shift 2
@@ -193,6 +259,542 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# ==============================================================================
+# Security Auditor: Zero-Bypass Secret & Key Scanner
+# ==============================================================================
+audit_secrets() {
+    local TARGET_PATH="$1"
+    local AUDIT_MODE="${2:-directory}"
+
+    python3 - "$TARGET_PATH" "$AUDIT_MODE" << 'AUDIT_PY_EOF'
+import os, sys, re
+
+target = sys.argv[1]
+mode = sys.argv[2] if len(sys.argv) > 2 else "directory"
+
+PROHIBITED_FILES = {
+    '.env', '.env.local', '.env.production', '.env.development', '.env.test',
+    '.env.staging', 'id_rsa', 'id_rsa.pub', 'id_ed25519', 'id_ed25519.pub',
+    'id_ecdsa', 'id_ecdsa.pub', 'id_dsa', 'id_dsa.pub', 'authorized_keys', 'known_hosts'
+}
+
+PROHIBITED_EXTENSIONS = {
+    '.pem', '.key', '.pkcs12', '.p12', '.pfx', '.kdbx'
+}
+
+PATTERNS = [
+    ('GitHub Token', r'(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}'),
+    ('GitHub Fine-grained PAT', r'github_pat_[A-Za-z0-9_]{50,}'),
+    ('Stripe Live API Key', r'sk_live_[0-9a-zA-Z]{24,}'),
+    ('OpenAI API Key', r'sk-[a-zA-Z0-9]{32,}'),
+    ('Anthropic API Key', r'sk-ant-[a-zA-Z0-9]{32,}'),
+    ('OpenAI Project Key', r'sk-proj-[a-zA-Z0-9_\-]{40,}'),
+    ('Google API Key', r'AIza[0-9A-Za-z\-_]{35}'),
+    ('AWS Access Key ID', r'AKIA[0-9A-Z]{16}'),
+    ('Private Key Block', r'-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----'),
+    ('Hardcoded Secret / Password', r'(?i)(?:password|secret|api[_-]?key|access[_-]?token)\s*[:=]\s*[\x27\x22](?!(?:YOUR_|REPLACE_|MOCK_|TEST_|DUMMY_|\{\{|<))[A-Za-z0-9_\-\.\$\!\@\#\%\^\&\*\(\)\+]{8,}[\x27\x22]')
+]
+
+violations = []
+
+def check_file(filepath):
+    fname = os.path.basename(filepath)
+    _, ext = os.path.splitext(fname)
+
+    if fname in PROHIBITED_FILES or fname.startswith('.env.'):
+        violations.append((filepath, 0, 'Prohibited Sensitive File', fname))
+        return
+
+    if ext.lower() in PROHIBITED_EXTENSIONS:
+        violations.append((filepath, 0, 'Prohibited Key/Certificate Extension', fname))
+        return
+
+    if '/.git/' in filepath or filepath.endswith('/.git'):
+        return
+
+    try:
+        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+            for line_no, line in enumerate(f, start=1):
+                for label, pat in PATTERNS:
+                    m = re.search(pat, line)
+                    if m:
+                        matched = m.group(0)
+                        masked = matched[:4] + '*' * (len(matched) - 8) + matched[-4:] if len(matched) > 8 else '****'
+                        violations.append((filepath, line_no, label, masked))
+                        break
+    except Exception:
+        pass
+
+if mode == 'file':
+    if os.path.isfile(target):
+        check_file(target)
+else:
+    for root, dirs, files in os.walk(target):
+        if '.git' in dirs:
+            dirs.remove('.git')
+        for f in files:
+            check_file(os.path.join(root, f))
+
+if violations:
+    RED = "\033[0;31m"
+    BOLD = "\033[1m"
+    YELLOW = "\033[1;33m"
+    NC = "\033[0m"
+    print(f"\n{RED}{BOLD}[✗] PRE-PUSH SECURITY AUDITOR VIOLATION: Zero-Bypass Guard Triggered!{NC}")
+    print(f"{RED}Found {len(violations)} sensitive secret(s) or prohibited credential file(s):{NC}")
+    for path, line, label, preview in violations:
+        rel = os.path.relpath(path, target) if mode != "file" else path
+        line_str = f"Line {line}" if line > 0 else "Filename"
+        print(f"   - {YELLOW}{rel}{NC} [{line_str}]: {RED}{label}{NC} (Preview: {preview})")
+    print(f"\n{RED}{BOLD}[✗] ABORT: Push/Share rejected! Remove credentials before committing to remote repository.{NC}\n")
+    sys.exit(1)
+else:
+    print("\033[0;32m[✓] Pre-Push Security Audit Passed: 0 sensitive credentials or forbidden files detected.\033[0m")
+AUDIT_PY_EOF
+}
+
+# ------------------------------------------------------------------------------
+# Action: Central Memory Knowledge Base (Private GitHub Repo)
+# ------------------------------------------------------------------------------
+if [ -n "$MEMORY_ACTION" ]; then
+    MEMORY_DIR="$HOME/.auto-context/memory"
+
+    case "$MEMORY_ACTION" in
+        init)
+            REPO_NAME="${MEMORY_ARG:-auto-context-memory}"
+            echo -e "\n${CYAN}=====================================================================${NC}"
+            echo -e "${BOLD}${GREEN}🧠 Auto-Context: Initializing Private Central Memory Brain${NC}"
+            echo -e "   Directory:   ${YELLOW}$MEMORY_DIR${NC}"
+            echo -e "   Target Repo: ${CYAN}$REPO_NAME${NC} (Strictly Private)"
+            echo -e "${CYAN}=====================================================================${NC}"
+
+            mkdir -p "$MEMORY_DIR/rules" "$MEMORY_DIR/skills"
+
+            # 1. Initialize git if not present
+            if [ ! -d "$MEMORY_DIR/.git" ]; then
+                git -C "$MEMORY_DIR" init >/dev/null 2>&1 || true
+                echo -e "   ${GREEN}[✓] Initialized Git repository${NC}"
+            fi
+
+            # 2. Hardened .gitignore in central memory
+            GITIGNORE_MEM="$MEMORY_DIR/.gitignore"
+            cat << 'GI_MEM_EOF' > "$GITIGNORE_MEM"
+# Security: Prohibit credentials and environment files from central memory
+.env
+.env.*
+*.local.md
+context.local.md
+*.key
+*.pem
+*.p12
+*.pfx
+*.kdbx
+id_rsa*
+id_ed25519*
+id_ecdsa*
+id_dsa*
+authorized_keys
+known_hosts
+GI_MEM_EOF
+            echo -e "   ${GREEN}[✓] Hardened .gitignore for central memory${NC}"
+
+            # 3. Create profile.md from template
+            PROFILE_FILE="$MEMORY_DIR/profile.md"
+            if [ ! -f "$PROFILE_FILE" ]; then
+                USER_NAME=$(git config user.name 2>/dev/null || whoami || echo "Developer")
+                DATE_NOW=$(date +"%Y-%m-%d")
+                cat << PROF_EOF > "$PROFILE_FILE"
+# Agent Memory & Developer Profile
+
+> **Owner:** $USER_NAME  
+> **Initialized:** $DATE_NOW  
+> **Repository:** $REPO_NAME  
+> **Visibility:** Private Central Agent Brain  
+
+---
+
+## 1. Developer Preferences & Communication Style
+- **Language & Tone:** Provide friendly, structured explanations in clear Bengali alongside English technical terms and bash/PowerShell snippets.
+- **Code Architecture:** Adhere to clean code, Single Responsibility Principle (SRP), early return guard clauses, and strict type safety.
+- **Git Hygiene:** Use atomic conventional commits (\`feat:\`, \`fix:\`, \`docs:\`, \`refactor:\`, \`chore:\`).
+
+---
+
+## 2. Central Knowledge Base Index
+- **Global Rules:** Defined in \`rules/\` (automatically synchronized across all local projects).
+- **Reusable Skills:** Stored in \`skills/\` (available on-demand via Two-Tier Progressive Disclosure).
+- **MCP Server Presets:** Cataloged in \`mcp/\` (referenced securely via environment variables).
+PROF_EOF
+                echo -e "   ${GREEN}[✓] Generated Developer Profile:${NC} profile.md"
+            fi
+
+            # 4. Seed default rules and skills if empty
+            GLOBAL_PLUGIN_DIR="$HOME/.gemini/config/plugins/auto-context"
+            if [ -d "$GLOBAL_PLUGIN_DIR/rules" ]; then
+                cp -rn "$GLOBAL_PLUGIN_DIR/rules/"* "$MEMORY_DIR/rules/" 2>/dev/null || true
+            fi
+            if [ -d "$GLOBAL_PLUGIN_DIR/skills" ]; then
+                cp -rn "$GLOBAL_PLUGIN_DIR/skills/"* "$MEMORY_DIR/skills/" 2>/dev/null || true
+            fi
+
+            # 5. Pre-Push Security Audit (Zero-Bypass)
+            echo -e "   ${CYAN}[*] Running pre-push security audit on memory brain...${NC}"
+            audit_secrets "$MEMORY_DIR" "directory"
+
+            # 6. Initial Commit
+            git -C "$MEMORY_DIR" add -A
+            if ! git -C "$MEMORY_DIR" diff --cached --quiet 2>/dev/null; then
+                git -C "$MEMORY_DIR" commit -m "feat(memory): initialize central agent brain knowledge base" >/dev/null 2>&1 || true
+            fi
+            git -C "$MEMORY_DIR" branch -M main >/dev/null 2>&1 || true
+
+            # 7. Create GitHub repo with Mandatory Private Flag (Rule 1 Enforced)
+            if command -v gh >/dev/null 2>&1; then
+                echo -e "   ${CYAN}[*] Enforcing strictly Private repository creation via 'gh repo create'...${NC}"
+                # Rule 1: --private is strictly auto-injected without bypass
+                if gh repo create "$REPO_NAME" --private --source="$MEMORY_DIR" --remote=origin --push 2>&1; then
+                    echo -e "   ${GREEN}[✓] Private GitHub memory repository created and pushed!${NC}"
+                else
+                    echo -e "   ${YELLOW}[!] GitHub CLI command could not push automatically (token/remote issue).${NC}"
+                    echo -e "   ${YELLOW}[*] To connect manually to your PRIVATE GitHub repository, run:${NC}"
+                    echo -e "       git -C \"$MEMORY_DIR\" remote add origin git@github.com:<username>/$REPO_NAME.git"
+                    echo -e "       git -C \"$MEMORY_DIR\" push -u origin main"
+                fi
+            else
+                echo -e "   ${YELLOW}[!] GitHub CLI ('gh') is not installed.${NC}"
+                echo -e "   ${YELLOW}[*] Please create a PRIVATE repository on GitHub named '$REPO_NAME', then run:${NC}"
+                echo -e "       git -C \"$MEMORY_DIR\" remote add origin git@github.com:<username>/$REPO_NAME.git"
+                echo -e "       git -C \"$MEMORY_DIR\" push -u origin main"
+            fi
+
+            # Sync seeded rules and skills back to global plugin
+            mkdir -p "$HOME/.gemini/config/plugins/auto-context/rules" "$HOME/.gemini/config/plugins/auto-context/skills"
+            cp -rn "$MEMORY_DIR/rules/"* "$HOME/.gemini/config/plugins/auto-context/rules/" 2>/dev/null || true
+            cp -rn "$MEMORY_DIR/skills/"* "$HOME/.gemini/config/plugins/auto-context/skills/" 2>/dev/null || true
+
+            echo -e "\n${GREEN}🎉 Central Memory Initialized Successfully!${NC}"
+            echo -e "   Local Brain:  ${YELLOW}$MEMORY_DIR${NC}"
+            echo -e "   Sync Command: ${GREEN}init-context memory push${NC}"
+            echo -e "${CYAN}=====================================================================${NC}\n"
+            exit 0
+            ;;
+
+        push|sync)
+            echo -e "\n${CYAN}=====================================================================${NC}"
+            echo -e "${BOLD}${GREEN}🧠 Auto-Context: Synchronizing Central Memory Brain${NC}"
+            echo -e "   Location: ${YELLOW}$MEMORY_DIR${NC}"
+            echo -e "${CYAN}=====================================================================${NC}"
+
+            if [ ! -d "$MEMORY_DIR" ]; then
+                echo -e "${RED}[✗] Memory directory not found at $MEMORY_DIR.${NC}"
+                echo -e "    Run 'init-context memory init' first to initialize."
+                exit 1
+            fi
+
+            # Rule 2: Zero-Bypass Pre-Push Secret Auditor Hard-Block
+            echo -e "   ${CYAN}[*] Running Zero-Bypass Security Auditor before pushing...${NC}"
+            audit_secrets "$MEMORY_DIR" "directory"
+
+            # Sync any new global rules/skills from plugin into memory before pushing
+            GLOBAL_PLUGIN_DIR="$HOME/.gemini/config/plugins/auto-context"
+            if [ -d "$GLOBAL_PLUGIN_DIR/rules" ]; then
+                cp -rn "$GLOBAL_PLUGIN_DIR/rules/"* "$MEMORY_DIR/rules/" 2>/dev/null || true
+            fi
+            if [ -d "$GLOBAL_PLUGIN_DIR/skills" ]; then
+                cp -rn "$GLOBAL_PLUGIN_DIR/skills/"* "$MEMORY_DIR/skills/" 2>/dev/null || true
+            fi
+
+            git -C "$MEMORY_DIR" add -A
+            if ! git -C "$MEMORY_DIR" diff --cached --quiet 2>/dev/null; then
+                git -C "$MEMORY_DIR" commit -m "chore(memory): sync agent brain knowledge base [$(date +"%Y-%m-%d %H:%M")]" >/dev/null 2>&1 || true
+                echo -e "   ${GREEN}[✓] Changes committed to local git history.${NC}"
+            else
+                echo -e "   ${CYAN}[*] No local changes to commit.${NC}"
+            fi
+
+            if git -C "$MEMORY_DIR" remote get-url origin >/dev/null 2>&1; then
+                echo -e "   ${CYAN}[*] Pushing to private remote repository...${NC}"
+                if git -C "$MEMORY_DIR" push origin main 2>&1; then
+                    echo -e "   ${GREEN}[✓] Memory brain pushed successfully to private GitHub repository!${NC}"
+                else
+                    echo -e "   ${YELLOW}[!] Failed to push to remote. Verify network and git remote credentials.${NC}"
+                fi
+            else
+                echo -e "   ${YELLOW}[!] No remote 'origin' configured for $MEMORY_DIR.${NC}"
+                echo -e "       Add your private GitHub remote with: git -C \"$MEMORY_DIR\" remote add origin <url>"
+            fi
+
+            echo -e "\n${GREEN}✨ Memory synchronization complete!${NC}\n"
+            exit 0
+            ;;
+
+        pull)
+            REPO_URL="${MEMORY_ARG:-}"
+            echo -e "\n${CYAN}=====================================================================${NC}"
+            echo -e "${BOLD}${GREEN}🧠 Auto-Context: Pulling Central Memory Brain${NC}"
+            echo -e "${CYAN}=====================================================================${NC}"
+
+            if [ ! -d "$MEMORY_DIR" ]; then
+                if [ -z "$REPO_URL" ]; then
+                    echo -e "${RED}[✗] Memory directory does not exist. Specify repository URL:${NC}"
+                    echo -e "    init-context memory pull <git-repo-url>"
+                    exit 1
+                fi
+                echo -e "   ${CYAN}[*] Cloning memory repository from:${NC} $REPO_URL"
+                git clone "$REPO_URL" "$MEMORY_DIR"
+            else
+                echo -e "   ${CYAN}[*] Pulling latest changes into:${NC} $MEMORY_DIR"
+                git -C "$MEMORY_DIR" pull origin main || true
+            fi
+
+            echo -e "   ${CYAN}[*] Running post-pull security audit...${NC}"
+            audit_secrets "$MEMORY_DIR" "directory"
+
+            # Sync to global plugin
+            GLOBAL_PLUGIN_DIR="$HOME/.gemini/config/plugins/auto-context"
+            mkdir -p "$GLOBAL_PLUGIN_DIR/rules" "$GLOBAL_PLUGIN_DIR/skills"
+            cp -ru "$MEMORY_DIR/rules/"* "$GLOBAL_PLUGIN_DIR/rules/" 2>/dev/null || true
+            cp -ru "$MEMORY_DIR/skills/"* "$GLOBAL_PLUGIN_DIR/skills/" 2>/dev/null || true
+
+            echo -e "\n${GREEN}✨ Central memory updated and synchronized with active agent tools!${NC}\n"
+            exit 0
+            ;;
+
+        status)
+            echo -e "\n${CYAN}=====================================================================${NC}"
+            echo -e "${BOLD}${GREEN}🧠 Auto-Context: Central Memory Status${NC}"
+            echo -e "${CYAN}=====================================================================${NC}"
+            if [ -d "$MEMORY_DIR" ]; then
+                echo -e "   Location: ${YELLOW}$MEMORY_DIR${NC}"
+                REMOTE=$(git -C "$MEMORY_DIR" remote get-url origin 2>/dev/null || echo "None")
+                echo -e "   Remote:   ${CYAN}$REMOTE${NC}"
+                RULE_COUNT=$(find "$MEMORY_DIR/rules" -name "*.md" 2>/dev/null | wc -l)
+                SKILL_COUNT=$(find "$MEMORY_DIR/skills" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)
+                echo -e "   Rules:    ${GREEN}$RULE_COUNT${NC} registered"
+                echo -e "   Skills:   ${GREEN}$SKILL_COUNT${NC} registered"
+            else
+                echo -e "   ${YELLOW}[!] Central memory is not yet initialized.${NC}"
+                echo -e "       Run 'init-context memory init' to create your private brain."
+            fi
+            echo -e "${CYAN}=====================================================================${NC}\n"
+            exit 0
+            ;;
+
+        *)
+            echo -e "${RED}[✗] Unknown memory subcommand: $MEMORY_ACTION${NC}"
+            echo -e "    Valid subcommands: init, push, pull, status"
+            exit 1
+            ;;
+    esac
+fi
+
+# ------------------------------------------------------------------------------
+# Action: Granular Share of Skill or Rule via GitHub Gist
+# ------------------------------------------------------------------------------
+if [ -n "$SHARE_NAME" ]; then
+    CLEAN_SHARE_NAME=$(echo "$SHARE_NAME" | tr '[:upper:]' '[:lower:]' | tr ' _' '-' | sed 's/\.md$//')
+    TARGET_FILE=""
+    ITEM_TYPE=""
+
+    # Candidate search paths
+    CANDIDATES=(
+        "$TARGET_DIR/.agents/skills/$CLEAN_SHARE_NAME/SKILL.md:skill"
+        "$TARGET_DIR/.agents/rules/$CLEAN_SHARE_NAME.md:rule"
+        "$HOME/.auto-context/memory/skills/$CLEAN_SHARE_NAME/SKILL.md:skill"
+        "$HOME/.auto-context/memory/rules/$CLEAN_SHARE_NAME.md:rule"
+        "$HOME/.gemini/config/plugins/auto-context/skills/$CLEAN_SHARE_NAME/SKILL.md:skill"
+        "$HOME/.gemini/config/plugins/auto-context/rules/$CLEAN_SHARE_NAME.md:rule"
+    )
+
+    for item in "${CANDIDATES[@]}"; do
+        p="${item%%:*}"
+        t="${item##*:}"
+        if [ -f "$p" ]; then
+            TARGET_FILE="$p"
+            ITEM_TYPE="$t"
+            break
+        fi
+    done
+
+    if [ -z "$TARGET_FILE" ]; then
+        echo -e "\n${RED}[✗] Error: Item '$CLEAN_SHARE_NAME' was not found.${NC}"
+        echo -e "    Searched local project, central memory, and global plugin directories."
+        echo -e "    Check .agents/skills/ or .agents/rules/ for available items.\n"
+        exit 1
+    fi
+
+    echo -e "\n${CYAN}=====================================================================${NC}"
+    echo -e "${BOLD}${GREEN}📤 Auto-Context: Publishing $ITEM_TYPE via GitHub Gist${NC}"
+    echo -e "   Target:  ${YELLOW}$CLEAN_SHARE_NAME${NC} ($TARGET_FILE)"
+    echo -e "${CYAN}=====================================================================${NC}"
+
+    echo -e "   ${CYAN}[*] Running pre-share security audit on target file...${NC}"
+    audit_secrets "$TARGET_FILE" "file"
+
+    if ! command -v gh >/dev/null 2>&1; then
+        echo -e "\n${RED}[✗] GitHub CLI ('gh') is required to automatically share via Gist.${NC}"
+        echo -e "    Install gh (https://cli.github.com) or share manually from: $TARGET_FILE\n"
+        exit 1
+    fi
+
+    VIS_FLAG="--public"
+    if [ "$SHARE_VISIBILITY" = "secret" ]; then
+        VIS_FLAG=""
+    fi
+
+    echo -e "   ${CYAN}[*] Creating GitHub Gist (${SHARE_VISIBILITY})...${NC}"
+    GIST_OUTPUT=$(gh gist create "$TARGET_FILE" --desc "auto-context $ITEM_TYPE: $CLEAN_SHARE_NAME" $VIS_FLAG 2>&1) || {
+        echo -e "${RED}[✗] Failed to create Gist: $GIST_OUTPUT${NC}"
+        exit 1
+    }
+
+    GIST_URL=$(echo "$GIST_OUTPUT" | grep -o 'https://gist\.github\.com/[^ ]*' | head -n 1)
+    [ -z "$GIST_URL" ] && GIST_URL="$GIST_OUTPUT"
+
+    echo -e "\n${GREEN}✨ $ITEM_TYPE Successfully Published!${NC}"
+    echo -e "   Gist URL: ${BOLD}${CYAN}${GIST_URL}${NC}"
+    echo -e "\n${YELLOW}💡 Anyone can import this skill using:${NC}"
+    echo -e "   ${GREEN}init-context import ${GIST_URL}${NC}"
+    echo -e "${CYAN}=====================================================================${NC}\n"
+    exit 0
+fi
+
+# ------------------------------------------------------------------------------
+# Action: Import External Skill or Rule from Gist or Raw URL
+# ------------------------------------------------------------------------------
+if [ -n "$IMPORT_URL" ]; then
+    echo -e "\n${CYAN}=====================================================================${NC}"
+    echo -e "${BOLD}${GREEN}📥 Auto-Context: Importing External Instruction/Skill${NC}"
+    echo -e "${CYAN}=====================================================================${NC}"
+
+    TMP_IMPORT=$(mktemp)
+    RAW_URL="$IMPORT_URL"
+
+    # Support gist URLs: convert https://gist.github.com/user/id to raw URL
+    if [[ "$IMPORT_URL" =~ ^https?://gist\.github\.com/([^/]+)/([a-f0-9]+)$ ]]; then
+        GIST_USER="${BASH_REMATCH[1]}"
+        GIST_ID="${BASH_REMATCH[2]}"
+        RAW_URL="https://gist.githubusercontent.com/${GIST_USER}/${GIST_ID}/raw"
+    fi
+
+    echo -e "   ${CYAN}[*] Fetching:${NC} $RAW_URL"
+    if ! curl -fsSL -L "$RAW_URL" -o "$TMP_IMPORT" 2>/dev/null; then
+        echo -e "${RED}[✗] Failed to download content from: $RAW_URL${NC}"
+        rm -f "$TMP_IMPORT"
+        exit 1
+    fi
+
+    echo -e "   ${CYAN}[*] Running pre-import security auditor...${NC}"
+    audit_secrets "$TMP_IMPORT" "file"
+
+    # Parse YAML frontmatter to identify type and name
+    PARSED_INFO=$(python3 - "$TMP_IMPORT" << 'PARSE_EOF'
+import sys, re
+
+filepath = sys.argv[1]
+try:
+    with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+        content = f.read()
+except Exception:
+    content = ""
+
+name = ""
+m_name = re.search(r"^name:\s*[\x22\x27]?([a-zA-Z0-9_-]+)", content, re.MULTILINE)
+if m_name:
+    name = m_name.group(1).strip()
+
+item_type = "rule"
+if re.search(r"^triggers\s*:", content, re.MULTILINE) or "# Skill:" in content:
+    item_type = "skill"
+elif "trigger:" in content or "# Rule:" in content:
+    item_type = "rule"
+
+print(f"{item_type}|{name}")
+PARSE_EOF
+)
+
+    ITEM_TYPE=$(echo "$PARSED_INFO" | cut -d'|' -f1)
+    EXTRACTED_NAME=$(echo "$PARSED_INFO" | cut -d'|' -f2)
+
+    FINAL_NAME="${IMPORT_AS:-$EXTRACTED_NAME}"
+    if [ -z "$FINAL_NAME" ]; then
+        FINAL_NAME="imported-$(date +%s)"
+    fi
+
+    CLEAN_NAME=$(echo "$FINAL_NAME" | tr '[:upper:]' '[:lower:]' | tr ' _' '-' | sed 's/\.md$//')
+
+    if [ "$IS_GLOBAL" = true ]; then
+        if [ "$ITEM_TYPE" = "skill" ]; then
+            DEST_FILE="$HOME/.gemini/config/plugins/auto-context/skills/$CLEAN_NAME/SKILL.md"
+        else
+            DEST_FILE="$HOME/.gemini/config/plugins/auto-context/rules/$CLEAN_NAME.md"
+        fi
+        SCOPE_LABEL="GLOBAL Plugin"
+    else
+        if [ "$ITEM_TYPE" = "skill" ]; then
+            DEST_FILE="$TARGET_DIR/.agents/skills/$CLEAN_NAME/SKILL.md"
+        else
+            DEST_FILE="$TARGET_DIR/.agents/rules/$CLEAN_NAME.md"
+        fi
+        SCOPE_LABEL="LOCAL Project ($TARGET_DIR)"
+    fi
+
+    # Collision Guard (Rule 3)
+    if [ -f "$DEST_FILE" ]; then
+        if [ "$FORCE" = true ]; then
+            echo -e "   ${YELLOW}[!] Target already exists. Overwriting because --force was specified.${NC}"
+        else
+            if [ -t 0 ]; then
+                echo -e "\n${YELLOW}[!] Collision Warning:${NC} '${CLEAN_NAME}' already exists at:"
+                echo -e "    ${CYAN}$DEST_FILE${NC}"
+                read -r -p "What would you like to do? [O]verwrite / [R]ename / [C]ancel: " CHOICE
+                case "$CHOICE" in
+                    [Oo]*)
+                        echo -e "    ${YELLOW}Overwriting existing file...${NC}"
+                        ;;
+                    [Rr]*)
+                        read -r -p "Enter new name: " NEW_INPUT
+                        if [ -z "$NEW_INPUT" ]; then
+                            echo -e "${RED}[✗] Name cannot be empty. Import cancelled.${NC}"
+                            rm -f "$TMP_IMPORT"
+                            exit 1
+                        fi
+                        CLEAN_NAME=$(echo "$NEW_INPUT" | tr '[:upper:]' '[:lower:]' | tr ' _' '-' | sed 's/\.md$//')
+                        if [ "$IS_GLOBAL" = true ]; then
+                            [ "$ITEM_TYPE" = "skill" ] && DEST_FILE="$HOME/.gemini/config/plugins/auto-context/skills/$CLEAN_NAME/SKILL.md" || DEST_FILE="$HOME/.gemini/config/plugins/auto-context/rules/$CLEAN_NAME.md"
+                        else
+                            [ "$ITEM_TYPE" = "skill" ] && DEST_FILE="$TARGET_DIR/.agents/skills/$CLEAN_NAME/SKILL.md" || DEST_FILE="$TARGET_DIR/.agents/rules/$CLEAN_NAME.md"
+                        fi
+                        ;;
+                    *)
+                        echo -e "${CYAN}[*] Import cancelled by user.${NC}\n"
+                        rm -f "$TMP_IMPORT"
+                        exit 0
+                        ;;
+                esac
+            else
+                echo -e "\n${RED}[✗] Collision Error: '${CLEAN_NAME}' already exists at:${NC}"
+                echo -e "    $DEST_FILE"
+                echo -e "    Use ${CYAN}--force${NC} to overwrite, or ${CYAN}--as <new-name>${NC} to rename.\n"
+                rm -f "$TMP_IMPORT"
+                exit 1
+            fi
+        fi
+    fi
+
+    mkdir -p "$(dirname "$DEST_FILE")"
+    mv "$TMP_IMPORT" "$DEST_FILE"
+    chmod 644 "$DEST_FILE"
+
+    echo -e "\n${GREEN}✨ External $ITEM_TYPE Imported Successfully!${NC}"
+    echo -e "   Type:   ${BOLD}${YELLOW}${ITEM_TYPE^^}${NC}"
+    echo -e "   Name:   ${YELLOW}${CLEAN_NAME}${NC}"
+    echo -e "   Scope:  ${CYAN}${SCOPE_LABEL}${NC}"
+    echo -e "   File:   ${GREEN}${DEST_FILE}${NC}"
+    echo -e "${CYAN}=====================================================================${NC}\n"
+    exit 0
+fi
 
 # ------------------------------------------------------------------------------
 # Action 1: Scaffold a New Rule

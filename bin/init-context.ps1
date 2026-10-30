@@ -38,6 +38,15 @@ param(
     [string]$Env,
     [string]$EnvVar,
 
+    [string]$Memory,
+    [string]$RepoName,
+    [string]$RepoUrl,
+    [string]$Share,
+    [string]$Import,
+    [string]$As,
+    [switch]$Public,
+    [switch]$Secret,
+
     [Alias("g")]
     [switch]$Global,
 
@@ -68,6 +77,16 @@ OPTIONS (RULES & SKILLS):
     -DryRun, -d            Preview generated files without writing to disk
     -Help, -h              Show this help message
 
+OPTIONS (CENTRAL MEMORY & GRANULAR SHARING):
+    -Memory <init|push|pull|status> Manage central memory brain
+    -RepoName <name>       Custom repository name (default: auto-context-memory)
+    -RepoUrl <url>         Remote repository URL for memory pull
+    -Share <name>          Audit & publish skill or rule via GitHub Gist
+    -Import <url>          Audit & import skill or rule from GitHub Gist or URL
+    -As <name>             Custom name when importing
+    -Public                Publish shared Gist as public
+    -Secret                Publish shared Gist as unlisted/secret
+
 OPTIONS (MCP TOOLING):
     -AddMcp <name>         Add or update an MCP server configuration
     -RemoveMcp <name>      Remove an MCP server from configuration
@@ -83,6 +102,10 @@ EXAMPLES:
     init-context
     init-context -NewRule code-standards
     init-context -NewSkill deploy-docker
+    init-context -Memory init
+    init-context -Memory push
+    init-context -Share git-workflow
+    init-context -Import <gist-url>
     init-context -AddMcp sqlite
     init-context -AddMcp github -Global
     init-context -ListMcp
@@ -90,6 +113,453 @@ EXAMPLES:
 DOCUMENTATION:
     https://github.com/Cyber-arghya/auto-context
 "@
+    exit 0
+}
+
+# Handle positional subcommands (e.g. init-context memory init / share / import)
+if ($args.Count -gt 0) {
+    if ($args[0] -eq 'memory') {
+        $Memory = if ($args.Count -gt 1) { $args[1] } else { 'status' }
+        if ($args.Count -gt 2) { $RepoName = $args[2]; $RepoUrl = $args[2] }
+    } elseif ($args[0] -eq 'share') {
+        if ($args.Count -gt 1) { $Share = $args[1] }
+    } elseif ($args[0] -eq 'import') {
+        if ($args.Count -gt 1) { $Import = $args[1] }
+    }
+}
+
+# ==============================================================================
+# Security Auditor: Zero-Bypass Secret & Key Scanner
+# ==============================================================================
+function Test-SecretSafety {
+    param(
+        [string]$Path,
+        [string]$Mode = "Directory"
+    )
+
+    $prohibitedFiles = @(
+        ".env", ".env.local", ".env.production", ".env.development", ".env.test",
+        ".env.staging", "id_rsa", "id_rsa.pub", "id_ed25519", "id_ed25519.pub",
+        "id_ecdsa", "id_ecdsa.pub", "id_dsa", "id_dsa.pub", "authorized_keys", "known_hosts"
+    )
+
+    $prohibitedExtensions = @(".pem", ".key", ".pkcs12", ".p12", ".pfx", ".kdbx")
+
+    $patterns = @(
+        @{ Name = "GitHub Token"; Regex = '(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}' },
+        @{ Name = "GitHub Fine-grained PAT"; Regex = 'github_pat_[A-Za-z0-9_]{50,}' },
+        @{ Name = "Stripe Live API Key"; Regex = 'sk_live_[0-9a-zA-Z]{24,}' },
+        @{ Name = "OpenAI API Key"; Regex = 'sk-[a-zA-Z0-9]{32,}' },
+        @{ Name = "Anthropic API Key"; Regex = 'sk-ant-[a-zA-Z0-9]{32,}' },
+        @{ Name = "OpenAI Project Key"; Regex = 'sk-proj-[a-zA-Z0-9_\-]{40,}' },
+        @{ Name = "Google API Key"; Regex = 'AIza[0-9A-Za-z\-_]{35}' },
+        @{ Name = "AWS Access Key ID"; Regex = 'AKIA[0-9A-Z]{16}' },
+        @{ Name = "Private Key Block"; Regex = '-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----' },
+        @{ Name = "Hardcoded Secret / Password"; Regex = '(?i)(?:password|secret|api[_-]?key|access[_-]?token)\s*[:=]\s*['"](?!(?:YOUR_|REPLACE_|MOCK_|TEST_|DUMMY_|\{\{|<))[A-Za-z0-9_\-\.\$\!\@\#\%\^\&\*\(\)\+]{8,}['"]' }
+    )
+
+    $violations = @()
+
+    $checkSingleFile = {
+        param([string]$targetFile)
+        $fname = [System.IO.Path]::GetFileName($targetFile)
+        $ext = [System.IO.Path]::GetExtension($targetFile).ToLower()
+
+        if ($prohibitedFiles -contains $fname -or $fname.StartsWith(".env.")) {
+            $violations += [PSCustomObject]@{ File = $targetFile; Line = 0; Pattern = "Prohibited Sensitive File"; Preview = $fname }
+            return
+        }
+
+        if ($prohibitedExtensions -contains $ext) {
+            $violations += [PSCustomObject]@{ File = $targetFile; Line = 0; Pattern = "Prohibited Key/Certificate Extension"; Preview = $fname }
+            return
+        }
+
+        if ($targetFile -like "*\.git\*" -or $targetFile -like "*/.git/*") {
+            return
+        }
+
+        try {
+            $lines = [System.IO.File]::ReadAllLines($targetFile)
+            for ($i = 0; $i -lt $lines.Length; $i++) {
+                $line = $lines[$i]
+                foreach ($p in $patterns) {
+                    if ($line -match $p.Regex) {
+                        $matched = $Matches[0]
+                        $masked = if ($matched.Length -gt 8) { $matched.Substring(0, 4) + ("*" * ($matched.Length - 8)) + $matched.Substring($matched.Length - 4) } else { "****" }
+                        $violations += [PSCustomObject]@{ File = $targetFile; Line = ($i + 1); Pattern = $p.Name; Preview = $masked }
+                        break
+                    }
+                }
+            }
+        } catch { }
+    }
+
+    if ($Mode -eq "File") {
+        if (Test-Path $Path -PathType Leaf) {
+            & $checkSingleFile $Path
+        }
+    } else {
+        if (Test-Path $Path) {
+            Get-ChildItem -Path $Path -Recurse -File -Force -ErrorAction SilentlyContinue | ForEach-Object {
+                if ($_.FullName -notmatch '[\\/]\.git[\\/]') {
+                    & $checkSingleFile $_.FullName
+                }
+            }
+        }
+    }
+
+    if ($violations.Count -gt 0) {
+        Write-Host "`n[✗] PRE-PUSH SECURITY AUDITOR VIOLATION: Zero-Bypass Guard Triggered!" -ForegroundColor Red
+        Write-Host "Found $($violations.Count) sensitive secret(s) or prohibited credential file(s):" -ForegroundColor Red
+        foreach ($v in $violations) {
+            $lineStr = if ($v.Line -gt 0) { "Line $($v.Line)" } else { "Filename" }
+            Write-Host "   - $($v.File) [$lineStr]: $($v.Pattern) (Preview: $($v.Preview))" -ForegroundColor Yellow
+        }
+        Write-Host "`n[✗] ABORT: Push/Share rejected! Remove credentials before committing to remote repository.`n" -ForegroundColor Red
+        exit 1
+    } else {
+        Write-Host "[✓] Pre-Push Security Audit Passed: 0 sensitive credentials or forbidden files detected." -ForegroundColor Green
+    }
+}
+
+# ------------------------------------------------------------------------------
+# Action: Central Memory Knowledge Base (Private GitHub Repo)
+# ------------------------------------------------------------------------------
+if ($Memory) {
+    $MemoryDir = Join-Path $HOME ".auto-context\memory"
+
+    switch ($Memory.ToLower()) {
+        "init" {
+            $EffectiveRepo = if ($RepoName) { $RepoName } else { "auto-context-memory" }
+            Write-Host "`n=====================================================================" -ForegroundColor Cyan
+            Write-Host "🧠 Auto-Context: Initializing Private Central Memory Brain" -ForegroundColor Green
+            Write-Host "   Directory:   $MemoryDir" -ForegroundColor Yellow
+            Write-Host "   Target Repo: $EffectiveRepo (Strictly Private)" -ForegroundColor Cyan
+            Write-Host "=====================================================================" -ForegroundColor Cyan
+
+            New-Item -ItemType Directory -Path (Join-Path $MemoryDir "rules") -Force | Out-Null
+            New-Item -ItemType Directory -Path (Join-Path $MemoryDir "skills") -Force | Out-Null
+
+            if (-not (Test-Path (Join-Path $MemoryDir ".git"))) {
+                git -C $MemoryDir init 2>$null | Out-Null
+                Write-Host "   [✓] Initialized Git repository" -ForegroundColor Green
+            }
+
+            # Hardened .gitignore
+            $gitIgnoreMem = Join-Path $MemoryDir ".gitignore"
+            @"
+# Security: Prohibit credentials and environment files from central memory
+.env
+.env.*
+*.local.md
+context.local.md
+*.key
+*.pem
+*.p12
+*.pfx
+*.kdbx
+id_rsa*
+id_ed25519*
+id_ecdsa*
+id_dsa*
+authorized_keys
+known_hosts
+"@ | Out-File -FilePath $gitIgnoreMem -Encoding utf8 -Force
+            Write-Host "   [✓] Hardened .gitignore for central memory" -ForegroundColor Green
+
+            # profile.md
+            $profileFile = Join-Path $MemoryDir "profile.md"
+            if (-not (Test-Path $profileFile)) {
+                $curUser = $env:USERNAME
+                if (-not $curUser) { $curUser = "Developer" }
+                $dateNow = (Get-Date).ToString("yyyy-MM-dd")
+                @"
+# Agent Memory & Developer Profile
+
+> **Owner:** $curUser  
+> **Initialized:** $dateNow  
+> **Repository:** $EffectiveRepo  
+> **Visibility:** Private Central Agent Brain  
+
+---
+
+## 1. Developer Preferences & Communication Style
+- **Language & Tone:** Provide friendly, structured explanations in clear Bengali alongside English technical terms and bash/PowerShell snippets.
+- **Code Architecture:** Adhere to clean code, Single Responsibility Principle (SRP), early return guard clauses, and strict type safety.
+- **Git Hygiene:** Use atomic conventional commits (\`feat:\`, \`fix:\`, \`docs:\`, \`refactor:\`, \`chore:\`).
+
+---
+
+## 2. Central Knowledge Base Index
+- **Global Rules:** Defined in \`rules/\` (automatically synchronized across all local projects).
+- **Reusable Skills:** Stored in \`skills/\` (available on-demand via Two-Tier Progressive Disclosure).
+- **MCP Server Presets:** Cataloged in \`mcp/\` (referenced securely via environment variables).
+"@ | Out-File -FilePath $profileFile -Encoding utf8 -Force
+                Write-Host "   [✓] Generated Developer Profile: profile.md" -ForegroundColor Green
+            }
+
+            # Pre-push Security Audit
+            Write-Host "   [*] Running pre-push security audit on memory brain..." -ForegroundColor Cyan
+            Test-SecretSafety -Path $MemoryDir -Mode "Directory"
+
+            git -C $MemoryDir add -A 2>$null | Out-Null
+            git -C $MemoryDir commit -m "feat(memory): initialize central agent brain knowledge base" 2>$null | Out-Null
+            git -C $MemoryDir branch -M main 2>$null | Out-Null
+
+            # Rule 1 Enforced: --private is strictly auto-injected
+            if (Get-Command gh -ErrorAction SilentlyContinue) {
+                Write-Host "   [*] Enforcing strictly Private repository creation via 'gh repo create'..." -ForegroundColor Cyan
+                gh repo create $EffectiveRepo --private --source=$MemoryDir --remote=origin --push
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Host "   [✓] Private GitHub memory repository created and pushed!" -ForegroundColor Green
+                } else {
+                    Write-Host "   [!] GitHub CLI could not push automatically. Connect manually:" -ForegroundColor Yellow
+                    Write-Host "       git -C `"$MemoryDir`" remote add origin git@github.com:<username>/$EffectiveRepo.git"
+                    Write-Host "       git -C `"$MemoryDir`" push -u origin main"
+                }
+            } else {
+                Write-Host "   [!] GitHub CLI ('gh') is not installed." -ForegroundColor Yellow
+                Write-Host "   [*] Please create a PRIVATE repository on GitHub named '$EffectiveRepo', then run:" -ForegroundColor Yellow
+                Write-Host "       git -C `"$MemoryDir`" remote add origin git@github.com:<username>/$EffectiveRepo.git"
+                Write-Host "       git -C `"$MemoryDir`" push -u origin main"
+            }
+
+            Write-Host "`n🎉 Central Memory Initialized Successfully!" -ForegroundColor Green
+            Write-Host "   Local Brain:  $MemoryDir" -ForegroundColor Yellow
+            Write-Host "   Sync Command: init-context -Memory push`n" -ForegroundColor Green
+            exit 0
+        }
+
+        { $_ -in "push", "sync" } {
+            Write-Host "`n=====================================================================" -ForegroundColor Cyan
+            Write-Host "🧠 Auto-Context: Synchronizing Central Memory Brain" -ForegroundColor Green
+            Write-Host "   Location: $MemoryDir" -ForegroundColor Yellow
+            Write-Host "=====================================================================" -ForegroundColor Cyan
+
+            if (-not (Test-Path $MemoryDir)) {
+                Write-Host "[✗] Memory directory not found at $MemoryDir." -ForegroundColor Red
+                Write-Host "    Run 'init-context -Memory init' first to initialize."
+                exit 1
+            }
+
+            # Rule 2: Zero-Bypass Pre-Push Secret Auditor Hard-Block
+            Write-Host "   [*] Running Zero-Bypass Security Auditor before pushing..." -ForegroundColor Cyan
+            Test-SecretSafety -Path $MemoryDir -Mode "Directory"
+
+            git -C $MemoryDir add -A 2>$null | Out-Null
+            git -C $MemoryDir commit -m "chore(memory): sync agent brain knowledge base [$(Get-Date -Format 'yyyy-MM-dd HH:mm')]" 2>$null | Out-Null
+
+            $remoteUrl = git -C $MemoryDir remote get-url origin 2>$null
+            if ($remoteUrl) {
+                Write-Host "   [*] Pushing to private remote repository..." -ForegroundColor Cyan
+                git -C $MemoryDir push origin main
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Host "   [✓] Memory brain pushed successfully to private GitHub repository!" -ForegroundColor Green
+                }
+            } else {
+                Write-Host "   [!] No remote 'origin' configured for $MemoryDir." -ForegroundColor Yellow
+            }
+
+            Write-Host "`n✨ Memory synchronization complete!`n" -ForegroundColor Green
+            exit 0
+        }
+
+        "pull" {
+            Write-Host "`n=====================================================================" -ForegroundColor Cyan
+            Write-Host "🧠 Auto-Context: Pulling Central Memory Brain" -ForegroundColor Green
+            Write-Host "=====================================================================" -ForegroundColor Cyan
+
+            if (-not (Test-Path $MemoryDir)) {
+                if (-not $RepoUrl) {
+                    Write-Host "[✗] Memory directory does not exist. Specify repository URL:" -ForegroundColor Red
+                    Write-Host "    init-context -Memory pull -RepoUrl <url>"
+                    exit 1
+                }
+                git clone $RepoUrl $MemoryDir
+            } else {
+                git -C $MemoryDir pull origin main
+            }
+
+            Write-Host "   [*] Running post-pull security audit..." -ForegroundColor Cyan
+            Test-SecretSafety -Path $MemoryDir -Mode "Directory"
+            Write-Host "`n✨ Central memory updated successfully!`n" -ForegroundColor Green
+            exit 0
+        }
+
+        "status" {
+            Write-Host "`n=====================================================================" -ForegroundColor Cyan
+            Write-Host "🧠 Auto-Context: Central Memory Status" -ForegroundColor Green
+            Write-Host "=====================================================================" -ForegroundColor Cyan
+            if (Test-Path $MemoryDir) {
+                Write-Host "   Location: $MemoryDir" -ForegroundColor Yellow
+                $remote = git -C $MemoryDir remote get-url origin 2>$null
+                Write-Host "   Remote:   $remote" -ForegroundColor Cyan
+                $rc = (Get-ChildItem -Path (Join-Path $MemoryDir "rules") -Filter "*.md" -ErrorAction SilentlyContinue).Count
+                $sc = (Get-ChildItem -Path (Join-Path $MemoryDir "skills") -Directory -ErrorAction SilentlyContinue).Count
+                Write-Host "   Rules:    $rc registered" -ForegroundColor Green
+                Write-Host "   Skills:   $sc registered" -ForegroundColor Green
+            } else {
+                Write-Host "   [!] Central memory is not yet initialized." -ForegroundColor Yellow
+                Write-Host "       Run 'init-context -Memory init' to create your private brain."
+            }
+            Write-Host "=====================================================================`n" -ForegroundColor Cyan
+            exit 0
+        }
+
+        default {
+            Write-Host "[✗] Unknown memory subcommand: $Memory" -ForegroundColor Red
+            exit 1
+        }
+    }
+}
+
+# ------------------------------------------------------------------------------
+# Action: Granular Share of Skill or Rule via GitHub Gist
+# ------------------------------------------------------------------------------
+if ($Share) {
+    $CleanShareName = ($Share.ToLower() -replace '[ _]', '-') -replace '\.md$', ''
+    $candidates = @(
+        (Join-Path $TargetDir ".agents\skills\$CleanShareName\SKILL.md"),
+        (Join-Path $TargetDir ".agentsules\$CleanShareName.md"),
+        (Join-Path $HOME ".auto-context\memory\skills\$CleanShareName\SKILL.md"),
+        (Join-Path $HOME ".auto-context\memoryules\$CleanShareName.md"),
+        (Join-Path $HOME ".gemini\config\pluginsuto-context\skills\$CleanShareName\SKILL.md"),
+        (Join-Path $HOME ".gemini\config\pluginsuto-contextules\$CleanShareName.md")
+    )
+
+    $targetFile = $null
+    foreach ($c in $candidates) {
+        if (Test-Path $c -PathType Leaf) {
+            $targetFile = $c
+            break
+        }
+    }
+
+    if (-not $targetFile) {
+        Write-Host "`n[✗] Error: Item '$CleanShareName' was not found." -ForegroundColor Red
+        exit 1
+    }
+
+    Write-Host "`n=====================================================================" -ForegroundColor Cyan
+    Write-Host "📤 Auto-Context: Publishing via GitHub Gist" -ForegroundColor Green
+    Write-Host "   Target: $CleanShareName ($targetFile)" -ForegroundColor Yellow
+    Write-Host "=====================================================================" -ForegroundColor Cyan
+
+    Write-Host "   [*] Running pre-share security audit..." -ForegroundColor Cyan
+    Test-SecretSafety -Path $targetFile -Mode "File"
+
+    if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+        Write-Host "[✗] GitHub CLI ('gh') is required to share via Gist." -ForegroundColor Red
+        exit 1
+    }
+
+    $visFlag = if ($Secret) { "" } else { "--public" }
+    $gistOut = if ($visFlag) { gh gist create $targetFile --desc "auto-context: $CleanShareName" --public } else { gh gist create $targetFile --desc "auto-context: $CleanShareName" }
+
+    Write-Host "`n✨ Successfully Published!" -ForegroundColor Green
+    Write-Host "   Gist URL: $gistOut" -ForegroundColor Cyan
+    Write-Host "`n💡 Anyone can import this skill using:" -ForegroundColor Yellow
+    Write-Host "   init-context -Import $gistOut`n" -ForegroundColor Green
+    exit 0
+}
+
+# ------------------------------------------------------------------------------
+# Action: Import External Skill or Rule from Gist or Raw URL
+# ------------------------------------------------------------------------------
+if ($Import) {
+    Write-Host "`n=====================================================================" -ForegroundColor Cyan
+    Write-Host "📥 Auto-Context: Importing External Instruction/Skill" -ForegroundColor Green
+    Write-Host "=====================================================================" -ForegroundColor Cyan
+
+    $rawUrl = $Import
+    if ($Import -match '^https?://gist\.github\.com/([^/]+)/([a-f0-9]+)$') {
+        $gistUser = $Matches[1]
+        $gistId = $Matches[2]
+        $rawUrl = "https://gist.githubusercontent.com/$gistUser/$gistId/raw"
+    }
+
+    $tmpImport = [System.IO.Path]::GetTempFileName()
+    Write-Host "   [*] Fetching: $rawUrl" -ForegroundColor Cyan
+    try {
+        Invoke-WebRequest -Uri $rawUrl -OutFile $tmpImport -UseBasicParsing
+    } catch {
+        Write-Host "[✗] Failed to download content from: $rawUrl" -ForegroundColor Red
+        exit 1
+    }
+
+    Write-Host "   [*] Running pre-import security auditor..." -ForegroundColor Cyan
+    Test-SecretSafety -Path $tmpImport -Mode "File"
+
+    $importedContent = Get-Content -Path $tmpImport -Raw -Encoding utf8
+    $itemName = ""
+    if ($importedContent -match '(?m)^name:\s*['"]?([a-zA-Z0-9_\-]+)') {
+        $itemName = $Matches[1].Trim()
+    }
+    $itemType = if ($importedContent -match '(?m)^triggers\s*:' -or $importedContent -like "*# Skill:*") { "skill" } else { "rule" }
+
+    $finalName = if ($As) { $As } elseif ($itemName) { $itemName } else { "imported-$([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())" }
+    $cleanName = ($finalName.ToLower() -replace '[ _]', '-') -replace '\.md$', ''
+
+    if ($Global) {
+        $destFile = if ($itemType -eq "skill") {
+            Join-Path $HOME ".gemini\config\pluginsuto-context\skills\$cleanName\SKILL.md"
+        } else {
+            Join-Path $HOME ".gemini\config\pluginsuto-contextules\$cleanName.md"
+        }
+        $scopeLabel = "GLOBAL Plugin"
+    } else {
+        $destFile = if ($itemType -eq "skill") {
+            Join-Path $TargetDir ".agents\skills\$cleanName\SKILL.md"
+        } else {
+            Join-Path $TargetDir ".agentsules\$cleanName.md"
+        }
+        $scopeLabel = "LOCAL Project"
+    }
+
+    # Collision Guard (Rule 3)
+    if (Test-Path $destFile) {
+        if ($Force) {
+            Write-Host "   [!] Target already exists. Overwriting because -Force was specified." -ForegroundColor Yellow
+        } else {
+            Write-Host "`n[!] Collision Warning: '$cleanName' already exists at:" -ForegroundColor Yellow
+            Write-Host "    $destFile" -ForegroundColor Cyan
+            $choice = Read-Host "What would you like to do? [O]verwrite / [R]ename / [C]ancel"
+            if ($choice -match '^[Oo]') {
+                Write-Host "    Overwriting existing file..." -ForegroundColor Yellow
+            } elseif ($choice -match '^[Rr]') {
+                $newInput = Read-Host "Enter new name"
+                if ([string]::IsNullOrWhiteSpace($newInput)) {
+                    Write-Host "[✗] Name cannot be empty. Import cancelled." -ForegroundColor Red
+                    Remove-Item -Path $tmpImport -Force -ErrorAction SilentlyContinue
+                    exit 1
+                }
+                $cleanName = ($newInput.ToLower() -replace '[ _]', '-') -replace '\.md$', ''
+                if ($Global) {
+                    $destFile = if ($itemType -eq "skill") { Join-Path $HOME ".gemini\config\pluginsuto-context\skills\$cleanName\SKILL.md" } else { Join-Path $HOME ".gemini\config\pluginsuto-contextules\$cleanName.md" }
+                } else {
+                    $destFile = if ($itemType -eq "skill") { Join-Path $TargetDir ".agents\skills\$cleanName\SKILL.md" } else { Join-Path $TargetDir ".agentsules\$cleanName.md" }
+                }
+            } else {
+                Write-Host "[*] Import cancelled by user.`n" -ForegroundColor Cyan
+                Remove-Item -Path $tmpImport -Force -ErrorAction SilentlyContinue
+                exit 0
+            }
+        }
+    }
+
+    $destParent = Split-Path -Parent $destFile
+    if (-not (Test-Path $destParent)) {
+        New-Item -ItemType Directory -Path $destParent -Force | Out-Null
+    }
+    Move-Item -Path $tmpImport -Destination $destFile -Force
+
+    Write-Host "`n✨ External $itemType Imported Successfully!" -ForegroundColor Green
+    Write-Host "   Type:   $($itemType.ToUpper())" -ForegroundColor Yellow
+    Write-Host "   Name:   $cleanName" -ForegroundColor Yellow
+    Write-Host "   Scope:  $scopeLabel" -ForegroundColor Cyan
+    Write-Host "   File:   $destFile" -ForegroundColor Green
+    Write-Host "=====================================================================`n" -ForegroundColor Cyan
     exit 0
 }
 
