@@ -30,6 +30,8 @@ param(
     [string]$RemoveMcp,
     [switch]$ListMcp,
     [string]$Preset,
+    [Alias("runner")]
+    [string]$Runtime,
     [string]$Command,
     [string]$Args,
     [string]$Url,
@@ -70,7 +72,8 @@ OPTIONS (MCP TOOLING):
     -AddMcp <name>         Add or update an MCP server configuration
     -RemoveMcp <name>      Remove an MCP server from configuration
     -ListMcp               List all active MCP server tools
-    -Preset <preset>       Preset template (sqlite, postgres, github, filesystem, brave, fetch)
+    -Preset <preset>       Preset template (sqlite, git, fetch, time, duckdb, postgres, github, filesystem, brave)
+    -Runtime, -runner <cmd> Package runner for stdio tools: uvx (Python) or npx (Node)
     -Command <cmd>         Executable command for stdio server (e.g. npx, uvx, python)
     -Args <args>           Arguments to pass to command
     -Url <url>             Streamable HTTP endpoint URL for remote MCP server
@@ -348,10 +351,54 @@ if ($AddMcp) {
     $EnvPlaceholder = ""
     $RawSecretPassed = ""
 
+    # Determine runtime preference (uvx vs npx)
+    $RunnerVal = $Runtime
+    if (-not $RunnerVal) {
+        if ($ChosenPreset -in @("duckdb", "time")) {
+            $RunnerVal = "uvx"
+        } else {
+            $hasPython = (Test-Path (Join-Path $TargetDir "pyproject.toml")) -or (Test-Path (Join-Path $TargetDir "requirements.txt")) -or (Test-Path (Join-Path $TargetDir "Pipfile"))
+            if ($hasPython -and (Get-Command "uvx" -ErrorAction SilentlyContinue)) {
+                $RunnerVal = "uvx"
+            } else {
+                $RunnerVal = "npx"
+            }
+        }
+    }
+
     if ($ChosenPreset -eq "sqlite") {
-        $CmdVal = "npx"
         $dbPath = if ($Args) { $Args } else { "database.db" }
-        $ArgsArr = @("-y", "@modelcontextprotocol/server-sqlite", $dbPath)
+        if ($RunnerVal -eq "uvx" -or $RunnerVal -eq "python") {
+            $CmdVal = "uvx"
+            $ArgsArr = @("mcp-server-sqlite", "--db-path", $dbPath)
+        } else {
+            $CmdVal = "npx"
+            $ArgsArr = @("-y", "@modelcontextprotocol/server-sqlite", $dbPath)
+        }
+    } elseif ($ChosenPreset -eq "git") {
+        $repoPath = if ($Args) { $Args } else { $TargetDir }
+        if ($RunnerVal -eq "uvx" -or $RunnerVal -eq "python") {
+            $CmdVal = "uvx"
+            $ArgsArr = @("mcp-server-git", "--repository", $repoPath)
+        } else {
+            $CmdVal = "npx"
+            $ArgsArr = @("-y", "@modelcontextprotocol/server-git", $repoPath)
+        }
+    } elseif ($ChosenPreset -eq "duckdb") {
+        $CmdVal = "uvx"
+        $dbPath = if ($Args) { $Args } else { "database.duckdb" }
+        $ArgsArr = @("duckdb-mcp", "--db-path", $dbPath)
+    } elseif ($ChosenPreset -eq "time") {
+        $CmdVal = "uvx"
+        $ArgsArr = @("mcp-server-time")
+    } elseif ($ChosenPreset -eq "fetch") {
+        if ($RunnerVal -eq "uvx" -or $RunnerVal -eq "python") {
+            $CmdVal = "uvx"
+            $ArgsArr = @("mcp-server-fetch")
+        } else {
+            $CmdVal = "npx"
+            $ArgsArr = @("-y", "@modelcontextprotocol/server-fetch")
+        }
     } elseif ($ChosenPreset -in @("postgres", "postgresql")) {
         $CmdVal = "npx"
         $SecureVarName = if ($EnvVar) { $EnvVar } else { "DATABASE_URL" }
@@ -376,9 +423,6 @@ if ($AddMcp) {
         $EnvPlaceholder = "your_brave_api_key_here"
         if ($Args) { $RawSecretPassed = $Args }
         $EnvObj["BRAVE_API_KEY"] = "`${$SecureVarName}"
-    } elseif ($ChosenPreset -eq "fetch") {
-        $CmdVal = "npx"
-        $ArgsArr = @("-y", "@modelcontextprotocol/server-fetch")
     } elseif ($Url) {
         $UrlVal = $Url
     } elseif ($Command) {
@@ -390,8 +434,13 @@ if ($AddMcp) {
             $EnvObj[$SecureVarName] = "`${$SecureVarName}"
         }
     } else {
-        $CmdVal = "npx"
-        $ArgsArr = @("-y", "@modelcontextprotocol/server-$ServerName")
+        if ($RunnerVal -eq "uvx" -or $RunnerVal -eq "python") {
+            $CmdVal = "uvx"
+            $ArgsArr = @("mcp-server-$ServerName")
+        } else {
+            $CmdVal = "npx"
+            $ArgsArr = @("-y", "@modelcontextprotocol/server-$ServerName")
+        }
         if ($EnvVar) {
             $SecureVarName = $EnvVar
             $EnvPlaceholder = "your_${SecureVarName}_secret_here"
@@ -487,6 +536,9 @@ if ($AddMcp) {
         Write-Host "   Transport:   Streamable HTTP ($UrlVal)" -ForegroundColor Green
     } else {
         Write-Host "   Transport:   Stdio ($CmdVal)" -ForegroundColor Green
+        if ($RunnerVal) {
+            Write-Host "   Runtime:     $RunnerVal" -ForegroundColor Magenta
+        }
         Write-Host "   Arguments:   $($ArgsArr -join ' ')" -ForegroundColor Yellow
         if ($EnvObj.Count -gt 0) {
             Write-Host "   Environment: $(($EnvObj.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ', ')" -ForegroundColor Cyan

@@ -28,3 +28,12 @@ Use this skill when initializing context for a project, scaffolding new agent ru
    ```
    * Creates `.agents/skills/<skill-name>/SKILL.md` with YAML frontmatter.
    * Populate with when-to-activate triggers, step-by-step procedure, and verification steps.
+
+4. **Manage MCP Tooling & Runtimes (uvx / npx):**
+   ```bash
+   init-context --add-mcp <name> [--runtime uvx|npx] [--args <args>]
+   init-context --list-mcp
+   init-context --remove-mcp <name>
+   ```
+   * Automatically aligns stdio tools to `uvx` (Python) or `npx` (Node) based on project markers.
+   * Tokens and secrets reference `${VAR_NAME}` from `.env` and are protected from Git.

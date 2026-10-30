@@ -97,7 +97,24 @@ init-context --add-mcp brave
 init-context --add-mcp github --env-var MY_CUSTOM_GH_TOKEN
 ```
 
-### 2️⃣ Add Custom Stdio or Remote HTTP MCP Servers
+### 2️⃣ 🐍 Python vs. Node Runtimes: `uvx` vs. `npx`
+Auto-Context automatically aligns stdio MCP tools with your project's ecosystem:
+* **Auto-Detection:** If your workspace has a `pyproject.toml`, `requirements.txt`, or `Pipfile`, tools like `sqlite`, `git`, and `fetch` automatically use `uvx` (`mcp-server-*`). In Node.js / JavaScript projects, it defaults to `npx` (`@modelcontextprotocol/server-*`).
+* **Explicit Runtime Flag (`--runtime` / `--runner`):** You can force your preferred runtime at any time:
+  ```bash
+  # Force Python uvx runner
+  init-context --add-mcp sqlite --runtime uvx
+
+  # Force Node.js npx runner
+  init-context --add-mcp sqlite --runtime npx
+
+  # Python-native tools (DuckDB, Time, Git)
+  init-context --add-mcp duckdb
+  init-context --add-mcp time
+  init-context --add-mcp git --runtime uvx
+  ```
+
+### 3️⃣ Add Custom Stdio or Remote HTTP MCP Servers
 ```bash
 # Add custom Python/Node MCP server
 init-context --add-mcp my-tool --command "python3" --args "server.py"
@@ -106,7 +123,7 @@ init-context --add-mcp my-tool --command "python3" --args "server.py"
 init-context --add-mcp remote-api --url "https://mcp.mycompany.com/mcp"
 ```
 
-### 3️⃣ List and Delete MCP Tools
+### 4️⃣ List and Delete MCP Tools
 ```bash
 # List all active project or global MCP tools
 init-context --list-mcp
@@ -306,9 +323,11 @@ Whenever an AI coding assistant operates in an `auto-context` repository:
 
 ### নিরাপদ MCP টুল ম্যানেজমেন্ট (Secure Secrets via .env):
 টোকেন বা পাসওয়ার্ড কখনোই কনফিগ ফাইলে ওপেন টেক্সটে সেভ হয় না, বরং `.env` এবং `.gitignore`-এর মাধ্যমে নিরাপদ থাকে:
-* **টুল যুক্ত করতে:**
+* **টুল যুক্ত করতে (Node `npx` বা Python `uvx` সাপোর্ট):**
   ```bash
-  init-context --add-mcp sqlite             # SQLite লোকাল ডাটাবেজ
+  init-context --add-mcp sqlite             # অটো ডিটেকশন (Node হলে npx, Python হলে uvx)
+  init-context --add-mcp sqlite --runtime uvx # পাইথন uvx প্যাকেজ রানার নিশ্চিত করতে
+  init-context --add-mcp duckdb             # পাইথন-বেসড DuckDB MCP সার্ভার
   init-context --add-mcp github             # GitHub API (.env থেকে টোকেন পড়বে)
   init-context --add-mcp postgres           # PostgreSQL (.env থেকে DATABASE_URL পড়বে)
   ```
