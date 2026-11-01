@@ -17,11 +17,12 @@ Whenever you learn a new pattern, receive a correction, observe a coding prefere
 1. **Identify the Type:**
    - **Rule:** If it is a constraint, coding standard, safety boundary, or architectural preference -> Create a Rule (`init-context -r <name>`).
    - **Skill:** If it is a multi-step procedure, deployment workflow, diagnosis runbook, or CLI sequence -> Create a Skill (`init-context -s <name>`).
-2. **Scope Decision:**
-   - **Machine-Wide / Global (DEFAULT for reusable standards):** If the rule is a reusable best practice, coding standard, or user says "for future" / "always" -> **MANDATORY: Always use `--global` (`-g`)** to register in Central Memory (`~/.auto-context/memory`) and `~/.gemini/config/plugins/auto-context/`. Immediately run `init-context memory push`.
-   - **Project-Specific:** Only save locally in `.agents/rules/` if strictly confined to this specific project's internal code.
-   - **Token Conservation:** DO NOT burn tokens manually searching directories or reading files to check for existing rules. Directly run `init-context -r <name> [-g]` — CLI handles uniqueness checks automatically.
-3. **Execution:**
+2. **Zero Token Waste:**
+   - **DO NOT burn tokens manually searching directories or reading files to check for existing rules.** Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.
+3. **Mandatory Global Scope:**
+   - When the user mentions "for future", "always", or defines a reusable standard, **MANDATORY: Always pass `--global` (`-g`)** and immediately follow with `init-context memory push`.
+   - **Project-Specific:** Only omit `-g` if strictly confined to this specific project repository.
+4. **Execution:**
    - Use the `init-context` CLI tool to scaffold the file.
    - Populate it with clear objectives, constraints, or step-by-step instructions.
    - Inform the user of the new rule or skill codified.
@@ -31,6 +32,7 @@ You have native access to run `init-context` via terminal commands:
 - `init-context`: Scaffolds or repairs project context.
 - `init-context -r <rule-name> [-g]`: Creates a new rule with frontmatter.
 - `init-context -s <skill-name> [-g]`: Creates a new skill with frontmatter.
+- `init-context memory push`: Synchronizes central brain memory to private Git repository.
 
 ### 4. Required Content & Structure in `context.md`
 1. **Master Credentials & Configuration Vault (Section 1):** Keep all ports, IPs, secrets, tokens, and endpoints synchronized.

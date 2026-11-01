@@ -27,11 +27,13 @@ Whenever you learn a new pattern, receive a correction, observe a user preferenc
 1. **Identify the Type:**
    - **Rule (`init-context -r <name>`):** If it is a constraint, coding standard, safety boundary, or architectural preference.
    - **Skill (`init-context -s <name>`):** If it is a multi-step procedure, deployment workflow, diagnosis runbook, or CLI sequence.
-2. **Scope Decision:**
-   - **Project-Specific:** Save in `.agents/rules/` or `.agents/skills/`.
-   - **Machine-Wide / Global:** If it applies to all projects, use `--global` (`-g`) to register in `~/.gemini/config/plugins/auto-context/`.
-3. **Execution:**
-   - Execute `init-context -r <name>` or `init-context -s <name>`.
+2. **Zero Token Waste:**
+   - **DO NOT burn tokens manually searching directories or reading files to check for existing rules.** Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.
+3. **Mandatory Global Scope:**
+   - When the user mentions "for future", "always", or defines a reusable standard, **MANDATORY: Always pass `--global` (`-g`)** and immediately follow with `init-context memory push`.
+   - **Project-Specific:** Only omit `-g` if the instruction is strictly confined to this specific project repository.
+4. **Execution:**
+   - Execute `init-context -r <name> [-g]` or `init-context -s <name> [-g]`.
    - Populate the generated markdown file with clear objectives, constraints, or step-by-step instructions.
    - Inform the user of the new rule or skill codified so they are aware of the persistent learning.
 
@@ -40,6 +42,7 @@ You have native access to run `init-context` via terminal commands:
 - `init-context`: Scaffolds or repairs 5-tier context in the active project.
 - `init-context -r <rule-name> [--global]`: Creates a compliant rule with frontmatter.
 - `init-context -s <skill-name> [--global]`: Creates a compliant skill with frontmatter.
+- `init-context memory push`: Synchronizes central brain memory to private Git repository.
 
 ### 5. Documentation Integrity
 - Never truncate or erase previously logged solutions. Append each new challenge chronologically.

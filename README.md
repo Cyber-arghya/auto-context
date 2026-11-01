@@ -6,7 +6,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/auto-context-cli.svg?color=blue)](https://pypi.org/project/auto-context-cli/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/auto-context-cli.svg)](https://pypi.org/project/auto-context-cli/)
-[![GitHub Release](https://img.shields.io/github/v/release/Cyber-arghya/auto-context?color=green)](https://github.com/Cyber-arghya/auto-context/releases/tag/v1.0.0)
+[![GitHub Release](https://img.shields.io/github/v/release/Cyber-arghya/auto-context?color=green)](https://github.com/Cyber-arghya/auto-context/releases/tag/v1.0.1)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux%20WSL2-success.svg)](#-quick-one-line-install)
 [![AI Supported](https://img.shields.io/badge/AI%20Supported-Antigravity%20%7C%20Cursor%20%7C%20Claude%20Code%20%7C%20Copilot%20%7C%20Windsurf-orange.svg)](#-supported-ai-assistants)
@@ -178,6 +178,11 @@ You can easily teach your AI assistants new abilities (**Skills**) or enforce cu
 | :--- | :--- | :--- | :--- |
 | **Rule** | Behavioral constraints, coding standards, security boundaries, or test requirements. | Always active (`trigger: always_on`) or context-triggered. | `.agents/rules/<name>.md` or `GEMINI.md` |
 | **Skill** | Step-by-step procedures, deployment runbooks, debugging steps, or CLI tool guides. | Activated on-demand when relevant task is requested. | `.agents/skills/<name>/SKILL.md` |
+
+> [!IMPORTANT]
+> **Core Directives for AI Coding Agents:**
+> - **Zero Token Waste:** DO NOT burn tokens manually searching directories or reading files to check for existing rules. Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.
+> - **Mandatory Global Scope:** When the user mentions "for future", "always", or defines a reusable standard, **MANDATORY: Always pass `--global` (`-g`)** and immediately follow with `init-context memory push`.
 
 ---
 
@@ -471,6 +476,10 @@ To prevent **Prompt Injection Leaks** and keep production secrets safe:
   ব্যস! আপনার প্রজেক্টে স্বয়ংক্রিয় কনটেক্সট ট্র্যাকিং চালু হয়ে যাবে।
 
 ### নতুন স্কিল বা রুল তৈরি করার নিয়ম:
+> [!IMPORTANT]
+> **এআই কোডিং এজেন্টের জন্য বাধ্যতামূলক নির্দেশিকা:**
+> - **জিরো টোকেন অপচয় (Zero Token Waste):** কোনো রুল বা স্কিল আগে থেকে আছে কিনা তা চেক করতে ম্যানুয়ালি ফাইল খোঁজা বা পড়ার কোনো প্রয়োজন নেই। সরাসরি `init-context -r <name> [-g]` রান করুন — সিএলআই স্বয়ংক্রিয়ভাবে ডুপ্লিকেট শনাক্ত ও কলিশন গার্ড দিয়ে প্রোটেক্ট করে।
+> - **বাধ্যতামূলক গ্লোবাল স্কোপ (Mandatory Global Scope):** ইউজার যখন "for future", "always" বা ভবিষ্যতের জন্য কোনো সাধারণ নিয়ম সেভ করতে বলবে, তখন অবশ্যই `--global` (`-g`) ব্যবহার করতে হবে এবং সাথে সাথে `init-context memory push` রান করে সেন্ট্রাল মেমরিতে সিঙ্ক করতে হবে।
 * **নতুন রুল (Rule) তৈরি করতে:**
   ```bash
   init-context -r my-rule-name       # বর্তমান প্রজেক্টের জন্য

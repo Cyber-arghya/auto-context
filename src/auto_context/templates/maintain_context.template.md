@@ -13,9 +13,8 @@ trigger: always_on
    - Architectural decisions or operational runbooks.
 
 2. **Autonomous Learning & Skill Crystallization**:
-   - **Scope Directive:** If the user mentions "remember for future", "always", "in all projects", or defines a reusable architecture/coding preference, **MANDATORY: Always pass `--global` (`-g`)** (`init-context -r <name> -g` or `init-context -s <name> -g`). This registers the rule globally and in Central Memory (`~/.auto-context/memory`).
-   - Immediately follow with `init-context memory push` so the private git brain stays continuously synchronized.
-   - **Zero Token Waste:** DO NOT waste tokens manually scanning directories or reading existing rule/skill files to check for duplicates. Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.
+   - **Zero Token Waste:** DO NOT burn tokens manually searching directories or reading files to check for existing rules. Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.
+   - **Mandatory Global Scope:** When the user mentions "for future", "always", or defines a reusable standard, **MANDATORY: Always pass `--global` (`-g`)** and immediately follow with `init-context memory push`.
    - Populates the file with clear instructions and notifies the user.
 
 3. **CLI Tool Availability**:
@@ -23,6 +22,7 @@ trigger: always_on
      - `init-context`: Initialize/repair context.
      - `init-context -r <name> [-g]`: Create rule.
      - `init-context -s <name> [-g]`: Create skill.
+     - `init-context memory push`: Push updates to central memory.
 
 4. **No User Reminder Needed**: The user must never need to ask the agent to update `context.md` or learn rules. This is a strict automated post-condition for all actions.
 

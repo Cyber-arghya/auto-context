@@ -7,6 +7,11 @@ description: Scaffolds or updates a comprehensive context.md file, manages proje
 
 Use this skill when initializing context for a project, scaffolding new agent rules, or learning and crystallizing custom skills.
 
+## Critical Agent Mandates
+
+- **Zero Token Waste:** DO NOT burn tokens manually searching directories or reading files to check for existing rules. Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.
+- **Mandatory Global Scope:** When the user mentions "for future", "always", or defines a reusable standard, MANDATORY: Always pass `--global` (`-g`) and immediately follow with `init-context memory push`.
+
 ## Capabilities & Workflows
 
 1. **Scaffold or Repair Project Context:**
@@ -19,21 +24,22 @@ Use this skill when initializing context for a project, scaffolding new agent ru
    ```bash
    init-context -r <rule-name> [--global]
    ```
-   * Creates `.agents/rules/<rule-name>.md` with YAML frontmatter.
+   * Creates `.agents/rules/<rule-name>.md` (or globally in plugin and Central Memory with `-g`).
+   * Built-in collision guard prevents overwrites automatically.
    * Populate with guidelines, constraints, and prohibited patterns.
 
 3. **Codify a New Skill (Workflows, Runbooks, Multi-Step Tasks):**
    ```bash
    init-context -s <skill-name> [--global]
    ```
-   * Creates `.agents/skills/<skill-name>/SKILL.md` with YAML frontmatter.
+   * Creates `.agents/skills/<skill-name>/SKILL.md` (or globally with `-g`).
    * Populate with when-to-activate triggers, step-by-step procedure, and verification steps.
 
 4. **Manage MCP Tooling & Runtimes (uvx / npx):**
    ```bash
-   init-context --add-mcp <name> [--runtime uvx|npx] [--args <args>]
-   init-context --list-mcp
-   init-context --remove-mcp <name>
+   init-context mcp add <name> [--runtime uvx|npx] [--args <args>]
+   init-context mcp list
+   init-context mcp remove <name>
    ```
    * Automatically aligns stdio tools to `uvx` (Python) or `npx` (Node) based on project markers.
    * Tokens and secrets reference `${VAR_NAME}` from `.env` and are protected from Git.
@@ -48,6 +54,7 @@ Use this skill when initializing context for a project, scaffolding new agent ru
    init-context memory init [repo-name]   # Creates strictly private GitHub brain
    init-context memory push               # Zero-bypass secret audit & push to GitHub
    init-context memory pull [repo-url]    # Pull and synchronize brain to new machine
+   init-context memory status             # Inspect central brain status
    ```
    * Enforces `--private` flag during remote creation.
    * Scans every file for tokens, keys, and `.env` before pushing (hard-blocks with Exit 1 on secret detection).
