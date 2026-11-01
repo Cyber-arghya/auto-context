@@ -27,3 +27,4 @@ Maintain readable, maintainable, modular, and type-safe codebases with clear err
    - Prohibit unchecked null / undefined dereferencing.
 6. **Named Constants Over Magic Values:**
    - Replace literal strings and magic numbers with descriptive, uppercase module-level constants.
+7. **Immutable Data Structures**

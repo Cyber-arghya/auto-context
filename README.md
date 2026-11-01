@@ -69,7 +69,7 @@ Auto-Context supports both modern subcommands (`init-context <command>`) and sta
 | :--- | :--- | :--- |
 | `init-context init [DIR]` | `init-context [DIR]` | Scaffolds 5-tier context in active or specified directory. |
 | `init-context scan [DIR]` | `init-context --scan` | Stack-adaptive codebase scanner: generates satellites (.agents/context/). |
-| `init-context rule <name>` | `init-context -r <name> [-a]` | Scaffolds a new rule or appends guidelines to existing domain rule (`-a`). |
+| `init-context rule <name>` | `init-context -r <name> [-a]` | Scaffolds a rule or appends to a domain with `registry.json` duplicate protection. |
 | `init-context skill <name>` | `init-context -s <name>` | Scaffolds a new agent skill directory with triggers & runbook. |
 | `init-context promote <name>` | — | Promotes local workspace rule/skill to Global Plugin & Central Memory. |
 | `init-context update` | — | Modular, non-breaking update for CLI, global plugin & system rules. |

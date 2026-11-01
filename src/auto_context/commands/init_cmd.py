@@ -167,6 +167,10 @@ def init(
     for rule_file in (templates / "rules").glob("*.md"):
         _copy_if_missing(rule_file, rules_dest / rule_file.name, force=force, dry_run=dry_run)
 
+    reg_tmpl = templates / "rules" / "registry.json"
+    if reg_tmpl.exists():
+        _copy_if_missing(reg_tmpl, rules_dest / "registry.json", force=force, dry_run=dry_run)
+
     maintain_tmpl = templates / "maintain_context.template.md"
     if maintain_tmpl.exists():
         content = _render(maintain_tmpl, variables)
@@ -234,12 +238,86 @@ def init(
 
 # ── rule command ──────────────────────────────────────────────────────────────
 
+def _load_registry(registry_file: Path) -> dict:
+    if registry_file.exists():
+        try:
+            import json
+            return json.loads(registry_file.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    tmpl = get_templates_dir() / "rules" / "registry.json"
+    if tmpl.exists():
+        try:
+            import json
+            return json.loads(tmpl.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {"version": "1.0.0", "domains": {}}
+
+
+def _find_duplicate_rule(registry: dict, text_or_title: str) -> Optional[tuple[str, str, str]]:
+    import re
+    clean_query = re.sub(r"[^a-zA-Z0-9\s]", "", text_or_title).lower().strip()
+    query_words = set(w for w in clean_query.split() if len(w) > 3)
+
+    for d_key, domain in registry.get("domains", {}).items():
+        d_file = domain.get("file", f"{d_key}.md")
+        for r in domain.get("rules", []):
+            r_title = r.get("title", "")
+            r_id = r.get("id", "")
+            clean_title = re.sub(r"[^a-zA-Z0-9\s]", "", r_title).lower().strip()
+
+            if clean_query == clean_title or (len(clean_query) > 6 and clean_query in clean_title) or (len(clean_title) > 6 and clean_title in clean_query):
+                return d_key, r_title, d_file
+            if r_id and r_id in clean_query.replace(" ", "-"):
+                return d_key, r_title, d_file
+
+            r_keywords = set(k.lower() for k in r.get("keywords", []))
+            if query_words and len(query_words.intersection(r_keywords)) >= 2:
+                return d_key, r_title, d_file
+
+    return None
+
+
+def _register_rule_in_registry(registry_file: Path, domain_key: str, rule_title: str, file_name: str) -> None:
+    import json
+    import re
+    from datetime import date
+
+    registry = _load_registry(registry_file)
+    if "domains" not in registry:
+        registry["domains"] = {}
+
+    if domain_key not in registry["domains"]:
+        registry["domains"][domain_key] = {
+            "file": file_name,
+            "name": domain_key.replace("-", " ").title(),
+            "description": f"Domain rules for {domain_key}",
+            "rules": []
+        }
+
+    clean_first_line = rule_title.strip().splitlines()[0].strip("* ").strip()
+    slug = re.sub(r"[^a-zA-Z0-9\s-]", "", clean_first_line).strip().lower().replace(" ", "-")
+    clean_words = [w for w in re.sub(r"[^a-zA-Z0-9\s]", "", clean_first_line).lower().split() if len(w) > 3]
+
+    existing_ids = [r.get("id") for r in registry["domains"][domain_key].get("rules", [])]
+    if slug not in existing_ids:
+        registry["domains"][domain_key]["rules"].append({
+            "id": slug,
+            "title": clean_first_line,
+            "keywords": clean_words
+        })
+        registry["last_updated"] = date.today().isoformat()
+        registry_file.parent.mkdir(parents=True, exist_ok=True)
+        registry_file.write_text(json.dumps(registry, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
 def _append_guideline_to_file(dest_file: Path, text_to_append: str) -> None:
     import re
     content = dest_file.read_text(encoding="utf-8")
     existing_nums = [int(m) for m in re.findall(r"(?m)^(\d+)\.\s+\*", content)]
     next_num = (max(existing_nums) + 1) if existing_nums else 1
-    
+
     clean_guideline = text_to_append.strip()
     if not re.match(r"^\d+\.\s+", clean_guideline):
         if not clean_guideline.startswith("**"):
@@ -269,7 +347,7 @@ def new_rule(
     guideline: Annotated[Optional[str], typer.Option("--guideline", help="Guideline text to append to rule.")] = None,
     dry_run: Annotated[bool, typer.Option("--dry-run", "-d")] = False,
 ) -> None:
-    """Scaffold a new agent rule file or append to an existing domain rule."""
+    """Scaffold a new agent rule file or append to an existing domain rule with duplicate guard."""
     clean_name = name.lower().replace(" ", "-").replace("_", "-").removesuffix(".md")
     title = clean_name.replace("-", " ").title()
 
@@ -279,21 +357,39 @@ def new_rule(
         else (target or Path.cwd()).resolve() / AGENTS_SUBDIR / "rules"
     )
     dest_file = dest_dir / f"{clean_name}.md"
+    registry_file = dest_dir / "registry.json"
 
     if dest_file.exists() and not force:
         if append or guideline:
             text_to_append = guideline or "New domain constraint and best practice."
+
+            # Check duplicate against registry
+            dup = _find_duplicate_rule(_load_registry(registry_file), text_to_append)
+            if dup:
+                dup_domain, dup_title, dup_file = dup
+                console.print(Panel(
+                    f"[bold yellow]⚠️ Duplicate Rule Detected — Skipped![/]\n"
+                    f"[white]The guideline '[cyan]{text_to_append}[/]' matches existing rule:\n"
+                    f"[green]'{dup_title}'[/] inside [yellow]{dup_file}[/] (Domain: [cyan]{dup_domain}[/]).\n\n"
+                    f"[dim]Registry checked: {registry_file}[/]",
+                    border_style="yellow",
+                ))
+                return
+
             if not dry_run:
                 _append_guideline_to_file(dest_file, text_to_append)
+                _register_rule_in_registry(registry_file, clean_name, text_to_append, dest_file.name)
                 if global_ and config.MEMORY_DIR.exists():
                     mem_dest = config.MEMORY_DIR / "rules" / f"{clean_name}.md"
                     if mem_dest.exists():
                         _append_guideline_to_file(mem_dest, text_to_append)
+                        _register_rule_in_registry(config.MEMORY_DIR / "rules" / "registry.json", clean_name, text_to_append, dest_file.name)
             console.print(Panel(
-                f"[bold green]✨ Rule Domain Updated (Appended)![/]\n"
-                f"[yellow]   Rule:[/]  {clean_name}\n"
-                f"[cyan]   File:[/]  {dest_file}\n"
-                f"[green]   Added:[/] {text_to_append}",
+                f"[bold green]✨ Rule Domain Updated & Registered![/]\n"
+                f"[yellow]   Rule:[/]     {clean_name}\n"
+                f"[cyan]   File:[/]     {dest_file}\n"
+                f"[cyan]   Registry:[/] {registry_file}\n"
+                f"[green]   Added:[/]    {text_to_append}",
                 border_style="green",
             ))
             return

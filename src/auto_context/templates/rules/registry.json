@@ -1,0 +1,226 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-11-02",
+  "description": "Registry of unique rules and guidelines to prevent duplicates and enforce domain consolidation.",
+  "domains": {
+    "code-standards": {
+      "file": "code-standards.md",
+      "name": "Code Quality & Architecture Standards",
+      "description": "Clean code, defensive programming, typing, naming, and error handling",
+      "rules": [
+        {
+          "id": "defensive-coding-early-return",
+          "title": "Defensive Coding & Early Return",
+          "keywords": [
+            "guard clauses",
+            "early return",
+            "nested indentation",
+            "input validation",
+            "defensive coding"
+          ]
+        },
+        {
+          "id": "clean-code-srp",
+          "title": "Clean Code & Self-Documenting Logic",
+          "keywords": [
+            "single responsibility",
+            "srp",
+            "clean code",
+            "variable names",
+            "docstrings"
+          ]
+        },
+        {
+          "id": "structured-error-handling",
+          "title": "Structured Error Handling",
+          "keywords": [
+            "exception handling",
+            "empty catch",
+            "error logging",
+            "try catch"
+          ]
+        },
+        {
+          "id": "conventional-git-commits",
+          "title": "Conventional Git Commits",
+          "keywords": [
+            "commit messages",
+            "feat",
+            "fix",
+            "docs",
+            "chore",
+            "refactor"
+          ]
+        },
+        {
+          "id": "static-type-annotations",
+          "title": "Static Type Annotations & Null Safety",
+          "keywords": [
+            "type hints",
+            "type annotations",
+            "null safety",
+            "typing",
+            "null pointer"
+          ]
+        },
+        {
+          "id": "named-constants-over-magic-values",
+          "title": "Named Constants Over Magic Values",
+          "keywords": [
+            "magic numbers",
+            "literal strings",
+            "constants",
+            "magic values"
+          ]
+        },
+        {
+          "id": "immutable-data-structures",
+          "title": "Immutable Data Structures",
+          "keywords": [
+            "immutable",
+            "data",
+            "structures"
+          ]
+        }
+      ]
+    },
+    "security-boundaries": {
+      "file": "security-boundaries.md",
+      "name": "Security Boundaries & Secret Safety",
+      "description": "Secret protection, API keys, sandbox isolation, and network exposure",
+      "rules": [
+        {
+          "id": "zero-hardcoded-secrets",
+          "title": "Zero Hardcoded Secrets",
+          "keywords": [
+            "api keys",
+            "passwords",
+            "tokens",
+            "private keys",
+            "secrets",
+            ".env"
+          ]
+        },
+        {
+          "id": "local-sandbox-test-data-isolation",
+          "title": "Local Sandbox Test Data Isolation",
+          "keywords": [
+            "context.local.md",
+            "mock credentials",
+            "dummy logins",
+            "test accounts",
+            "git-ignored"
+          ]
+        },
+        {
+          "id": "public-exposure-boundaries",
+          "title": "Public Exposure Boundaries",
+          "keywords": [
+            "port binding",
+            "127.0.0.1",
+            "localhost",
+            "exposure",
+            "tunneling"
+          ]
+        }
+      ]
+    },
+    "hub-satellite-architecture": {
+      "file": "hub-satellite-architecture.md",
+      "name": "Hub & Satellite Modular Architecture & Idempotency Proof",
+      "description": "Context budget, satelittes, deterministic idempotency, and gotchas invariants",
+      "rules": [
+        {
+          "id": "hub-satellite-token-budget",
+          "title": "Hub & Satellite Pattern (Strict Token Budget)",
+          "keywords": [
+            "context.md",
+            "satellites",
+            "routes.md",
+            "schema.md",
+            "gotchas.md",
+            "token budget"
+          ]
+        },
+        {
+          "id": "strict-idempotency-proof",
+          "title": "Strict Idempotency Proof",
+          "keywords": [
+            "idempotency",
+            "anchored blocks",
+            "re-running",
+            "deterministic",
+            "hash check"
+          ]
+        },
+        {
+          "id": "brutal-truth-filter",
+          "title": "The Brutal Truth Filter (Zero Dead Logs)",
+          "keywords": [
+            "gotchas.md",
+            "anti-patterns",
+            "dead logs",
+            "bug cemeteries",
+            "invariants"
+          ]
+        },
+        {
+          "id": "kiss-dry-heuristics",
+          "title": "KISS & DRY Heuristics",
+          "keywords": [
+            "convention heuristics",
+            "graceful degradation",
+            "lightweight scanners"
+          ]
+        }
+      ]
+    },
+    "readme-docs-sync": {
+      "file": "readme-docs-sync.md",
+      "name": "Mandatory README & Documentation Synchronization",
+      "description": "Documentation synchronization for CLI commands, options, and workflows",
+      "rules": [
+        {
+          "id": "zero-undocumented-features",
+          "title": "Zero Undocumented Features",
+          "keywords": [
+            "readme",
+            "documentation",
+            "docs sync",
+            "bengali guide",
+            "options table"
+          ]
+        },
+        {
+          "id": "clear-executable-instructions",
+          "title": "Clear & Executable Instructions",
+          "keywords": [
+            "executable commands",
+            "cli examples",
+            "options tables",
+            "syntax"
+          ]
+        },
+        {
+          "id": "safety-non-breaking-boundaries",
+          "title": "Safety & Non-Breaking Boundaries",
+          "keywords": [
+            "non-breaking",
+            "protection guarantees",
+            "custom rules preserve"
+          ]
+        },
+        {
+          "id": "release-version-alignment",
+          "title": "Release Version Alignment",
+          "keywords": [
+            "version bump",
+            "pyproject.toml",
+            "tags",
+            "release badges"
+          ]
+        }
+      ]
+    }
+  }
+}

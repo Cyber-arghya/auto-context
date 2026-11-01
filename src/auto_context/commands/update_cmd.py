@@ -241,6 +241,7 @@ def update_global_plugin() -> int:
         ("plugin/rules/security-boundaries.md", rules_dir / "security-boundaries.md"),
         ("plugin/rules/hub-satellite-architecture.md", rules_dir / "hub-satellite-architecture.md"),
         ("plugin/rules/readme-docs-sync.md", rules_dir / "readme-docs-sync.md"),
+        ("plugin/rules/registry.json", rules_dir / "registry.json"),
         ("plugin/skills/auto-context/SKILL.md", skills_dir / "SKILL.md"),
         ("plugin/skills/browser-testing/SKILL.md", plugin_dir / "skills" / "browser-testing" / "SKILL.md"),
         ("plugin/skills/docker-ops/SKILL.md", plugin_dir / "skills" / "docker-ops" / "SKILL.md"),
@@ -266,6 +267,7 @@ def update_global_plugin() -> int:
                 "security-boundaries.md": tmpl_dir / "rules" / "security-boundaries.md",
                 "hub-satellite-architecture.md": tmpl_dir / "rules" / "hub-satellite-architecture.md",
                 "readme-docs-sync.md": tmpl_dir / "rules" / "readme-docs-sync.md",
+                "registry.json": tmpl_dir / "rules" / "registry.json",
             }
             fb = fallback_map.get(dest_path.name)
             if fb and fb.exists():
