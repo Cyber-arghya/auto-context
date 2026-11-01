@@ -61,45 +61,32 @@ cd /path/to/any-project
 init-context
 ```
 
-### Options & Flags:
-```text
-init-context [OPTIONS] [DIRECTORY]
+### Command Reference & Syntax:
 
-OPTIONS (CONTEXT & RULES):
-  -r, --new-rule <NAME>     Scaffold a new rule file (.agents/rules/<name>.md)
-  -s, --new-skill <NAME>    Scaffold a new skill folder (.agents/skills/<name>/SKILL.md)
-  -g, --global              Target global plugin scope (~/.gemini/config/plugins/auto-context/)
-  -f, --force               Overwrite existing context.md and standing rule files
-  -d, --dry-run             Preview generated structure without writing to disk
-  -v, --version             Display current version
-  -h, --help                Show help documentation
+Auto-Context supports both modern subcommands (`init-context <command>`) and standard legacy flags:
 
-OPTIONS (CENTRAL MEMORY & GRANULAR SHARING):
-  memory init [REPO]        Initialize private central memory repo (~/.auto-context/memory)
-  memory push               Audit secrets & push memory brain to private GitHub repo
-  memory pull [URL]         Pull & sync central memory brain from remote repo
-  memory status             Show status of central memory brain
-  share <NAME>              Audit & publish skill or rule to GitHub Gist
-  import <URL>              Audit & import skill or rule from GitHub Gist or URL
-  update                    Safely update CLI, global plugin & public rules (Non-breaking)
-  update --check            Check for updates without modifying files
-  update -w, --workspace    Update managed system rules in active workspace
-  update -g, --global       Sync global plugin (~/.gemini/config/plugins/auto-context/)
-  update -c, --cli          Upgrade auto-context-cli package via uv/pipx/pip
-  --as <NAME>               Custom name when importing a skill or rule
-  --public                  Publish shared Gist as public (default)
-  --secret, --private       Publish shared Gist as unlisted/secret
+| Command | Shorthand / Flag | Description |
+| :--- | :--- | :--- |
+| `init-context init [DIR]` | `init-context [DIR]` | Scaffolds 5-tier context in active or specified directory. |
+| `init-context rule <name>` | `init-context -r <name>` | Scaffolds a new agent rule with YAML frontmatter. |
+| `init-context skill <name>` | `init-context -s <name>` | Scaffolds a new agent skill directory with triggers & runbook. |
+| `init-context promote <name>` | — | Promotes local workspace rule/skill to Global Plugin & Central Memory. |
+| `init-context update` | — | Modular, non-breaking update for CLI, global plugin & system rules. |
+| `init-context share <name>` | — | Audits secrets and shares a rule or skill via GitHub Gist. |
+| `init-context import <url>` | — | Imports a rule or skill with 3-way Collision Guard protection. |
+| `init-context memory init` | — | Initializes private GitHub brain repository (`~/.auto-context/memory`). |
+| `init-context memory push` | — | Auto-harvests workspace rules, audits secrets & pushes to private GitHub. |
+| `init-context memory pull` | — | Pulls and restores central brain on a new machine. |
+| `init-context memory status` | — | Displays central brain location, remote URL, and rules/skills count. |
+| `init-context mcp add <name>`| `init-context --add-mcp` | Adds or updates an MCP tool (Node `npx` or Python `uvx`). |
+| `init-context mcp list` | `init-context --list-mcp` | Lists all active MCP server configurations. |
+| `init-context mcp remove <name>`| `init-context --remove-mcp` | Safely removes an MCP server configuration. |
 
-OPTIONS (MCP TOOLING):
-  --add-mcp <NAME>          Add or update an MCP server configuration
-  --remove-mcp <NAME>       Remove an MCP server from configuration
-  --list-mcp                List all active MCP server tools
-  --preset <PRESET>         Preset template (sqlite, postgres, github, filesystem, brave, fetch)
-  --command <CMD>           Executable command for stdio server (e.g. npx, uvx, python3)
-  --args <ARGS>             Arguments to pass to command
-  --url <URL>               Streamable HTTP endpoint URL for remote MCP server
-  --env <KEY=VAL,...>       Environment variables (e.g. 'GITHUB_TOKEN=xyz')
-```
+### Global Flags:
+* `-g, --global`: Targets machine-wide scope (`~/.gemini/config/plugins/auto-context/` & `~/.auto-context/memory/`).
+* `-f, --force`: Overwrites existing files (bypasses collision guards with confirmation).
+* `-d, --dry-run`: Previews actions without writing files or modifying directories.
+* `-v, --version`: Displays installed package version.
 
 ---
 
@@ -292,6 +279,32 @@ triggers: ["docker", "container", "compose", "dockerfile"]
    docker compose ps
    ```
 ```
+
+---
+
+## 🚀 Rule Promotion & Auto-Harvesting (`init-context promote`)
+
+Sometimes a rule or workflow starts as a quick experiment in one project, but proves so valuable that you want every project across your machine and team to inherit it.
+
+### 1️⃣ 1-Command Rule Promotion
+```bash
+init-context promote docker-multi-stage
+```
+* **Elevates Local to Global:** Copies `.agents/rules/docker-multi-stage.md` directly into `~/.gemini/config/plugins/auto-context/rules/` and `~/.auto-context/memory/rules/`.
+* **Zero Rewriting:** Preserves all existing YAML frontmatter, guidelines, and constraints.
+* **Instant Sync:** Immediately run `init-context memory push` to backup the newly promoted rule to your private Git brain.
+
+### 2️⃣ Auto-Harvesting in Central Memory
+When you run:
+```bash
+init-context memory push
+```
+The CLI automatically:
+1. **Discovers Local Knowledge:** Scans the active workspace's `.agents/rules/` and `.agents/skills/`.
+2. **Harvests to Central Memory:** Copies any new rules and skills into `~/.auto-context/memory/` without overwriting existing files.
+3. **Audits Secrets:** Runs the Zero-Bypass security audit.
+4. **Pushes to Private Remote:** Backs up everything to your private GitHub repo.
+Even if an agent originally codified a rule locally, running `memory push` guarantees zero knowledge loss!
 
 ---
 
@@ -530,6 +543,15 @@ To prevent **Prompt Injection Leaks** and keep production secrets safe:
 
 ### ⚡ টু-টায়ার প্রোগ্রেসিভ ডিসক্লোজার (টোকেন সাশ্রয়ী আর্কিটেকচার):
 শুরুতেই সব স্কিলের বড় ফাইল লোড করে চ্যাট ভারী করা হয় না। এআই শুরুতে মাত্র ১৫০–২০০ টোকেনের একটি ইনডেক্স (`context.md` Section 5) পড়ে। যখন নির্দিষ্ট টাস্কের কিওয়ার্ড মিলবে (যেমন: "docker", "rebase", "diagnostics", "ui test"), কেবল তখনই সংশ্লিষ্ট পূর্ণাঙ্গ স্কিলটি অন-ডিমান্ড মেমরিতে লোড হয়। ফলে টোকেন খরচ প্রায় ৮০% হ্রাস পায়!
+
+### 🚀 রুল প্রমোশন ও অটো-হার্ভেস্টিং (Promote & Auto-Harvest):
+* **লোকাল রুলকে গ্লোবালে উন্নীত করা (`promote`):**
+  যদি কোনো নির্দিষ্ট প্রজেক্টে তৈরি করা রুল বা স্কিল আপনার কম্পিউটারের সকল প্রজেক্টের জন্য প্রয়োজন হয়, তবে এক কমান্ডে গ্লোবাল প্লাগইন ও সেন্ট্রাল মেমরিতে প্রমোট করতে পারবেন:
+  ```bash
+  init-context promote docker-multi-stage
+  ```
+* **অটো-হার্ভেস্টিং (Auto-Harvesting in Memory Push):**
+  যখন আপনি `init-context memory push` চালাবেন, তখন বর্তমান প্রজেক্টের লোকাল রুল ও স্কিলগুলো স্বয়ংক্রিয়ভাবে সেন্ট্রাল মেমরিতে হার্ভেস্ট (সংগ্রহ) হবে এবং সিক্রেট অডিট পাস করে প্রাইভেট গিটহাবে ব্যাকআপ হয়ে যাবে।
 
 ### 🧠 সেন্ট্রাল মেমরি ব্রেইন ও ডটফাইলস (Disaster Recovery & Dotfiles):
 যেমনভাবে লিনাক্সে `.dotfiles` দিয়ে চোখের পলকে সব কনফিগারেশন সেটআপ করা যায়, তেমনি Auto-Context দিয়ে আপনার এআই এজেন্টের মেমরি ও স্কিল ক্লাউডে নিরাপদে সেভ থাকে:
