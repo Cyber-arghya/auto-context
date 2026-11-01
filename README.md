@@ -6,7 +6,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/auto-context-cli.svg?color=blue)](https://pypi.org/project/auto-context-cli/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/auto-context-cli.svg)](https://pypi.org/project/auto-context-cli/)
-[![GitHub Release](https://img.shields.io/github/v/release/Cyber-arghya/auto-context?color=green)](https://github.com/Cyber-arghya/auto-context/releases/tag/v1.0.1)
+[![GitHub Release](https://img.shields.io/github/v/release/Cyber-arghya/auto-context?color=green)](https://github.com/Cyber-arghya/auto-context/releases/tag/v1.0.2)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux%20WSL2-success.svg)](#-quick-one-line-install)
 [![AI Supported](https://img.shields.io/badge/AI%20Supported-Antigravity%20%7C%20Cursor%20%7C%20Claude%20Code%20%7C%20Copilot%20%7C%20Windsurf-orange.svg)](#-supported-ai-assistants)
@@ -81,6 +81,11 @@ OPTIONS (CENTRAL MEMORY & GRANULAR SHARING):
   memory status             Show status of central memory brain
   share <NAME>              Audit & publish skill or rule to GitHub Gist
   import <URL>              Audit & import skill or rule from GitHub Gist or URL
+  update                    Safely update CLI, global plugin & public rules (Non-breaking)
+  update --check            Check for updates without modifying files
+  update -w, --workspace    Update managed system rules in active workspace
+  update -g, --global       Sync global plugin (~/.gemini/config/plugins/auto-context/)
+  update -c, --cli          Upgrade auto-context-cli package via uv/pipx/pip
   --as <NAME>               Custom name when importing a skill or rule
   --public                  Publish shared Gist as public (default)
   --secret, --private       Publish shared Gist as unlisted/secret
@@ -95,6 +100,38 @@ OPTIONS (MCP TOOLING):
   --url <URL>               Streamable HTTP endpoint URL for remote MCP server
   --env <KEY=VAL,...>       Environment variables (e.g. 'GITHUB_TOKEN=xyz')
 ```
+
+---
+
+## 🔄 Modular Upstream Sync & Non-Breaking Updates (আপডেট ও সিঙ্ক)
+
+When new public rules, skills, or agent capabilities are added to the official [Cyber-arghya/auto-context](https://github.com/Cyber-arghya/auto-context) repository:
+
+### 1️⃣ Automatic Background Notification
+`auto-context` includes a lightweight, cached (24h TTL) update notifier. Whenever you or an AI agent runs `init-context`, it unobtrusively checks PyPI and GitHub. If new upstream rules or versions are available, a clean banner is displayed:
+```text
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ 🔔 Auto-Context Update Available: v1.0.1 → v1.0.2                           │
+│    New public rules, skills, and upstream capabilities are ready.           │
+│    Run 'init-context update' to sync modularly without breaking local context.│
+╰─────────────────────────────────────────────────────────────────────────────╯
+```
+
+### 2️⃣ 1-Command Safe Modular Update
+Run:
+```bash
+init-context update
+```
+- **Upgrades CLI Package:** Automatically updates `auto-context-cli` via `uv tool`, `pipx`, or `pip`.
+- **Syncs Global Plugin:** Updates `~/.gemini/config/plugins/auto-context/` (`rules/AGENTS.md`, `skills/auto-context/SKILL.md`) with upstream instructions.
+- **Syncs Workspace System Rules:** Updates system rules (`.agents/rules/maintain_context.md`, `AGENTS.md`, `GEMINI.md`).
+
+> [!TIP]
+> **Strict Non-Breaking Guarantees:**
+> - **Zero Context Loss:** `context.md` is **NEVER** modified or overwritten. All project credentials, architecture diagrams, and problem history remain 100% intact.
+> - **Secret Protection:** `context.local.md`, `.env`, and test logins are **NEVER** touched.
+> - **Custom Rule Safety:** Your personal rules (e.g. `docker-multi-stage.md`, `my-style.md`) are **NEVER** overwritten or deleted.
+> - **Automatic Backup:** If you customized `AGENTS.md`, the updater automatically creates an `AGENTS.md.bak` backup.
 
 ---
 
@@ -522,6 +559,20 @@ To prevent **Prompt Injection Leaks** and keep production secrets safe:
   init-context import <gist-url> -g # গ্লোবাল এআই প্লাগইনে যুক্ত করবে
   ```
   > **কলিশন গার্ড:** যদি একই নামের কোনো স্কিল আগে থেকেই থেকে থাকে, তবে এটি না জানিয়ে কখনো ওভাররাইট করবে না। টার্মিনালে আপনাকে ৩টি অপশন দেবে: `[O]verwrite / [R]ename / [C]ancel`।
+
+### 🔄 মডুলার আপস্ট্রিম আপডেট ও স্বয়ংক্রিয় নোটিফিকেশন (Update & Sync):
+অফিশিয়াল গিটহাব রিপোজিটরিতে নতুন কোনো রুলবুক, স্কিল বা এআই এজেন্ট টুল যুক্ত হলে ব্যবহারকারীরা খুব সহজে আপডেট পেতে পারেন:
+1. **স্বয়ংক্রিয় নোটিফিকেশন ব্যানার:** চব্বিশ ঘণ্টায় একবার ব্যাকগ্রাউন্ডে চেক করে নতুন রুল আসলে টার্মিনালে সুন্দর নোটিফিকেশন দেখাবে।
+2. **এক কমান্ডে নিরাপদ আপডেট (`init-context update`):**
+   ```bash
+   init-context update           # ফুল মডুলার আপডেট (CLI + গ্লোবাল প্লাগইন + সিস্টেম রুলস)
+   init-context update --check   # কোনো আপডেট আছে কিনা শুধু চেক করতে
+   init-context update -w        # শুধুমাত্র বর্তমান প্রজেক্টের সিস্টেম রুলস আপডেট করতে
+   ```
+> **ব্রেকিং-চেঞ্জ মুক্ত সুরক্ষা (Zero Breaking Guarantee):**
+> * আপনার প্রজেক্টের `context.md`, `context.local.md` বা `.env` ফাইলে **কখনোই হাত দেওয়া হবে না**।
+> * আপনার তৈরিকৃত কোনো কাস্টম রুল মুছে যাবে না।
+> * কোনো ফাইলে কাস্টম পরিবর্তন থাকলে স্বয়ংক্রিয়ভাবে `.bak` ব্যাকআপ তৈরি হবে।
 
 ### নিরাপদ MCP টুল ম্যানেজমেন্ট (Secure Secrets via .env):
 টোকেন বা পাসওয়ার্ড কখনোই কনফিগ ফাইলে ওপেন টেক্সটে সেভ হয় না, বরং `.env` এবং `.gitignore`-এর মাধ্যমে নিরাপদ থাকে:

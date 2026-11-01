@@ -42,6 +42,7 @@ You have native access to run `init-context` via terminal commands:
 - `init-context`: Scaffolds or repairs 5-tier context in the active project.
 - `init-context -r <rule-name> [--global]`: Creates a compliant rule with frontmatter.
 - `init-context -s <skill-name> [--global]`: Creates a compliant skill with frontmatter.
+- `init-context update`: Safely syncs public rules and upstream capabilities (non-breaking).
 - `init-context memory push`: Synchronizes central brain memory to private Git repository.
 
 ### 5. Documentation Integrity

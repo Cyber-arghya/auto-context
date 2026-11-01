@@ -22,6 +22,7 @@ trigger: always_on
      - `init-context`: Initialize/repair context.
      - `init-context -r <name> [-g]`: Create rule.
      - `init-context -s <name> [-g]`: Create skill.
+     - `init-context update`: Safely sync public rules and upstream capabilities (non-breaking).
      - `init-context memory push`: Push updates to central memory.
 
 4. **No User Reminder Needed**: The user must never need to ask the agent to update `context.md` or learn rules. This is a strict automated post-condition for all actions.

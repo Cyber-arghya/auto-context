@@ -63,3 +63,31 @@ STACK_INDICATORS: list[tuple[str, str, str]] = [
 GIT_COMMIT_INIT = "feat(memory): initialize central agent brain knowledge base"
 GIT_COMMIT_SYNC = "chore(memory): sync agent brain knowledge base"
 
+# ── Update & Upstream Configuration ──────────────────────────────────────────
+GITHUB_REPO = "Cyber-arghya/auto-context"
+PYPI_PACKAGE = "auto-context-cli"
+RAW_GITHUB_BASE = "https://raw.githubusercontent.com/Cyber-arghya/auto-context/main"
+PYPI_JSON_URL = f"https://pypi.org/pypi/{PYPI_PACKAGE}/json"
+GITHUB_LATEST_RELEASE_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+
+import tempfile
+
+def get_cache_dir() -> Path:
+    """Return user cache directory, falling back to tempdir if permission restricted."""
+    try:
+        p = HOME / ".auto-context" / "cache"
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+    except Exception:
+        p = Path(tempfile.gettempdir()) / "auto-context-cache"
+        try:
+            p.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            pass
+        return p
+
+CACHE_DIR: Path = get_cache_dir()
+UPDATE_CACHE_FILE: Path = CACHE_DIR / "update_check.json"
+UPDATE_CHECK_INTERVAL: int = 86400  # 24 hours in seconds
+
+

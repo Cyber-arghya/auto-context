@@ -32,6 +32,7 @@ You have native access to run `init-context` via terminal commands:
 - `init-context`: Scaffolds or repairs project context.
 - `init-context -r <rule-name> [-g]`: Creates a new rule with frontmatter.
 - `init-context -s <skill-name> [-g]`: Creates a new skill with frontmatter.
+- `init-context update`: Safely syncs public rules and upstream capabilities (non-breaking).
 - `init-context memory push`: Synchronizes central brain memory to private Git repository.
 
 ### 4. Required Content & Structure in `context.md`

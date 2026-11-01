@@ -10,7 +10,7 @@ set -euo pipefail
 
 REPO_RAW="https://raw.githubusercontent.com/Cyber-arghya/auto-context/main"
 PACKAGE_NAME="auto-context-cli"
-VERSION="1.0.1"
+VERSION="1.0.2"
 
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'

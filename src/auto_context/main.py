@@ -11,7 +11,7 @@ from typing import Annotated, Optional
 import typer
 from rich.console import Console
 
-from auto_context.commands import init_cmd, memory, mcp, share, import_cmd
+from auto_context.commands import init_cmd, memory, mcp, share, import_cmd, update_cmd
 
 app = typer.Typer(
     name="init-context",
@@ -32,6 +32,7 @@ app.command("skill")(init_cmd.new_skill)
 app.command("promote")(init_cmd.promote)
 app.command("share")(share.share)
 app.command("import")(import_cmd.import_item)
+app.command("update")(update_cmd.update)
 
 
 @app.callback(invoke_without_command=True)
@@ -119,4 +120,15 @@ def main() -> None:  # pragma: no cover
             sys.stderr.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
         except AttributeError:
             pass
-    app()
+
+    try:
+        app()
+    except SystemExit as e:
+        if e.code == 0 and not any(arg in sys.argv for arg in ("--version", "-v", "update", "--help", "-h")):
+            update_cmd.maybe_notify_update()
+        raise
+    except Exception:
+        raise
+    else:
+        if not any(arg in sys.argv for arg in ("--version", "-v", "update", "--help", "-h")):
+            update_cmd.maybe_notify_update()
