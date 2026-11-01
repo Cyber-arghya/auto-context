@@ -18,8 +18,9 @@ Whenever you learn a new pattern, receive a correction, observe a coding prefere
    - **Rule:** If it is a constraint, coding standard, safety boundary, or architectural preference -> Create a Rule (`init-context -r <name>`).
    - **Skill:** If it is a multi-step procedure, deployment workflow, diagnosis runbook, or CLI sequence -> Create a Skill (`init-context -s <name>`).
 2. **Scope Decision:**
-   - **Project-Specific:** Save in `.agents/rules/` or `.agents/skills/`.
-   - **Machine-Wide / Global:** If it applies to all projects, use `--global` (`-g`) to register in `~/.gemini/config/plugins/auto-context/`.
+   - **Machine-Wide / Global (DEFAULT for reusable standards):** If the rule is a reusable best practice, coding standard, or user says "for future" / "always" -> **MANDATORY: Always use `--global` (`-g`)** to register in Central Memory (`~/.auto-context/memory`) and `~/.gemini/config/plugins/auto-context/`. Immediately run `init-context memory push`.
+   - **Project-Specific:** Only save locally in `.agents/rules/` if strictly confined to this specific project's internal code.
+   - **Token Conservation:** DO NOT burn tokens manually searching directories or reading files to check for existing rules. Directly run `init-context -r <name> [-g]` — CLI handles uniqueness checks automatically.
 3. **Execution:**
    - Use the `init-context` CLI tool to scaffold the file.
    - Populate it with clear objectives, constraints, or step-by-step instructions.

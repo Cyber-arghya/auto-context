@@ -13,10 +13,10 @@ trigger: always_on
    - Architectural decisions or operational runbooks.
 
 2. **Autonomous Learning & Skill Crystallization**:
-   - Whenever a new pattern, user preference, architectural guideline, or multi-step procedure is discovered or instructed:
-     - Scaffolds a **Rule** (`init-context -r <name> [-g]`) if it is a constraint, coding standard, or guideline.
-     - Scaffolds a **Skill** (`init-context -s <name> [-g]`) if it is a multi-step procedure or deployment runbook.
-     - Populates the file with clear instructions and notifies the user.
+   - **Scope Directive:** If the user mentions "remember for future", "always", "in all projects", or defines a reusable architecture/coding preference, **MANDATORY: Always pass `--global` (`-g`)** (`init-context -r <name> -g` or `init-context -s <name> -g`). This registers the rule globally and in Central Memory (`~/.auto-context/memory`).
+   - Immediately follow with `init-context memory push` so the private git brain stays continuously synchronized.
+   - **Zero Token Waste:** DO NOT waste tokens manually scanning directories or reading existing rule/skill files to check for duplicates. Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.
+   - Populates the file with clear instructions and notifies the user.
 
 3. **CLI Tool Availability**:
    - The agent has full access to run `init-context` directly via terminal:

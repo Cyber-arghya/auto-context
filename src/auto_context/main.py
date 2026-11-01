@@ -29,6 +29,7 @@ app.add_typer(mcp.app, name="mcp", help="MCP tool registry management.")
 app.command("init")(init_cmd.init)
 app.command("rule")(init_cmd.new_rule)
 app.command("skill")(init_cmd.new_skill)
+app.command("promote")(init_cmd.promote)
 app.command("share")(share.share)
 app.command("import")(import_cmd.import_item)
 

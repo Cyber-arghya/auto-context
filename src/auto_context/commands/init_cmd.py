@@ -307,3 +307,44 @@ def new_skill(
         f"[green]   File: [/] {dest_file}",
         border_style="cyan",
     ))
+
+
+# ── promote command ───────────────────────────────────────────────────────────
+
+def promote(
+    name: Annotated[str, typer.Argument(help="Rule or skill name to promote to Central Memory.")],
+    target: Annotated[Optional[Path], typer.Option("--target", "-t")] = None,
+) -> None:
+    """Promote a local workspace rule or skill to Central Memory and global scope."""
+    project_dir = (target or Path.cwd()).resolve()
+    clean_name = name.lower().replace(" ", "-").replace("_", "-").removesuffix(".md")
+
+    local_rule = project_dir / AGENTS_SUBDIR / "rules" / f"{clean_name}.md"
+    local_skill = project_dir / AGENTS_SUBDIR / "skills" / clean_name / "SKILL.md"
+
+    promoted = False
+    if local_rule.exists():
+        content = local_rule.read_text(encoding="utf-8")
+        (config.GLOBAL_PLUGIN_DIR / "rules").mkdir(parents=True, exist_ok=True)
+        (config.GLOBAL_PLUGIN_DIR / "rules" / f"{clean_name}.md").write_text(content, encoding="utf-8")
+        if config.MEMORY_DIR.exists():
+            (config.MEMORY_DIR / "rules").mkdir(parents=True, exist_ok=True)
+            (config.MEMORY_DIR / "rules" / f"{clean_name}.md").write_text(content, encoding="utf-8")
+        console.print(f"[bold green][✓] Promoted local rule '{clean_name}' to Global Plugin and Central Memory![/]")
+        promoted = True
+
+    if local_skill.exists():
+        content = local_skill.read_text(encoding="utf-8")
+        (config.GLOBAL_PLUGIN_DIR / "skills" / clean_name).mkdir(parents=True, exist_ok=True)
+        (config.GLOBAL_PLUGIN_DIR / "skills" / clean_name / "SKILL.md").write_text(content, encoding="utf-8")
+        if config.MEMORY_DIR.exists():
+            (config.MEMORY_DIR / "skills" / clean_name).mkdir(parents=True, exist_ok=True)
+            (config.MEMORY_DIR / "skills" / clean_name / "SKILL.md").write_text(content, encoding="utf-8")
+        console.print(f"[bold green][✓] Promoted local skill '{clean_name}' to Global Plugin and Central Memory![/]")
+        promoted = True
+
+    if not promoted:
+        console.print(f"[red][✗] Rule or skill '{clean_name}' not found in local workspace ({project_dir}).[/]")
+        raise typer.Exit(1)
+
+    console.print("   [cyan]💡 Run 'init-context memory push' to push changes to your private GitHub repo.[/]\n")

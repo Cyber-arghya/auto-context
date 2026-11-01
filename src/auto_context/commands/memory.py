@@ -144,10 +144,51 @@ def _write_profile(repo_name: str) -> None:
     console.print("  [green][✓] Generated Developer Profile: profile.md[/]")
 
 
+# ── local harvester ─────────────────────────────────────────────────────────
+
+def _sync_local_to_memory(project_dir: Path) -> int:
+    """Harvest newly created local project rules & skills into central memory."""
+    harvested = 0
+    try:
+        local_rules = project_dir / config.AGENTS_SUBDIR / "rules"
+        if local_rules.exists():
+            (MEMORY_DIR / "rules").mkdir(parents=True, exist_ok=True)
+            for rfile in local_rules.glob("*.md"):
+                # Skip standard default boilerplates from polluting memory if already synced
+                dest = MEMORY_DIR / "rules" / rfile.name
+                if not dest.exists():
+                    shutil.copy2(rfile, dest)
+                    harvested += 1
+                    console.print(f"  [green][✓] Harvested local rule to Central Memory:[/] {rfile.name}")
+                elif rfile.stat().st_mtime > dest.stat().st_mtime:
+                    shutil.copy2(rfile, dest)
+                    harvested += 1
+                    console.print(f"  [green][✓] Updated local rule in Central Memory:[/] {rfile.name}")
+
+        local_skills = project_dir / config.AGENTS_SUBDIR / "skills"
+        if local_skills.exists():
+            (MEMORY_DIR / "skills").mkdir(parents=True, exist_ok=True)
+            for sdir in local_skills.iterdir():
+                if sdir.is_dir() and (sdir / "SKILL.md").exists():
+                    dest_dir = MEMORY_DIR / "skills" / sdir.name
+                    dest_file = dest_dir / "SKILL.md"
+                    src_file = sdir / "SKILL.md"
+                    if not dest_file.exists() or src_file.stat().st_mtime > dest_file.stat().st_mtime:
+                        dest_dir.mkdir(parents=True, exist_ok=True)
+                        shutil.copy2(src_file, dest_file)
+                        harvested += 1
+                        console.print(f"  [green][✓] Harvested local skill to Central Memory:[/] {sdir.name}")
+    except OSError:
+        pass
+    return harvested
+
+
 # ── push ──────────────────────────────────────────────────────────────────────
 
 @app.command("push")
-def memory_push() -> None:
+def memory_push(
+    harvest: Annotated[bool, typer.Option("--harvest/--no-harvest", "-h/-n", help="Auto-harvest local workspace rules/skills into central memory.")] = True,
+) -> None:
     """Audit secrets and push memory brain to private GitHub repo."""
     console.print(Panel(
         "[bold green]🧠 Synchronizing Central Memory Brain[/]\n"
@@ -155,31 +196,49 @@ def memory_push() -> None:
         border_style="cyan",
     ))
 
-    if not MEMORY_DIR.exists():
-        console.print(f"[red][✗] Memory directory not found:[/] {MEMORY_DIR}")
-        console.print("    Run: [cyan]init-context memory init[/]")
-        raise typer.Exit(1)
+    try:
+        if not MEMORY_DIR.exists():
+            console.print(f"[red][✗] Memory directory not found:[/] {MEMORY_DIR}")
+            console.print("    Run: [cyan]init-context memory init[/]")
+            raise typer.Exit(1)
 
-    console.print("  [cyan][*] Running Zero-Bypass Security Auditor...[/]")
-    violations = security.audit_path(MEMORY_DIR)
-    security.abort_if_violations(violations)
+        # Harvest local rules/skills if in a project directory
+        if harvest:
+            _sync_local_to_memory(Path.cwd().resolve())
 
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-    _git(MEMORY_DIR, "add", "-A", check=False)
-    _git(MEMORY_DIR, "commit", "-m", f"{config.GIT_COMMIT_SYNC} [{timestamp}]", check=False)
+        console.print("  [cyan][*] Running Zero-Bypass Security Auditor...[/]")
+        violations = security.audit_path(MEMORY_DIR)
+        security.abort_if_violations(violations)
 
-    remote = _git(MEMORY_DIR, "remote", "get-url", "origin", check=False).stdout.strip()
-    if remote:
-        console.print("  [cyan][*] Pushing to private remote repository...[/]")
-        result = _git(MEMORY_DIR, "push", "origin", "main", check=False)
-        if result.returncode == 0:
-            console.print("  [green][✓] Memory brain pushed successfully![/]")
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+        _git(MEMORY_DIR, "add", "-A", check=False)
+        _git(MEMORY_DIR, "commit", "-m", f"{config.GIT_COMMIT_SYNC} [{timestamp}]", check=False)
+
+        remote = _git(MEMORY_DIR, "remote", "get-url", "origin", check=False).stdout.strip()
+        if remote:
+            console.print("  [cyan][*] Pushing to private remote repository...[/]")
+            result = _git(MEMORY_DIR, "push", "origin", "main", check=False)
+            if result.returncode == 0:
+                console.print("  [green][✓] Memory brain pushed successfully![/]")
+            else:
+                console.print(f"  [red][✗] Push failed:[/] {result.stderr.strip()}")
         else:
-            console.print(f"  [red][✗] Push failed:[/] {result.stderr.strip()}")
-    else:
-        console.print("  [yellow][!] No remote 'origin' configured. Run memory init first.[/]")
+            console.print("  [yellow][!] No remote 'origin' configured. Run memory init first.[/]")
 
-    console.print("\n[bold green]✨ Memory synchronization complete![/]\n")
+        console.print("\n[bold green]✨ Memory synchronization complete![/]\n")
+
+    except PermissionError as pe:
+        console.print(Panel(
+            f"[bold red][✗] Permission Denied Accessing Central Memory[/]\n"
+            f"[yellow]   Path:[/] {MEMORY_DIR}\n\n"
+            f"[white]   Cause:[/] Running inside a restricted sandbox without host filesystem access.\n"
+            f"[cyan]   Fix:[/] Run this command in your external terminal (PowerShell / Bash), or enable unsandboxed mode.",
+            border_style="red",
+        ))
+        raise typer.Exit(1)
+    except OSError as err:
+        console.print(f"[red][✗] Central memory error:[/] {err}")
+        raise typer.Exit(1)
 
 
 # ── pull ──────────────────────────────────────────────────────────────────────
@@ -194,19 +253,29 @@ def memory_pull(
         border_style="cyan",
     ))
 
-    if not MEMORY_DIR.exists():
-        if not repo_url:
-            console.print("[red][✗] Memory directory not found. Provide a repo URL:[/]")
-            console.print("    [cyan]init-context memory pull <url>[/]")
-            raise typer.Exit(1)
-        subprocess.run(["git", "clone", repo_url, str(MEMORY_DIR)], check=True)
-    else:
-        _git(MEMORY_DIR, "pull", "origin", "main")
+    try:
+        if not MEMORY_DIR.exists():
+            if not repo_url:
+                console.print("[red][✗] Memory directory not found. Provide a repo URL:[/]")
+                console.print("    [cyan]init-context memory pull <url>[/]")
+                raise typer.Exit(1)
+            subprocess.run(["git", "clone", repo_url, str(MEMORY_DIR)], check=True)
+        else:
+            _git(MEMORY_DIR, "pull", "origin", "main")
 
-    console.print("  [cyan][*] Running post-pull security audit...[/]")
-    violations = security.audit_path(MEMORY_DIR)
-    security.abort_if_violations(violations)
-    console.print("\n[bold green]✨ Central memory updated successfully![/]\n")
+        console.print("  [cyan][*] Running post-pull security audit...[/]")
+        violations = security.audit_path(MEMORY_DIR)
+        security.abort_if_violations(violations)
+        console.print("\n[bold green]✨ Central memory updated successfully![/]\n")
+
+    except PermissionError as pe:
+        console.print(Panel(
+            f"[bold red][✗] Permission Denied Accessing Central Memory[/]\n"
+            f"[yellow]   Path:[/] {MEMORY_DIR}\n\n"
+            f"[white]   Fix:[/] Run in external terminal or enable unsandboxed execution mode.",
+            border_style="red",
+        ))
+        raise typer.Exit(1)
 
 
 # ── status ────────────────────────────────────────────────────────────────────
@@ -219,18 +288,33 @@ def memory_status() -> None:
         border_style="cyan",
     ))
 
-    if not MEMORY_DIR.exists():
-        console.print("  [yellow][!] Central memory not initialized.[/]")
-        console.print("      Run: [cyan]init-context memory init[/]")
-        return
+    try:
+        if not MEMORY_DIR.exists():
+            console.print("  [yellow][!] Central memory not initialized.[/]")
+            console.print("      Run: [cyan]init-context memory init[/]")
+            return
 
-    remote = _git(MEMORY_DIR, "remote", "get-url", "origin", check=False).stdout.strip()
-    rules_count = len(list((MEMORY_DIR / "rules").glob("*.md"))) if (MEMORY_DIR / "rules").exists() else 0
-    skills_count = len([d for d in (MEMORY_DIR / "skills").iterdir() if d.is_dir()]) if (MEMORY_DIR / "skills").exists() else 0
+        remote = _git(MEMORY_DIR, "remote", "get-url", "origin", check=False).stdout.strip()
+        rules_path = MEMORY_DIR / "rules"
+        skills_path = MEMORY_DIR / "skills"
 
-    console.print(f"  [yellow]Location:[/] {MEMORY_DIR}")
-    console.print(f"  [cyan]Remote:  [/] {remote or '(none)'}")
-    console.print(f"  [green]Rules:   [/] {rules_count} registered")
-    console.print(f"  [green]Skills:  [/] {skills_count} registered")
-    console.print()
+        rules_count = len(list(rules_path.glob("*.md"))) if rules_path.exists() else 0
+        skills_count = len([d for d in skills_path.iterdir() if d.is_dir()]) if skills_path.exists() else 0
+
+        console.print(f"  [yellow]Location:[/] {MEMORY_DIR}")
+        console.print(f"  [cyan]Remote:  [/] {remote or '(none)'}")
+        console.print(f"  [green]Rules:   [/] {rules_count} registered")
+        console.print(f"  [green]Skills:  [/] {skills_count} registered")
+        console.print()
+
+    except PermissionError:
+        console.print(Panel(
+            f"[bold red][✗] Permission Denied Accessing Central Memory[/]\n"
+            f"[yellow]   Path:[/] {MEMORY_DIR}\n\n"
+            f"[white]   Cause:[/] Sandboxed IDE terminal lacks access to host directory ~/.auto-context.\n"
+            f"[cyan]   Fix:[/] Run 'init-context memory status' in your host terminal (PowerShell / Bash), or grant filesystem access.",
+            border_style="red",
+        ))
+    except OSError as err:
+        console.print(f"  [yellow][!] Central memory status warning:[/] {err}")
 
