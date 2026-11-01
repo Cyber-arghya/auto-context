@@ -234,14 +234,42 @@ def init(
 
 # ── rule command ──────────────────────────────────────────────────────────────
 
+def _append_guideline_to_file(dest_file: Path, text_to_append: str) -> None:
+    import re
+    content = dest_file.read_text(encoding="utf-8")
+    existing_nums = [int(m) for m in re.findall(r"(?m)^(\d+)\.\s+\*", content)]
+    next_num = (max(existing_nums) + 1) if existing_nums else 1
+    
+    clean_guideline = text_to_append.strip()
+    if not re.match(r"^\d+\.\s+", clean_guideline):
+        if not clean_guideline.startswith("**"):
+            lines = clean_guideline.splitlines()
+            title = lines[0]
+            rest = lines[1:] if len(lines) > 1 else []
+            entry = f"{next_num}. **{title}**\n"
+            for r in rest:
+                entry += f"   {r}\n"
+        else:
+            entry = f"{next_num}. {clean_guideline}\n"
+    else:
+        entry = f"{clean_guideline}\n"
+
+    if not content.endswith("\n"):
+        content += "\n"
+    content += entry
+    dest_file.write_text(content, encoding="utf-8")
+
+
 def new_rule(
     name: Annotated[str, typer.Argument(help="Rule name (e.g. code-standards).")],
     target: Annotated[Optional[Path], typer.Option("--target", "-t")] = None,
     global_: Annotated[bool, typer.Option("--global", "-g", help="Install into global plugin.")] = False,
     force: Annotated[bool, typer.Option("--force", "-f")] = False,
+    append: Annotated[bool, typer.Option("--append", "-a", help="Append guideline to existing rule domain.")] = False,
+    guideline: Annotated[Optional[str], typer.Option("--guideline", help="Guideline text to append to rule.")] = None,
     dry_run: Annotated[bool, typer.Option("--dry-run", "-d")] = False,
 ) -> None:
-    """Scaffold a new agent rule file."""
+    """Scaffold a new agent rule file or append to an existing domain rule."""
     clean_name = name.lower().replace(" ", "-").replace("_", "-").removesuffix(".md")
     title = clean_name.replace("-", " ").title()
 
@@ -253,7 +281,23 @@ def new_rule(
     dest_file = dest_dir / f"{clean_name}.md"
 
     if dest_file.exists() and not force:
-        console.print(f"[yellow][!] Rule already exists:[/] {dest_file}\n    Use --force to overwrite.")
+        if append or guideline:
+            text_to_append = guideline or "New domain constraint and best practice."
+            if not dry_run:
+                _append_guideline_to_file(dest_file, text_to_append)
+                if global_ and config.MEMORY_DIR.exists():
+                    mem_dest = config.MEMORY_DIR / "rules" / f"{clean_name}.md"
+                    if mem_dest.exists():
+                        _append_guideline_to_file(mem_dest, text_to_append)
+            console.print(Panel(
+                f"[bold green]✨ Rule Domain Updated (Appended)![/]\n"
+                f"[yellow]   Rule:[/]  {clean_name}\n"
+                f"[cyan]   File:[/]  {dest_file}\n"
+                f"[green]   Added:[/] {text_to_append}",
+                border_style="green",
+            ))
+            return
+        console.print(f"[yellow][!] Rule already exists:[/] {dest_file}\n    Use --append (-a) with --guideline to add to this domain, or --force to overwrite.")
         raise typer.Exit(1)
 
     tmpl = get_templates_dir() / "rule.template.md"

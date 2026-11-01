@@ -237,10 +237,19 @@ def update_global_plugin() -> int:
     core_files = [
         ("plugin.json", plugin_dir / "plugin.json"),
         ("plugin/rules/AGENTS.md", rules_dir / "AGENTS.md"),
+        ("plugin/rules/code-standards.md", rules_dir / "code-standards.md"),
+        ("plugin/rules/security-boundaries.md", rules_dir / "security-boundaries.md"),
+        ("plugin/rules/hub-satellite-architecture.md", rules_dir / "hub-satellite-architecture.md"),
+        ("plugin/rules/readme-docs-sync.md", rules_dir / "readme-docs-sync.md"),
         ("plugin/skills/auto-context/SKILL.md", skills_dir / "SKILL.md"),
+        ("plugin/skills/browser-testing/SKILL.md", plugin_dir / "skills" / "browser-testing" / "SKILL.md"),
+        ("plugin/skills/docker-ops/SKILL.md", plugin_dir / "skills" / "docker-ops" / "SKILL.md"),
+        ("plugin/skills/git-workflow/SKILL.md", plugin_dir / "skills" / "git-workflow" / "SKILL.md"),
+        ("plugin/skills/server-diagnostics/SKILL.md", plugin_dir / "skills" / "server-diagnostics" / "SKILL.md"),
     ]
 
     for rel_path, dest_path in core_files:
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
         url = f"{config.RAW_GITHUB_BASE}/{rel_path}"
         content = _download_text(url)
         if content:
@@ -252,10 +261,15 @@ def update_global_plugin() -> int:
             tmpl_dir = config.get_templates_dir()
             fallback_map = {
                 "AGENTS.md": tmpl_dir / "AGENTS.template.md",
-                "SKILL.md": tmpl_dir / "skill.template.md",
+                "SKILL.md": tmpl_dir / "skills" / dest_path.parent.name / "SKILL.md" if (tmpl_dir / "skills" / dest_path.parent.name / "SKILL.md").exists() else tmpl_dir / "skill.template.md",
+                "code-standards.md": tmpl_dir / "rules" / "code-standards.md",
+                "security-boundaries.md": tmpl_dir / "rules" / "security-boundaries.md",
+                "hub-satellite-architecture.md": tmpl_dir / "rules" / "hub-satellite-architecture.md",
+                "readme-docs-sync.md": tmpl_dir / "rules" / "readme-docs-sync.md",
             }
-            if dest_path.name in fallback_map and fallback_map[dest_path.name].exists():
-                shutil.copy2(fallback_map[dest_path.name], dest_path)
+            fb = fallback_map.get(dest_path.name)
+            if fb and fb.exists():
+                shutil.copy2(fb, dest_path)
                 console.print(f"  [green][✓] Restored from bundled template:[/] {dest_path.name}")
                 updated_count += 1
 

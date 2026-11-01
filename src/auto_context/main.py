@@ -54,6 +54,8 @@ def root(
     env: Annotated[Optional[str], typer.Option("--env", help="Environment variables (KEY=val,KEY2=val2).")] = None,
     global_: Annotated[bool, typer.Option("--global", "-g", help="Target global plugin scope.")] = False,
     force: Annotated[bool, typer.Option("--force", "-f", help="Overwrite existing files.")] = False,
+    append: Annotated[bool, typer.Option("--append", "-a", help="Append to existing domain rule.")] = False,
+    guideline: Annotated[Optional[str], typer.Option("--guideline", help="Guideline text to append to rule.")] = None,
     dry_run: Annotated[bool, typer.Option("--dry-run", "-d", help="Preview without writing.")] = False,
     scan: Annotated[bool, typer.Option("--scan", help="Run stack-adaptive scanner on target directory.")] = False,
     version: bool = typer.Option(False, "--version", "-v", help="Show version and exit."),
@@ -78,7 +80,7 @@ def root(
 
     # ── Legacy flag routing ────────────────────────────────────────────────────
     if new_rule:
-        init_cmd.new_rule(name=new_rule, target=target, global_=global_, force=force, dry_run=dry_run)
+        init_cmd.new_rule(name=new_rule, target=target, global_=global_, force=force, append=append, guideline=guideline, dry_run=dry_run)
         return
 
     if new_skill:
