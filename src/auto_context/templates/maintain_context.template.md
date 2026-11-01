@@ -6,32 +6,43 @@ trigger: always_on
 
 # Autonomous Context Maintenance & Self-Evolution Rule
 
-1. **Mandatory Synchronization**: Every agent working in this workspace MUST inspect and update `context.md` before finishing their turn whenever any of the following occur:
-   - Script or configuration edits (environment variables, docker-compose, configs, network parameters).
-   - Problem diagnosis, debugging steps, and technical solutions.
-   - User credentials, tokens, secrets, or permissions changes.
-   - Architectural decisions or operational runbooks.
+## 1. Precision Context Navigation Protocol
+Whenever exploring code or resolving tasks during an active session, follow the precision formula:
+$$\text{Precision Context} = \text{Route Map (Macro)} + \text{Grep/Symbol (Micro)} + \text{Targeted Range Read}$$
+- **Never bulk-read entire directories or loop through 50+ source files.**
+- First inspect `.agents/context/routes.md` or Section 2 of `context.md` for high-level file locations.
+- Use `grep` or symbol search to pinpoint exact files and line numbers.
+- Read only the specific target line range (e.g. `#L30-L70`) rather than loading entire large files.
 
-2. **Autonomous Learning & Skill Crystallization**:
-   - **Zero Token Waste:** DO NOT burn tokens manually searching directories or reading files to check for existing rules. Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.
-   - **Mandatory Global Scope:** When the user mentions "for future", "always", or defines a reusable standard, **MANDATORY: Always pass `--global` (`-g`)** and immediately follow with `init-context memory push`.
-   - Populates the file with clear instructions and notifies the user.
+## 2. Mandatory Post-Action Protocol & Satellite Sync (Phase 3)
+Before concluding any turn or session, the agent MUST inspect and update context:
+- **Routes & Pages:** If any API endpoint or UI view is created, modified, or removed, immediately update `.agents/context/routes.md` (or run `init-context scan`).
+- **Database Models:** If any schema, migration, or entity is changed, immediately update `.agents/context/schema.md`.
+- **Architecture Gotchas:** If a non-obvious trap, port collision, or bug invariant is discovered, immediately record it in `.agents/context/gotchas.md`.
+- **Core Hub:** Keep `context.md` compact (< 400 tokens / 60 lines) as an executive routing hub.
 
-3. **CLI Tool Availability**:
-   - The agent has full access to run `init-context` directly via terminal:
-     - `init-context`: Initialize/repair context.
-     - `init-context -r <name> [-g]`: Create rule.
-     - `init-context -s <name> [-g]`: Create skill.
-     - `init-context update`: Safely sync public rules and upstream capabilities (non-breaking).
-     - `init-context memory push`: Push updates to central memory.
+## 3. Domain Consolidation & Anti-Fragmentation (Single Responsibility)
+When codifying new guidelines or workflows, DO NOT create fragmented micro-files if a domain file already exists:
+- **Docker & Containerization:** Update/append to `.agents/skills/docker-ops/SKILL.md`.
+- **Git & Release Workflows:** Update/append to `.agents/skills/git-workflow/SKILL.md`.
+- **Coding Standards & Patterns:** Update/append to `.agents/rules/code-standards.md`.
+- **Security Boundaries:** Update/append to `.agents/rules/security-boundaries.md`.
+- Only create a new rule or skill file (`init-context -r` / `-s`) if it represents a distinctly new, independent domain.
 
-4. **No User Reminder Needed**: The user must never need to ask the agent to update `context.md` or learn rules. This is a strict automated post-condition for all actions.
+## 4. Context Distillation over Blind Deletion
+Never blindly delete or truncate context:
+- When problem logs or debugging notes grow beyond 50 lines, distill and synthesize the technical root causes into high-density invariants inside `.agents/context/gotchas.md`.
+- Preserve 100% of the architectural wisdom with 90% fewer tokens.
 
-5. **Local Sandbox Test Credentials (`context.local.md`)**:
-   - For local dev logins, automated browser testing, and mock fixtures, inspect and update `context.local.md`.
-   - Never store real production secrets or payment tokens in markdown files. Real secrets belong in `.env`.
-   - Ensure `context.local.md` is strictly git-ignored and protected with `chmod 600`.
+## 5. Local Sandbox Test Credentials (`context.local.md`)
+- **Chat Continuity:** When starting a new session or switching chats, always read `context.local.md` to identify local dev ports, seed users, and mock passwords (`admin@test.local`) before running browser automation or curl tests.
+- **Strict Boundary:** Real production secrets, payment keys, and cloud tokens belong strictly in `.env`.
+- Ensure `context.local.md` is protected with `.gitignore` and `chmod 600`.
 
-6. **Two-Tier Progressive Disclosure**:
-   - Never load full `SKILL.md` bodies into the initial context. Use Section 5 of `context.md` for routing.
-   - Dynamically load specific skills via `read_file` only when a user prompt matches their triggers.
+## 6. Autonomous Learning & Tooling
+- **Zero Token Waste:** DO NOT burn tokens manually searching directories to check for duplicates. Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.
+- **Mandatory Global Scope:** When the user mentions "for future", "always", or defines a reusable standard, **MANDATORY: Always pass `--global` (`-g`)** and immediately follow with `init-context memory push`.
+- The agent has full access to run `init-context`:
+  - `init-context scan`: Refresh stack-adaptive satellites (`routes.md`, `schema.md`, `gotchas.md`).
+  - `init-context update`: Safely sync public rules and upstream capabilities (non-breaking).
+  - `init-context memory push`: Push updates to central memory.

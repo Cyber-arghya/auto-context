@@ -131,3 +131,4 @@ def scan(
         f"• Hub size (context.md): [bold green]< 60 lines (Token Optimized)[/]",
         border_style="green",
     ))
+

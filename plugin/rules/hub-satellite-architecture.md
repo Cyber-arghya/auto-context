@@ -31,3 +31,4 @@ Prevent monolithic context file bloat, eliminate token waste, ensure 100% idempo
 4. **KISS & DRY Heuristics:**
    - Prefer language-agnostic filesystem convention heuristics (directories, manifests) over heavy language AST parsers that crash on in-flight syntax errors.
    - All scanners must degrade gracefully with zero unhandled exceptions.
+

@@ -1,56 +1,48 @@
 # Autonomous Global Context & Instruction Management Protocol
 
-## Critical Mandate: Universal `context.md` Synchronization & Self-Evolution
+## Critical Mandate: Universal Hub & Satellite Synchronization & Precision Navigation
 As an AI coding assistant, whenever operating in ANY workspace or project:
-You are **strictly mandated** to maintain a comprehensive `context.md` file at the root of the active workspace and autonomously crystallize new rules and skills. The user must **never** need to remind or instruct you.
+You are **strictly mandated** to maintain the Hub & Satellite context architecture, navigate codebases with laser precision, and autonomously crystallize new rules and skills. The user must **never** need to remind or instruct you.
 
-### 1. Automatic Workspace Initialization
-- If `context.md` does not exist in the root of the active workspace:
-  - Automatically create `context.md` during your first turn.
-  - Structure it into four standard sections:
-    1. **Master Credentials & Configuration Vault:** (IPs, Ports, Usernames, Passwords, API Keys, Tokens, Service UUIDs, Domain names).
-    2. **Project Architecture & Component Map:** (Tech stack, architecture diagrams, component descriptions, directory structure).
-    3. **Chronological Problem Log & Technical Solutions:** (Symptoms, root causes, exact terminal commands and code patches used to fix each issue).
-    4. **Setup, Reproduction & Runbook:** (Exact commands to install dependencies, run development servers, or deploy to production).
+### 1. Precision Context Navigation Protocol
+Whenever exploring code or resolving tasks during an active session, follow the precision formula:
+$$\text{Precision Context} = \text{Route Map (Macro)} + \text{Grep/Symbol (Micro)} + \text{Targeted Range Read}$$
+- **Never bulk-read entire directories or loop through 50+ source files.**
+- First inspect `.agents/context/routes.md` or Section 2 of `context.md` for high-level file locations.
+- Use `grep` or symbol search to pinpoint exact files and line numbers.
+- Read only the specific target line range (e.g. `#L30-L70`) rather than loading entire large files.
 
-### 2. Mandatory Post-Action Protocol
-Whenever ANY of the following occur during a session:
-- A configuration file, script, or source file is created, modified, or removed.
-- A bug, build failure, network error, or runtime issue is diagnosed and resolved.
-- Credentials, tokens, keys, ports, or environment variables are added or changed.
-- Architectural decisions or system workflows are updated.
+### 2. Mandatory Post-Action Protocol & Satellite Sync (Phase 3)
+Before concluding any turn or session, the agent MUST inspect and update context:
+- **Routes & Pages:** If any API endpoint or UI view is created, modified, or removed, immediately update `.agents/context/routes.md` (or run `init-context scan`).
+- **Database Models:** If any schema, migration, or entity is changed, immediately update `.agents/context/schema.md`.
+- **Architecture Gotchas:** If a non-obvious trap, port collision, or bug invariant is discovered, immediately record it in `.agents/context/gotchas.md`.
+- **Core Hub:** Keep `context.md` compact (< 400 tokens / 60 lines) as an executive routing hub.
 
-**You MUST immediately update `context.md` before concluding your response.**
+### 3. Domain Consolidation & Anti-Fragmentation (Single Responsibility)
+When codifying new guidelines or workflows, DO NOT create fragmented micro-files if a domain file already exists:
+- **Docker & Containerization:** Update/append to `.agents/skills/docker-ops/SKILL.md`.
+- **Git & Release Workflows:** Update/append to `.agents/skills/git-workflow/SKILL.md`.
+- **Coding Standards & Patterns:** Update/append to `.agents/rules/code-standards.md`.
+- **Security Boundaries:** Update/append to `.agents/rules/security-boundaries.md`.
+- Only create a new rule or skill file (`init-context -r` / `-s`) if it represents a distinctly new, independent domain.
 
-### 3. Autonomous Learning & Self-Evolution (Pattern & Skill Crystallization)
-Whenever you learn a new pattern, receive a correction, observe a user preference, or resolve a complex repeatable problem:
-1. **Identify the Type:**
-   - **Rule (`init-context -r <name>`):** If it is a constraint, coding standard, safety boundary, or architectural preference.
-   - **Skill (`init-context -s <name>`):** If it is a multi-step procedure, deployment workflow, diagnosis runbook, or CLI sequence.
-2. **Zero Token Waste:**
-   - **DO NOT burn tokens manually searching directories or reading files to check for existing rules.** Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.
-3. **Mandatory Global Scope:**
-   - When the user mentions "for future", "always", or defines a reusable standard, **MANDATORY: Always pass `--global` (`-g`)** and immediately follow with `init-context memory push`.
-   - **Project-Specific:** Only omit `-g` if the instruction is strictly confined to this specific project repository.
-4. **Execution:**
-   - Execute `init-context -r <name> [-g]` or `init-context -s <name> [-g]`.
-   - Populate the generated markdown file with clear objectives, constraints, or step-by-step instructions.
-   - Inform the user of the new rule or skill codified so they are aware of the persistent learning.
+### 4. Context Distillation over Blind Deletion
+Never blindly delete or truncate context:
+- When problem logs or debugging notes grow beyond 50 lines, distill and synthesize the technical root causes into high-density invariants inside `.agents/context/gotchas.md`.
+- Preserve 100% of the architectural wisdom with 90% fewer tokens.
 
-### 4. CLI Tooling: `init-context`
-You have native access to run `init-context` via terminal commands:
-- `init-context`: Scaffolds or repairs 5-tier context in the active project.
-- `init-context -r <rule-name> [--global]`: Creates a compliant rule with frontmatter.
-- `init-context -s <skill-name> [--global]`: Creates a compliant skill with frontmatter.
-- `init-context update`: Safely syncs public rules and upstream capabilities (non-breaking).
-- `init-context memory push`: Synchronizes central brain memory to private Git repository.
+### 5. Local Sandbox Test Credentials (`context.local.md`)
+- **Chat Continuity:** When starting a new session or switching chats, always read `context.local.md` to identify local dev ports, seed users, and mock passwords (`admin@test.local`) before running browser automation or curl tests.
+- **Strict Boundary:** Real production secrets, payment keys, and cloud tokens belong strictly in `.env`.
+- Ensure `context.local.md` is protected with `.gitignore` and `chmod 600`.
 
-### 5. Documentation Integrity
-- Never truncate or erase previously logged solutions. Append each new challenge chronologically.
-- Keep commands, file paths, and credentials 100% executable and synchronized with reality.
-- Maintain clear formatting, line references, and user manuals so any developer can reproduce the project state instantly.
-
-### 6. Local Sandbox Credentials & Dummy Test Fixtures (`context.local.md`)
-- Inspect `context.local.md` before prompting the user for test logins, seed accounts, or local ports during browser testing or dev execution.
-- Strictly forbid storing real production secrets or payment keys in `context.local.md` (mock data only; real secrets stay in `.env`).
-- Ensure `context.local.md` remains strictly git-ignored and protected with `chmod 600`.
+### 6. Autonomous Learning & Tool Access
+- **Zero Token Waste:** DO NOT burn tokens manually searching directories to check for duplicates. Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.
+- **Mandatory Global Scope:** When the user mentions "for future", "always", or defines a reusable standard, **MANDATORY: Always pass `--global` (`-g`)** and immediately follow with `init-context memory push`.
+- Available CLI commands:
+  - `init-context scan`: Refresh stack-adaptive satellites (`routes.md`, `schema.md`, `gotchas.md`).
+  - `init-context -r <name> [-g]`: Create rule.
+  - `init-context -s <name> [-g]`: Create skill.
+  - `init-context update`: Safely sync public rules and upstream capabilities (non-breaking).
+  - `init-context memory push`: Push updates to central memory.
