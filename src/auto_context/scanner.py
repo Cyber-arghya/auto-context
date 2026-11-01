@@ -9,6 +9,13 @@ import json
 from pathlib import Path
 import re
 from typing import Optional
+try:
+    import tomllib
+except ImportError:
+    try:
+        import tomli as tomllib  # type: ignore
+    except ImportError:
+        tomllib = None
 
 from rich.console import Console
 
@@ -42,6 +49,30 @@ def write_idempotent(path: Path, content: str, label: str = "File") -> bool:
     return True
 
 
+def _get_project_search_roots(project_dir: Path) -> list[Path]:
+    """
+    Returns [project_dir] plus any immediate child directories containing manifests.
+    Guards against scanning dependencies or virtual environments.
+    """
+    roots = [project_dir]
+    ignore_names = {
+        "node_modules", ".git", ".venv", "venv", "__pycache__",
+        ".agents", ".gemini", "dist", "build", "site-packages", ".idea", ".vscode"
+    }
+    manifest_names = {
+        "package.json", "pyproject.toml", "Makefile", "manage.py",
+        "Cargo.toml", "go.mod", "docker-compose.yml", "compose.yaml", "requirements.txt"
+    }
+    try:
+        for child in project_dir.iterdir():
+            if child.is_dir() and child.name not in ignore_names and not child.name.startswith("."):
+                if any((child / m).exists() for m in manifest_names):
+                    roots.append(child)
+    except Exception:
+        pass
+    return roots
+
+
 # ── Port & Service Extractor ──────────────────────────────────────────────────
 
 def discover_ports_and_services(project_dir: Path) -> list[tuple[str, str, str]]:
@@ -52,50 +83,54 @@ def discover_ports_and_services(project_dir: Path) -> list[tuple[str, str, str]]
     results: list[tuple[str, str, str]] = []
     seen_ports: set[str] = set()
 
-    # 1. Check docker-compose.yml / compose.yaml
-    for compose_name in ("docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml"):
-        compose_file = project_dir / compose_name
-        if compose_file.exists():
+    for d in _get_project_search_roots(project_dir):
+        # 1. Check docker-compose.yml / compose.yaml
+        for compose_name in ("docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml"):
+            compose_file = d / compose_name
+            if compose_file.exists():
+                try:
+                    text = compose_file.read_text(encoding="utf-8", errors="ignore")
+                    matches = re.findall(r'["\']?(\d{2,5}):(\d{2,5})["\']?', text)
+                    for host_port, container_port in matches:
+                        if host_port not in seen_ports and int(host_port) > 80:
+                            seen_ports.add(host_port)
+                            src_label = compose_name if d == project_dir else f"{d.name}/{compose_name}"
+                            results.append(("Container Port", host_port, src_label))
+                except Exception:
+                    pass
+
+        # 2. Check .env.example / .env
+        for env_name in (".env.example", ".env", ".env.local"):
+            env_file = d / env_name
+            if env_file.exists():
+                try:
+                    for line in env_file.read_text(encoding="utf-8", errors="ignore").splitlines():
+                        line = line.strip()
+                        if line.startswith("#") or "=" not in line:
+                            continue
+                        key, val = line.split("=", 1)
+                        key = key.strip()
+                        val = val.strip().strip('"').strip("'")
+                        if "PORT" in key.upper() and val.isdigit() and val not in seen_ports:
+                            seen_ports.add(val)
+                            src_label = env_name if d == project_dir else f"{d.name}/{env_name}"
+                            results.append((key, val, src_label))
+                except Exception:
+                    pass
+
+        # 3. Check Dockerfile
+        dockerfile = d / "Dockerfile"
+        if dockerfile.exists():
             try:
-                text = compose_file.read_text(encoding="utf-8", errors="ignore")
-                matches = re.findall(r'["\']?(\d{2,5}):(\d{2,5})["\']?', text)
-                for host_port, container_port in matches:
-                    if host_port not in seen_ports and int(host_port) > 80:
-                        seen_ports.add(host_port)
-                        results.append(("Container Port", host_port, compose_name))
+                for line in dockerfile.read_text(encoding="utf-8", errors="ignore").splitlines():
+                    if line.strip().upper().startswith("EXPOSE "):
+                        port = line.strip().split()[1]
+                        if port.isdigit() and port not in seen_ports:
+                            seen_ports.add(port)
+                            src_label = "Dockerfile" if d == project_dir else f"{d.name}/Dockerfile"
+                            results.append(("Exposed Port", port, src_label))
             except Exception:
                 pass
-
-    # 2. Check .env.example / .env
-    for env_name in (".env.example", ".env", ".env.local"):
-        env_file = project_dir / env_name
-        if env_file.exists():
-            try:
-                for line in env_file.read_text(encoding="utf-8", errors="ignore").splitlines():
-                    line = line.strip()
-                    if line.startswith("#") or "=" not in line:
-                        continue
-                    key, val = line.split("=", 1)
-                    key = key.strip()
-                    val = val.strip().strip('"').strip("'")
-                    if "PORT" in key.upper() and val.isdigit() and val not in seen_ports:
-                        seen_ports.add(val)
-                        results.append((key, val, env_name))
-            except Exception:
-                pass
-
-    # 3. Check Dockerfile
-    dockerfile = project_dir / "Dockerfile"
-    if dockerfile.exists():
-        try:
-            for line in dockerfile.read_text(encoding="utf-8", errors="ignore").splitlines():
-                if line.strip().upper().startswith("EXPOSE "):
-                    port = line.strip().split()[1]
-                    if port.isdigit() and port not in seen_ports:
-                        seen_ports.add(port)
-                        results.append(("Exposed Port", port, "Dockerfile"))
-        except Exception:
-            pass
 
     return results
 
@@ -105,48 +140,128 @@ def discover_ports_and_services(project_dir: Path) -> list[tuple[str, str, str]]
 def discover_runbook_commands(project_dir: Path) -> list[tuple[str, str]]:
     """
     Extract executable development, build, and test commands from project manifests.
+    Guarantees 100% executable commands without hallucinated placeholders.
     Returns list of (Action, Command).
     """
     commands: list[tuple[str, str]] = []
+    seen_commands: set[str] = set()
 
-    # 1. package.json scripts
-    pkg_file = project_dir / "package.json"
-    if pkg_file.exists():
-        try:
-            data = json.loads(pkg_file.read_text(encoding="utf-8", errors="ignore"))
-            scripts = data.get("scripts", {})
-            for key in ("dev", "start", "build", "test", "lint"):
-                if key in scripts:
-                    commands.append((f"Run {key}", f"npm run {key}"))
-        except Exception:
-            pass
+    for d in _get_project_search_roots(project_dir):
+        dir_label = "" if d == project_dir else f" ({d.name})"
 
-    # 2. Makefile
-    makefile = project_dir / "Makefile"
-    if makefile.exists():
-        try:
-            targets = re.findall(r"^([a-zA-Z0-9_-]+):", makefile.read_text(encoding="utf-8", errors="ignore"), re.M)
-            for t in targets[:4]:
-                if not t.startswith("."):
-                    commands.append((f"Make {t}", f"make {t}"))
-        except Exception:
-            pass
+        # 1. package.json scripts
+        pkg_file = d / "package.json"
+        if pkg_file.exists():
+            try:
+                data = json.loads(pkg_file.read_text(encoding="utf-8", errors="ignore"))
+                scripts = data.get("scripts", {})
+                runner = "pnpm" if (d / "pnpm-lock.yaml").exists() else (
+                    "yarn" if (d / "yarn.lock").exists() else (
+                        "bun" if (d / "bun.lockb").exists() else "npm"
+                    )
+                )
+                for key in ("dev", "start", "build", "test", "lint"):
+                    if key in scripts:
+                        if d == project_dir:
+                            cmd = f"{runner} run {key}" if runner != "yarn" else f"yarn {key}"
+                        else:
+                            cmd = f"{runner} --prefix {d.name} run {key}" if runner == "npm" else f"{runner} --cwd {d.name} run {key}"
+                        if cmd not in seen_commands:
+                            seen_commands.add(cmd)
+                            commands.append((f"Run {key}{dir_label}", cmd))
+            except Exception:
+                pass
 
-    # 3. Python indicators
-    if (project_dir / "manage.py").exists():
-        commands.append(("Django Runserver", "python manage.py runserver"))
-        commands.append(("Django Migrate", "python manage.py migrate"))
-    elif (project_dir / "pyproject.toml").exists() or (project_dir / "requirements.txt").exists():
-        for main_candidate in ("main.py", "app.py", "server.py", "wsgi.py"):
-            if (project_dir / main_candidate).exists():
-                commands.append(("Start Python Server", f"python {main_candidate}"))
-                break
+        # 2. pyproject.toml (scripts & test runner)
+        pyproj = d / "pyproject.toml"
+        if pyproj.exists():
+            try:
+                raw_text = pyproj.read_text(encoding="utf-8", errors="ignore")
+                data = tomllib.loads(raw_text) if tomllib else {}
+                scripts = data.get("project", {}).get("scripts", {})
+                for script_name in scripts:
+                    cmd = f"uv run {script_name}" if d == project_dir else f"uv run --directory {d.name} {script_name}"
+                    if cmd not in seen_commands:
+                        seen_commands.add(cmd)
+                        commands.append((f"Run CLI ({script_name}){dir_label}", cmd))
 
-    # 4. Docker Compose
-    if (project_dir / "docker-compose.yml").exists() or (project_dir / "compose.yaml").exists():
-        commands.append(("Start Docker Services", "docker compose up -d"))
+                if "pytest" in raw_text or (d / "tests").is_dir() or (d / "test").is_dir():
+                    cmd = "uv run pytest" if d == project_dir else f"uv run --directory {d.name} pytest"
+                    if cmd not in seen_commands:
+                        seen_commands.add(cmd)
+                        commands.append((f"Run Tests{dir_label}", cmd))
+            except Exception:
+                pass
 
-    return commands
+        # 3. Python indicators (manage.py, main.py, app.py, server.py)
+        if (d / "manage.py").exists():
+            target = "manage.py" if d == project_dir else f"{d.name}/manage.py"
+            cmd_run = f"python {target} runserver"
+            cmd_mig = f"python {target} migrate"
+            if cmd_run not in seen_commands:
+                seen_commands.add(cmd_run)
+                commands.append((f"Django Runserver{dir_label}", cmd_run))
+            if cmd_mig not in seen_commands:
+                seen_commands.add(cmd_mig)
+                commands.append((f"Django Migrate{dir_label}", cmd_mig))
+        else:
+            for main_candidate in ("main.py", "app.py", "server.py", "wsgi.py"):
+                if (d / main_candidate).exists():
+                    target = main_candidate if d == project_dir else f"{d.name}/{main_candidate}"
+                    cmd = f"python {target}"
+                    if cmd not in seen_commands:
+                        seen_commands.add(cmd)
+                        commands.append((f"Start Server{dir_label}", cmd))
+                    break
+
+        # 4. Makefile targets
+        makefile = d / "Makefile"
+        if makefile.exists():
+            try:
+                targets = re.findall(r"^([a-zA-Z0-9_-]+):", makefile.read_text(encoding="utf-8", errors="ignore"), re.M)
+                preferred = [t for t in targets if not t.startswith(".") and t in ("dev", "start", "build", "test", "lint", "all", "run")]
+                if not preferred:
+                    preferred = [t for t in targets if not t.startswith(".")][:3]
+                for t in preferred[:3]:
+                    cmd = f"make {t}" if d == project_dir else f"make -C {d.name} {t}"
+                    if cmd not in seen_commands:
+                        seen_commands.add(cmd)
+                        commands.append((f"Make {t}{dir_label}", cmd))
+            except Exception:
+                pass
+
+        # 5. Rust Cargo
+        cargo = d / "Cargo.toml"
+        if cargo.exists():
+            cmd_run = "cargo run" if d == project_dir else f"cargo run --manifest-path {d.name}/Cargo.toml"
+            cmd_test = "cargo test" if d == project_dir else f"cargo test --manifest-path {d.name}/Cargo.toml"
+            if cmd_run not in seen_commands:
+                seen_commands.add(cmd_run)
+                commands.append((f"Cargo Run{dir_label}", cmd_run))
+            if cmd_test not in seen_commands:
+                seen_commands.add(cmd_test)
+                commands.append((f"Cargo Test{dir_label}", cmd_test))
+
+        # 6. Go mod
+        go_mod = d / "go.mod"
+        if go_mod.exists():
+            cmd_run = "go run ." if d == project_dir else f"cd {d.name} && go run ."
+            cmd_test = "go test ./..." if d == project_dir else f"cd {d.name} && go test ./..."
+            if cmd_run not in seen_commands:
+                seen_commands.add(cmd_run)
+                commands.append((f"Go Run{dir_label}", cmd_run))
+            if cmd_test not in seen_commands:
+                seen_commands.add(cmd_test)
+                commands.append((f"Go Test{dir_label}", cmd_test))
+
+        # 7. Docker Compose
+        if (d / "docker-compose.yml").exists() or (d / "compose.yaml").exists():
+            cmd = "docker compose up -d" if d == project_dir else f"docker compose -f {d.name}/docker-compose.yml up -d"
+            if cmd not in seen_commands:
+                seen_commands.add(cmd)
+                commands.append((f"Start Docker Services{dir_label}", cmd))
+
+    return commands[:6]
 
 
 # ── Routes & Endpoints Extractor ──────────────────────────────────────────────

@@ -28,8 +28,7 @@
 
 | Action | Command |
 | :--- | :--- |
-| **Start Development** | `npm run dev` / `python main.py` |
-| **Codebase Rescan** | `init-context scan` |
+| **Rescan & Sync Runbook** | `init-context scan` |
 <!-- AUTO-CONTEXT:DISCOVERY:END -->
 
 ---

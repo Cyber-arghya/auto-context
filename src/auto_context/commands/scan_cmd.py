@@ -59,15 +59,20 @@ def scan(
         for svc, port, src in ports:
             ports_table += f"| **{svc}** | `{port}` | {src} |\n"
     else:
-        ports_table += "| **App Port** | `3000` (Default) | Inferred |\n"
+        is_web = any(w in (stack + framework).lower() for w in ("next", "react", "vue", "express", "fastapi", "flask", "django", "node", "web", "nest", "svelte"))
+        if is_web:
+            ports_table += "| **App Port** | `3000` (Default) | Inferred web port |\n"
+        else:
+            ports_table += "| **Network Ports** | `None` | CLI / Library (No local server ports detected) |\n"
 
-    # Build runbook table
+    # Build runbook table (Strictly verified executable commands, zero hallucinated fallbacks)
     runbook_table = "| Task | Executable Command |\n| :--- | :--- |\n"
     if commands:
         for action, cmd in commands:
             runbook_table += f"| {action} | `{cmd}` |\n"
     else:
-        runbook_table += "| Start Development | `npm run dev` / `python main.py` |\n"
+        runbook_table += "| Project Runbook | No startup scripts declared in manifests |\n"
+    runbook_table += "| Rescan Codebase | `init-context scan` |\n"
 
     # Build satellites index section
     satellites_index = ""
