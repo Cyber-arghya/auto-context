@@ -10,22 +10,21 @@ from pathlib import Path
 
 def get_templates_dir() -> Path:
     """
-    Return the templates directory in a way that works both during development
-    (uv run / editable install) and after a wheel install (uv tool install .).
-
-    importlib.resources.files() is the PEP 451-compliant way to locate data
-    files that are bundled inside a Python package, regardless of whether the
-    package is installed as a wheel, a zip, or an editable source tree.
+    Return the templates directory in a crash-proof, persistent way
+    that works during development, wheel installs, and virtual environments.
     """
+    pkg_tmpl = Path(__file__).parent / "templates"
+    if pkg_tmpl.is_dir():
+        return pkg_tmpl
+
     try:
-        # Python 3.9+ path — works in wheel and editable installs
         ref = _pkg_resources.files("auto_context").joinpath("templates")
-        # Materialise to a real Path so callers can use glob(), iterdir(), etc.
-        with _pkg_resources.as_file(ref) as p:
-            return p
+        if isinstance(ref, Path) and ref.is_dir():
+            return ref
     except Exception:
-        # Hard fallback: source-tree layout (should never be reached in practice)
-        return Path(__file__).parent / "templates"
+        pass
+
+    return pkg_tmpl
 
 
 # ── User home-relative roots ───────────────────────────────────────────────────

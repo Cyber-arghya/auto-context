@@ -218,10 +218,10 @@ def init(
             ".env.*.local",
         ])
 
-        # ── Stack-Adaptive Satellites (.agents/context/) ───────────────────────
+        # ── Stack-Adaptive Satellites & Executive Hub Sync ────────────────────
         try:
-            from auto_context import scanner
-            scanner.generate_satellites(project_dir, force=force)
+            from auto_context.commands import scan_cmd
+            scan_cmd.scan(target=project_dir, force=force)
         except Exception:
             pass
 

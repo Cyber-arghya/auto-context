@@ -35,6 +35,9 @@ jobs:
       - name: Verify CLI availability & version
         run: init-context --version
 
+      - name: Run Python Unit & Integration Test Suite
+        run: uv run python tests/run_tests.py
+
       - name: Test Project Scaffolding
         shell: bash
         run: |

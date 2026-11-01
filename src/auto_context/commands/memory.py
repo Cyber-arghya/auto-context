@@ -146,6 +146,14 @@ def _write_profile(repo_name: str) -> None:
 
 # ── local harvester ─────────────────────────────────────────────────────────
 
+LOCAL_SYSTEM_RULES: frozenset[str] = frozenset({
+    "maintain_context.md",
+    "AGENTS.md",
+    "GEMINI.md",
+    "context.local.md",
+})
+
+
 def _sync_local_to_memory(project_dir: Path) -> int:
     """Harvest newly created local project rules & skills into central memory."""
     harvested = 0
@@ -154,7 +162,10 @@ def _sync_local_to_memory(project_dir: Path) -> int:
         if local_rules.exists():
             (MEMORY_DIR / "rules").mkdir(parents=True, exist_ok=True)
             for rfile in local_rules.glob("*.md"):
-                # Skip standard default boilerplates from polluting memory if already synced
+                # Exclude project-specific local instructions from polluting central memory
+                if rfile.name in LOCAL_SYSTEM_RULES or rfile.name.endswith(".local.md"):
+                    continue
+
                 dest = MEMORY_DIR / "rules" / rfile.name
                 if not dest.exists():
                     shutil.copy2(rfile, dest)

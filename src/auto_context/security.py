@@ -33,20 +33,25 @@ PROHIBITED_EXTENSIONS: frozenset[str] = frozenset({
     ".pem", ".key", ".pkcs12", ".p12", ".pfx", ".kdbx",
 })
 
+IGNORE_AUDIT_DIRS: frozenset[str] = frozenset({
+    ".git", "node_modules", ".venv", "venv", "__pycache__",
+    "dist", "build", ".next", ".turbo", ".nuxt", ".cache", ".idea", ".vscode"
+})
+
 # ── Secret patterns (name → compiled regex) ──────────────────────────────────
 _RAW_PATTERNS: list[tuple[str, str]] = [
     ("GitHub Token",               r"(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}"),
     ("GitHub Fine-grained PAT",    r"github_pat_[A-Za-z0-9_]{50,}"),
     ("Stripe Live Key",            r"sk_live_[0-9a-zA-Z]{24,}"),
-    ("OpenAI API Key",             r"sk-[a-zA-Z0-9_\-]{32,}"),
-    ("Anthropic API Key",          r"sk-ant-[a-zA-Z0-9_\-]{32,}"),
     ("OpenAI Project Key",         r"sk-proj-[a-zA-Z0-9_\-]{40,}"),
+    ("Anthropic API Key",          r"sk-ant-[a-zA-Z0-9_\-]{32,}"),
+    ("OpenAI API Key",             r"sk-[a-zA-Z0-9_\-]{32,}"),
     ("Google API Key",             r"AIza[0-9A-Za-z\-_]{35}"),
     ("AWS Access Key ID",          r"AKIA[0-9A-Z]{16}"),
     ("Private Key Block",          r"-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----"),
     ("Hardcoded Secret/Password",
      r'(?i)(?:password|secret|api[_-]?key|access[_-]?token)\s*[:=]\s*[\'"]'
-     r'(?!(?:YOUR_|REPLACE_|MOCK_|TEST_|DUMMY_|\{\{|<))'
+     r'(?!(?:YOUR_|REPLACE_|MOCK_|TEST_|DUMMY_|\{\{|\<|\$\{))'
      r'[A-Za-z0-9_\-\.\$\!\@\#\%\^\&\*\(\)\+]{8,}[\'"]'),
 ]
 
@@ -120,8 +125,8 @@ def audit_path(path: Path, *, single_file: bool = False) -> list[Violation]:
             violations.extend(_scan_file(path))
     else:
         for child in path.rglob("*"):
-            # Skip .git internals
-            if ".git" in child.parts:
+            # Skip VCS and bulky dependency directories
+            if any(part in IGNORE_AUDIT_DIRS for part in child.parts):
                 continue
             if child.is_file():
                 violations.extend(_scan_file(child))

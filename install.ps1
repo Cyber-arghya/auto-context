@@ -10,7 +10,7 @@ param()
 
 $RepoRaw = "https://raw.githubusercontent.com/Cyber-arghya/auto-context/main"
 $PackageName = "auto-context-cli"
-$Version = "1.0.5"
+$Version = "1.0.6"
 
 Write-Host ""
 Write-Host "=====================================================================" -ForegroundColor Cyan

@@ -10,8 +10,10 @@ from __future__ import annotations
 
 import json
 import os
-import stat
 from pathlib import Path
+import shlex
+import stat
+import sys
 from typing import Annotated, Optional
 
 import typer
@@ -199,7 +201,10 @@ def add_mcp(
     elif command:
         server_cfg = {"command": command}
         if args:
-            server_cfg["args"] = args.split()
+            try:
+                server_cfg["args"] = shlex.split(args, posix=(sys.platform != "win32"))
+            except Exception:
+                server_cfg["args"] = args.split()
         if env_var:
             server_cfg.setdefault("env", {})[env_var] = f"${{{env_var}}}"
             if not global_:

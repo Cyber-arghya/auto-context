@@ -404,9 +404,9 @@ def generate_satellites(project_dir: Path, force: bool = False) -> dict[str, Pat
         write_idempotent(schema_path, schema_content, "Schema Satellite")
         generated["schema"] = schema_path
 
-    # 3. gotchas.md (Critical Traps & Anti-Patterns — Replaces useless bug diaries)
+    # 3. gotchas.md (Critical Traps & Anti-Patterns — Preserved even with --force to prevent knowledge loss)
     gotchas_path = satellites_dir / "gotchas.md"
-    if not gotchas_path.exists() or force:
+    if not gotchas_path.exists():
         gotchas_content = (
             "# Critical Gotchas, Anti-Patterns & Architecture Invariants\n\n"
             "> Institutional knowledge and non-obvious traps that cannot be guessed from reading code.\n\n"
@@ -414,8 +414,9 @@ def generate_satellites(project_dir: Path, force: bool = False) -> dict[str, Pat
             "1. **Port Invariants:** Inspect discovered ports before binding local services.\n"
             "2. **Secret Isolation:** Production secrets belong in `.env`; dummy dev accounts belong in `context.local.md`.\n"
             "3. **State Boundaries:** Verify migrations before initiating build or release cycles.\n"
+            "4. **Verified Executable Runbooks:** Never accept or generate slash-separated placeholder commands (`cmd1 / cmd2`). Runbooks must only contain 100% executable commands parsed from manifests or verified CLI tools.\n"
         )
         write_idempotent(gotchas_path, gotchas_content, "Gotchas Satellite")
-        generated["gotchas"] = gotchas_path
+    generated["gotchas"] = gotchas_path
 
     return generated
