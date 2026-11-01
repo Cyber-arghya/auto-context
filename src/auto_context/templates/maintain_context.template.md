@@ -46,3 +46,8 @@ Never blindly delete or truncate context:
   - `init-context scan`: Refresh stack-adaptive satellites (`routes.md`, `schema.md`, `gotchas.md`).
   - `init-context update`: Safely sync public rules and upstream capabilities (non-breaking).
   - `init-context memory push`: Push updates to central memory.
+
+### 7. First-Principles Gatekeeper: Idempotency, KISS, DRY & The Brutal Truth Filter
+- **Strict Idempotency Proof ($f(f(x)) = f(x)$):** All code generation, filesystem operations, and context sync commands must be 100% idempotent. Running them once or 100 times must yield the exact same deterministic state without duplication or side-effects.
+- **Modular, KISS & DRY:** Maintain clean separation of concerns. Prohibit copy-paste duplication, unnecessary abstractions, and monolithic bloat across all project code and context.
+- **The Brutal Truth Filter:** Every idea, design proposal, or architectural suggestion must pass first-principles scrutiny. If an idea or approach fails "The Brutal Truth Filter" (adds needless complexity, breaks DRY/KISS, or solves the wrong problem), **immediately DROP the idea** and proactively notify the user with clear technical rationale instead of blindly building flawed requests.

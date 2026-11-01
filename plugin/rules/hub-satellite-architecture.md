@@ -23,8 +23,8 @@ Prevent monolithic context file bloat, eliminate token waste, ensure 100% idempo
    - User-written notes, secrets, and manual entries outside anchored zones must remain 100% untouched.
    - Check content hashes before disk writes to avoid unnecessary I/O.
 
-3. **The Brutal Truth Filter (Zero Dead Logs):**
-   - If an idea, log entry, or feature fails first-principles scrutiny, drop it immediately and inform the user.
+3. **The Brutal Truth Filter (Zero Dead Logs & Flawed Ideas):**
+   - If an idea, design approach, log entry, or feature proposal fails first-principles scrutiny, breaks KISS/DRY principles, or does not pass 'The Brutal Truth Filter', **immediately drop the idea and notify the user** with honest technical reasons.
    - Prohibit chronological bug cemeteries (`history.md` dumps of trivial solved bugs).
    - In their place, maintain **`gotchas.md`**: high-impact institutional knowledge, non-obvious architecture traps, port collisions, and edge-case invariants.
 
