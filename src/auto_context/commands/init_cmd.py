@@ -102,6 +102,17 @@ def detect_stack(project_dir: Path) -> tuple[str, str]:
 
         return stack, "Standard"
 
+    # Fallback: check immediate child directories if current folder has no manifest
+    try:
+        for child in project_dir.iterdir():
+            if child.is_dir() and not child.name.startswith((".", "node_modules", "venv", "__pycache__")):
+                for filename, stack, kind in config.STACK_INDICATORS:
+                    if (child / filename).exists():
+                        sub_stack, sub_fw = detect_stack(child)
+                        return f"{sub_stack} (in {child.name}/)", sub_fw
+    except Exception:
+        pass
+
     return "General / Multi-stack", "Not detected"
 
 

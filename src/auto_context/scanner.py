@@ -179,12 +179,21 @@ def discover_routes(project_dir: Path) -> list[str]:
                     kind = "API" if "api" in rel else "Page"
                     routes.append(f"[{kind}] {route_path} -> {file_path.relative_to(project_dir).as_posix()}")
 
-        # 3. Express / FastAPI / Django Route folders
-        for folder_name in ("routes", "controllers", "routers", "endpoints"):
-            for candidate in (project_dir / folder_name, project_dir / "src" / folder_name):
-                if candidate.is_dir():
-                    for f in candidate.glob("*.py") if candidate.glob("*.py") else candidate.glob("*.ts"):
-                        routes.append(f"[Module] {f.stem} -> {f.relative_to(project_dir).as_posix()}")
+        # 3. Modular Route, Controller & CLI Command Folders (Deep Convention Search)
+        target_dirs = ("routes", "controllers", "routers", "endpoints", "commands", "handlers", "views", "api")
+        ignore_parts = {"node_modules", ".git", ".venv", "venv", "__pycache__", ".agents", ".gemini", "dist", "build", "site-packages"}
+
+        for folder in project_dir.rglob("*"):
+            if folder.is_dir() and folder.name in target_dirs:
+                if any(ignored in folder.parts for ignored in ignore_parts):
+                    continue
+
+                label = "Command" if folder.name in ("commands", "cli") else "Route"
+                for ext in ("*.ts", "*.tsx", "*.js", "*.jsx", "*.py", "*.go", "*.rs"):
+                    for f in folder.glob(ext):
+                        if not f.name.startswith(("_", ".")):
+                            rel_file = f.relative_to(project_dir).as_posix()
+                            routes.append(f"[{label}] {f.stem} -> {rel_file}")
 
     except Exception:
         pass
