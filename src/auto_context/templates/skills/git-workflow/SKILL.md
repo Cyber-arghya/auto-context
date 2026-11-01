@@ -57,3 +57,12 @@ Always format commit messages using structured semantic prefixes:
    GIT_EDITOR=true git rebase --continue
    ```
 5. **Never force-push without lease:** Use `git push --force-with-lease` instead of raw `--force`.
+
+### 4. Automated Release Tagging Protocol
+Upon completion of a major architectural update, new feature, or breaking change, once verified stable and confirmed by user:
+1. **Manifest & Version Bump:** Increment semantic version in `pyproject.toml` (and package entrypoints like `main.py`).
+2. **Docs Alignment:** Update release badges, URLs, and installation snippets in `README.md`.
+3. **Release Commit:** Commit with message: `chore(release): bump version to vX.Y.Z with <summary>`.
+4. **Annotated Tag:** Create tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z: <summary>"`.
+5. **Remote Push:** Push both main and tag: `git push origin main && git push origin vX.Y.Z`.
+6. **Dual-Sync Pipeline:** Execute `init-context memory push` to update Central Memory & private repo.

@@ -18,6 +18,6 @@ Ensure that all features, subcommands, options, and architectural workflows in `
    - Include clear syntax examples (`init-context update`, `init-context promote`, `init-context memory`, etc.), options tables, and expected output.
 3. **Safety & Non-Breaking Boundaries:**
    - Explicitly document data protection guarantees (e.g. `context.md`, `.env`, and user custom rules are never overwritten or broken).
-4. **Release Version Alignment:**
-   - When bumping package versions (`pyproject.toml`, tags), update release badges and installation commands in `README.md`.
+4. **Release Version Alignment & Automated Tagging:**
+   - When a major change, new architecture, or feature is verified stable and confirmed by user, immediately bump package versions (`pyproject.toml`, `main.py`), update release badges and installation commands in `README.md`, generate an annotated git tag (`git tag -a vX.Y.Z`), and push commit & tag to origin.
 
