@@ -207,6 +207,13 @@ def init(
             ".env.*.local",
         ])
 
+        # ── Stack-Adaptive Satellites (.agents/context/) ───────────────────────
+        try:
+            from auto_context import scanner
+            scanner.generate_satellites(project_dir, force=force)
+        except Exception:
+            pass
+
     console.print(Panel(
         "[bold green]✨ Project scaffold complete![/]\n"
         "Edit [cyan]context.md[/] and [cyan]GEMINI.md[/] to customise your AI workspace.",

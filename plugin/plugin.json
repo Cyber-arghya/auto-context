@@ -1,6 +1,6 @@
 {
   "name": "auto-context",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Autonomous Context & Instruction Manager for AI coding agents. Automatically keeps context.md updated with credentials, architecture, and problem/solution logs.",
   "author": {
     "name": "Arghya Biswas",

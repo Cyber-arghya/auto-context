@@ -11,7 +11,7 @@ from typing import Annotated, Optional
 import typer
 from rich.console import Console
 
-from auto_context.commands import init_cmd, memory, mcp, share, import_cmd, update_cmd
+from auto_context.commands import init_cmd, memory, mcp, share, import_cmd, update_cmd, scan_cmd
 
 app = typer.Typer(
     name="init-context",
@@ -33,6 +33,7 @@ app.command("promote")(init_cmd.promote)
 app.command("share")(share.share)
 app.command("import")(import_cmd.import_item)
 app.command("update")(update_cmd.update)
+app.command("scan")(scan_cmd.scan)
 
 
 @app.callback(invoke_without_command=True)
@@ -54,6 +55,7 @@ def root(
     global_: Annotated[bool, typer.Option("--global", "-g", help="Target global plugin scope.")] = False,
     force: Annotated[bool, typer.Option("--force", "-f", help="Overwrite existing files.")] = False,
     dry_run: Annotated[bool, typer.Option("--dry-run", "-d", help="Preview without writing.")] = False,
+    scan: Annotated[bool, typer.Option("--scan", help="Run stack-adaptive scanner on target directory.")] = False,
     version: bool = typer.Option(False, "--version", "-v", help="Show version and exit."),
 ) -> None:
     """
@@ -67,7 +69,7 @@ def root(
             try:
                 v = pkg_version("auto-context")
             except Exception:
-                v = "1.0.1"
+                v = "1.0.3"
         console.print(f"init-context v{v}")
         raise typer.Exit()
 
@@ -104,6 +106,10 @@ def root(
             env_var=env_var,
             env=env,
         )
+        return
+
+    if scan:
+        scan_cmd.scan(target=target, force=force)
         return
 
     # Default action: scaffold workspace

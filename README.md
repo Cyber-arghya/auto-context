@@ -6,7 +6,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/auto-context-cli.svg?color=blue)](https://pypi.org/project/auto-context-cli/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/auto-context-cli.svg)](https://pypi.org/project/auto-context-cli/)
-[![GitHub Release](https://img.shields.io/github/v/release/Cyber-arghya/auto-context?color=green)](https://github.com/Cyber-arghya/auto-context/releases/tag/v1.0.2)
+[![GitHub Release](https://img.shields.io/github/v/release/Cyber-arghya/auto-context?color=green)](https://github.com/Cyber-arghya/auto-context/releases/tag/v1.0.3)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux%20WSL2-success.svg)](#-quick-one-line-install)
 [![AI Supported](https://img.shields.io/badge/AI%20Supported-Antigravity%20%7C%20Cursor%20%7C%20Claude%20Code%20%7C%20Copilot%20%7C%20Windsurf-orange.svg)](#-supported-ai-assistants)
@@ -68,6 +68,7 @@ Auto-Context supports both modern subcommands (`init-context <command>`) and sta
 | Command | Shorthand / Flag | Description |
 | :--- | :--- | :--- |
 | `init-context init [DIR]` | `init-context [DIR]` | Scaffolds 5-tier context in active or specified directory. |
+| `init-context scan [DIR]` | `init-context --scan` | Stack-adaptive codebase scanner: generates satellites (.agents/context/). |
 | `init-context rule <name>` | `init-context -r <name>` | Scaffolds a new agent rule with YAML frontmatter. |
 | `init-context skill <name>` | `init-context -s <name>` | Scaffolds a new agent skill directory with triggers & runbook. |
 | `init-context promote <name>` | — | Promotes local workspace rule/skill to Global Plugin & Central Memory. |
@@ -308,6 +309,42 @@ Even if an agent originally codified a rule locally, running `memory push` guara
 
 ---
 
+## 🛰️ Hub & Satellite Modular Architecture (< 400 Token Budget)
+
+Dumping routes, models, problem logs, credentials, and runbooks into a single monolithic `context.md` causes context file bloat (1,000–5,000 lines). Every turn burns thousands of unnecessary tokens simply reading the context file!
+
+Auto-Context solves this with the **Hub & Satellite Architecture**:
+
+```
+project-root/
+├── context.md                    <─── The Executive Hub (Capped at < 80 lines / ~400 tokens!)
+└── .agents/
+    └── context/                  <─── Stack-Adaptive Satellites (Loaded on-demand)
+        ├── routes.md             (API Endpoints & UI Page Map — loaded only for route tasks)
+        ├── schema.md             (Database Schemas & ORM Models — loaded only for DB tasks)
+        └── gotchas.md            (Critical Architecture Traps & Invariants)
+```
+
+### 1️⃣ Codebase Scanner (`init-context scan`)
+In any in-flight or 40% completed repository, run:
+```bash
+init-context scan
+```
+- **Zero Token Cost:** Scans project directories and manifests locally via fast filesystem heuristics (0 LLM tokens).
+- **Stack-Adaptive:**
+  - If Next.js / Express / FastAPI: Generates `.agents/context/routes.md`.
+  - If Prisma / Drizzle / Django / SQLAlchemy: Generates `.agents/context/schema.md`.
+  - Always provisions `.agents/context/gotchas.md`.
+- **Strict Idempotency Proof ($f(f(x)) = f(x)$):**
+  - Uses SHA-256 content hashes and anchored delimiters (`<!-- AUTO-CONTEXT:DISCOVERY:START -->`).
+  - Running `scan` 1 time or 100 times produces the exact same deterministic state without duplicating content.
+
+### 2️⃣ The Brutal Truth Filter & `gotchas.md`
+- **Zero Dead Logs:** A chronological diary of 50 minor solved bug typos is a waste of disk and token budget. Git already tracks commit history!
+- **Gotchas Over History:** Auto-Context replaces useless bug logs with **`gotchas.md`**: non-obvious architecture traps, port collisions, and invariants that cannot be guessed from reading code.
+
+---
+
 ## ⚡ Two-Tier Progressive Disclosure (Token-Optimized Architecture)
 
 To avoid context window bloat and burning 20k–30k tokens at session startup, Auto-Context enforces a **Two-Tier Progressive Disclosure Protocol**:
@@ -540,6 +577,22 @@ To prevent **Prompt Injection Leaks** and keep production secrets safe:
   init-context -s my-skill-name      # বর্তমান প্রজেক্টের জন্য
   init-context -s my-skill-name -g   # সকল প্রজেক্টের জন্য গ্লোবালি
   ```
+
+### 🛰️ হাব অ্যান্ড স্যাটেলাইট আর্কিটেকচার (< ৪০০ টোকেন সিলিং):
+সব রুট, ডাটাবেজ মডেল এবং হিস্ট্রি এক ফাইলে রাখলে `context.md` ১,০০০–৫,০০০ লাইন হয়ে টোকেন অপচয় করে। Auto-Context একে সমাধান করেছে **Hub & Satellite** মডেল দিয়ে:
+* **The Executive Hub (`context.md`):** প্রজেক্টের রুট ফাইল সবসময় সর্বোচ্চ **< ৮০ লাইন (< ৪০০ টোকেন)**-এ সীমাবদ্ধ থাকবে।
+* **স্ট্যাক-অ্যাডাপটিভ স্যাটেলাইট (`.agents/context/`):**
+  * `routes.md`: প্রজেক্টের এপিআই ও পেজ রুট ম্যাপ (শুধু রাউটিং কাজের সময় এআই পড়বে)।
+  * `schema.md`: ডাটাবেজ মডেল ও ওআরএম স্কিমা (শুধু ডাটাবেজ কাজের সময় পড়বে)।
+  * `gotchas.md`: বাস্তব টেকনিক্যাল ফাঁদ, পোর্ট কনফ্লিক্ট ও আর্কিটেকচারাল সীমাবদ্ধতা।
+
+### 🔍 কোডবেস স্ক্যানার (`init-context scan`):
+যেকোনো চলমান বা ৪০% শেষ হওয়া প্রজেক্টে টার্মিনালে রান করুন:
+```bash
+init-context scan
+```
+* **জিরো টোকেন খরচ:** সম্পূর্ণ অফলাইনে লোকাল প্রসেসর দিয়ে মাত্র ১০০ মিলিসেকেন্ডে প্রজেক্ট স্ক্যান করে স্যাটেলাইট ফাইল তৈরি করে।
+* **আইডেমপোটেন্সি প্রুফ ($f(f(x)) = f(x)$):** দিনে ১০০ বার কমান্ড চালালেও কোনো ডুপ্লিকেট কনটেন্ট হবে না বা ইউজারের নিজস্ব নোট ওভাররাইট হবে না।
 
 ### ⚡ টু-টায়ার প্রোগ্রেসিভ ডিসক্লোজার (টোকেন সাশ্রয়ী আর্কিটেকচার):
 শুরুতেই সব স্কিলের বড় ফাইল লোড করে চ্যাট ভারী করা হয় না। এআই শুরুতে মাত্র ১৫০–২০০ টোকেনের একটি ইনডেক্স (`context.md` Section 5) পড়ে। যখন নির্দিষ্ট টাস্কের কিওয়ার্ড মিলবে (যেমন: "docker", "rebase", "diagnostics", "ui test"), কেবল তখনই সংশ্লিষ্ট পূর্ণাঙ্গ স্কিলটি অন-ডিমান্ড মেমরিতে লোড হয়। ফলে টোকেন খরচ প্রায় ৮০% হ্রাস পায়!

@@ -20,3 +20,4 @@ Ensure that all features, subcommands, options, and architectural workflows in `
    - Explicitly document data protection guarantees (e.g. `context.md`, `.env`, and user custom rules are never overwritten or broken).
 4. **Release Version Alignment:**
    - When bumping package versions (`pyproject.toml`, tags), update release badges and installation commands in `README.md`.
+

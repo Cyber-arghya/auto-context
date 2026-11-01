@@ -1,94 +1,53 @@
-# {{PROJECT_NAME}} — Master Architectural Context, Problem Log & Operations Manual
+# {{PROJECT_NAME}} — Executive Context Hub
 
-> **Last Updated:** {{DATE_NOW}}  
-> **Project Directory:** `{{PROJECT_DIR}}`  
-> **Repository Name:** `{{PROJECT_NAME}}`  
-> **Primary Stack:** {{STACK}} ({{FRAMEWORK}})  
+> **Last Updated:** {{DATE_NOW}} | **Stack:** {{STACK}} ({{FRAMEWORK}})  
+> **Directory:** `{{PROJECT_DIR}}` | **Model:** Hub & Satellite (< 400 Tokens)
 
 ---
 
-## 1. Master Credentials & Configuration Vault
+<!-- AUTO-CONTEXT:DISCOVERY:START -->
+## 1. Network & Configuration Vault
 
-> 🔒 **Local Sandbox Isolation:** Mock test logins, seed users, and local dev ports are stored in [`context.local.md`](file://{{PROJECT_DIR}}/context.local.md) (strictly protected by `.gitignore` and `chmod 600`). Real secrets reside exclusively in `.env`.
+> 🔒 **Sandbox Isolation:** Mock dev accounts and local ports live in [`context.local.md`](file://{{PROJECT_DIR}}/context.local.md). Production secrets belong exclusively in `.env`.
 
-| Property | Value / Setting | Description |
+| Service / Key | Port / Setting | Source / Mode |
 | :--- | :--- | :--- |
-| **Project Name** | `{{PROJECT_NAME}}` | Active project identifier |
-| **Environment** | Development / Production | Current runtime environment |
-| **Base Port** | TBD | Application listening port |
-| **API Endpoints** | TBD | Service URL / Domains |
-| **Secrets / Keys** | Secured in Vault | Credentials, API tokens, passwords |
-| **Test Fixtures** | `context.local.md` | Local dummy test credentials (git-ignored) |
+| **App Server** | `3000` (Default) | Development |
+| **Test Fixtures** | `context.local.md` | Mock accounts (chmod 600) |
+| **Runtime Secrets** | `.env` | Protected by .gitignore |
+
+## 2. Stack & Adaptive Satellites
+
+* **Primary Stack:** {{STACK}} ({{FRAMEWORK}})
+* **Satellites Directory:** [`.agents/context/`](file://{{PROJECT_DIR}}/.agents/context/)
+  - **Critical Gotchas:** [`gotchas.md`](file://{{PROJECT_DIR}}/.agents/context/gotchas.md) — Architecture invariants & traps
+  - **Routes & Endpoints:** [`routes.md`](file://{{PROJECT_DIR}}/.agents/context/routes.md) — Discovered API & page map
+  - **Database Schemas:** [`schema.md`](file://{{PROJECT_DIR}}/.agents/context/schema.md) — Discovered models & ORM entities
+
+## 3. Operations Runbook
+
+| Action | Command |
+| :--- | :--- |
+| **Start Development** | `npm run dev` / `python main.py` |
+| **Codebase Rescan** | `init-context scan` |
+<!-- AUTO-CONTEXT:DISCOVERY:END -->
 
 ---
 
-## 2. Chronological Problem Log & Technical Solutions
+## 4. Active Invariants & Critical Gotchas
 
-```mermaid
-flowchart TD
-    Init["1. Project Initialized"] --> Ready["Ready for development"]
-```
+> ⚠️ Consult [`.agents/context/gotchas.md`](file://{{PROJECT_DIR}}/.agents/context/gotchas.md) before modifying database models, port bindings, or build pipelines.
 
-| # | Symptom / Error Message | Root Cause | Exact CLI Solution & Code Patch |
-| :-: | :--- | :--- | :--- |
-| 1 | Initial setup | Clean repository initialization | Generated autonomous context framework |
+1. **Token Conservation:** Do NOT read full component bodies; use Grep / Symbol targeting.
+2. **Secret Safety:** Never commit plaintext credentials or test keys.
 
 ---
 
-## 3. System Architecture & Tech Stack
+## 5. Skills & Progressive Disclosure Routing
 
-* **Primary Stack:** {{STACK}}
-* **Framework:** {{FRAMEWORK}}
-* **Database / Cache:** TBD
-* **Deployment Target:** TBD
-
-```
-{{PROJECT_NAME}}/
-├── .agents/
-│   ├── rules/
-│   │   ├── code-standards.md
-│   │   ├── maintain_context.md
-│   │   └── security-boundaries.md
-│   └── skills/
-│       ├── browser-testing/
-│       ├── docker-ops/
-│       ├── git-workflow/
-│       └── server-diagnostics/
-├── AGENTS.md
-├── GEMINI.md
-├── context.local.md
-└── context.md
-```
-
----
-
-## 4. Setup, Reproduction & Operations Runbook
-
-### Prerequisites
-* Operating System: Linux / WSL2 / Windows / macOS
-* Runtime / Package Manager: TBD
-
-### Quick Start
-```bash
-# Setup instructions will be populated automatically by AI assistant
-```
-
----
-
-## 5. Skills & Progressive Disclosure Catalog
-
-> 💡 **Progressive Disclosure Protocol:** Agents must NOT read full `SKILL.md` files upfront. When user prompts match any triggers, dynamically inspect the skill file using `read_file`.
-
-| Skill | Version | Purpose & Scope | Triggers | Location |
-| :--- | :---: | :--- | :--- | :--- |
-| **`docker-ops`** | 1.0.0 | Production Dockerfile & Compose orchestration | `docker`, `container`, `compose` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/docker-ops/SKILL.md) |
-| **`git-workflow`** | 1.0.0 | Conventional commits & merge conflict resolution | `git`, `commit`, `branch`, `rebase` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/git-workflow/SKILL.md) |
-| **`server-diagnostics`** | 1.0.0 | System health, RAM/swap, CPU, ports & sockets | `health`, `ram`, `cpu`, `swap`, `port` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/server-diagnostics/SKILL.md) |
-| **`browser-testing`** | 1.0.0 | UI testing & mock logins using `context.local.md` | `browser`, `playwright`, `puppeteer`, `ui-test` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/browser-testing/SKILL.md) |
-
----
-
-## 6. Autonomous Documentation Policy
-* Maintained automatically by AI assistants (Antigravity, Cursor, Claude Code, Copilot, Cline, Windsurf) on every code or configuration change.
-* Governed by [`GEMINI.md`](file://{{PROJECT_DIR}}/GEMINI.md) and [`.agents/rules/maintain_context.md`](file://{{PROJECT_DIR}}/.agents/rules/maintain_context.md).
-
+| Skill | Triggers | Location |
+| :--- | :--- | :--- |
+| **`docker-ops`** | `docker`, `compose` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/docker-ops/SKILL.md) |
+| **`git-workflow`** | `git`, `commit`, `rebase` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/git-workflow/SKILL.md) |
+| **`server-diagnostics`** | `health`, `ram`, `port` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/server-diagnostics/SKILL.md) |
+| **`browser-testing`** | `browser`, `playwright` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/browser-testing/SKILL.md) |
