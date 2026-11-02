@@ -1,4 +1,4 @@
-﻿# Python
+# Python
 __pycache__/
 *.py[cod]
 *.class
@@ -40,3 +40,12 @@ venv.bak/
 *.swo
 .DS_Store
 Thumbs.db
+
+# auto-context: protected files
+context.local.md
+*.local.md
+.env
+.env.local
+.env.*.local
+.auto-context/
+auto-context/
