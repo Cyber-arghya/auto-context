@@ -41,7 +41,6 @@ Never blindly delete or truncate context:
 - **Zero Token Waste:** DO NOT burn tokens manually searching directories to check for duplicates. Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.
 - **Mandatory Global Scope:** When the user mentions "for future", "always", or defines a reusable standard, **MANDATORY: Always pass `--global` (`-g`)** and immediately follow with `init-context memory push`.
 - **Core Autonomous CLI Commands:**
-  - `init-context scan`: Refresh stack-adaptive satellites (`routes.md`, `schema.md`, `gotchas.md`).
   - `init-context -r <name> [-g]`: Create or append to domain rule with collision guards.
   - `init-context -s <name> [-g]`: Create or update operational skill.
   - `init-context update`: Safely sync public rules and upstream capabilities (non-breaking).

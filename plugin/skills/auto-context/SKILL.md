@@ -21,11 +21,6 @@ Use this skill when initializing context for a project, scaffolding new agent ru
    - `.agents/rules/` (Modular domain rules: `code-standards.md`, `security-boundaries.md`, `readme-docs-sync.md`)
    - `.agents/skills/` (Built-in operational skills)
 
-2. **Codebase Inspection & Satellites:**
-   ```bash
-   init-context scan                      # Refresh stack-adaptive satellites (routes.md, gotchas.md)
-   ```
-
 3. **Codify a New Rule (Constraints, Styles, Security):**
    ```bash
    init-context -r <rule-name> [--global]

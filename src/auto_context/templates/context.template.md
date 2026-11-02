@@ -29,7 +29,6 @@
 
 | Action | Command |
 | :--- | :--- |
-| **Rescan & Sync Runbook** | `init-context scan` |
 <!-- AUTO-CONTEXT:DISCOVERY:END -->
 
 ---
