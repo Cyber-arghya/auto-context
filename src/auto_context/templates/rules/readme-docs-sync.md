@@ -12,7 +12,7 @@ Ensure that all features, subcommands, options, and architectural workflows in `
 ## Guidelines & Constraints
 1. **Zero Undocumented Features:**
    - Whenever a new feature, CLI command, option, flag, or architectural capability is added or modified, `README.md` MUST be updated before committing or releasing.
-   - Both the English reference documentation and the Bengali guide (বাংলা নির্দেশিকা) must be updated.
+   - All reference documentation, subcommands, and flags must be kept fully synchronized and up-to-date.
 2. **Clear & Executable Instructions:**
    - Every command documented must be 100% executable and tested.
    - Include clear syntax examples (`init-context update`, `init-context promote`, `init-context memory`, etc.), options tables, and expected output.

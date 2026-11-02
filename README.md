@@ -13,7 +13,7 @@
 
 *Never lose context, forgotten architecture decisions, or unlogged bug fixes again.*
 
-[English](#-english-documentation) • [বাংলা নির্দেশিকা](#-বাংলা-নির্দেশিকা-bengali-guide) • [Installation](#-quick-one-line-install) • [CLI Usage](#-cli-usage)
+[Installation](#-quick-one-line-install) • [CLI Usage](#-cli-usage) • [How It Works](#-how-it-works) • [Architecture](#-hub--satellite-modular-architecture--400-token-budget)
 
 </div>
 
@@ -93,7 +93,7 @@ Auto-Context supports both modern subcommands (`init-context <command>`) and sta
 
 ---
 
-## 🛡️ Zero Git Footprint Guarantee (প্রজেক্ট রিপোজিটরি সুরক্ষা)
+## 🛡️ Zero Git Footprint Guarantee
 
 `auto-context` is engineered strictly as a **local development helper tool**. It never pollutes your project's Git commit history:
 - **Global & Project Protection:** Automatically registers all AI assistant artifacts (`.agents/`, `.gemini/`, `context.md`, `context.local.md`, `AGENTS.md`, `GEMINI.md`, `*.bak`, `.auto-context/`, `auto-context/`) in your global Git excludesfile (`~/.gitignore_global`) and project `.gitignore`.
@@ -102,7 +102,7 @@ Auto-Context supports both modern subcommands (`init-context <command>`) and sta
 
 ---
 
-## 🔄 Modular Upstream Sync & Non-Breaking Updates (আপডেট ও সিঙ্ক)
+## 🔄 Modular Upstream Sync & Non-Breaking Updates
 
 When new public rules, skills, or agent capabilities are added to the official [Cyber-arghya/auto-context](https://github.com/Cyber-arghya/auto-context) repository:
 
@@ -134,7 +134,7 @@ init-context update
 
 ---
 
-## 🔌 MCP (Model Context Protocol) Tooling Management (টুল ম্যানেজমেন্ট)
+## 🔌 MCP (Model Context Protocol) Tooling Management
 
 Auto-Context allows you and your AI agents to seamlessly install, update, list, and delete **MCP servers** with single commands:
 
@@ -195,7 +195,7 @@ init-context --remove-mcp sqlite
 init-context --remove-mcp github -g
 ```
 
-### 💡 Lifecycle Note: Mid-Flight Execution vs. Next-Session MCP (হাইব্রিড মডেল)
+### 💡 Lifecycle Note: Mid-Flight Execution vs. Next-Session MCP
 > **Host Client Reality:** Most MCP host environments (Antigravity IDE, Cursor, Claude Desktop) load MCP tools **only during session startup**. Modifying `mcp_config.json` mid-session configures the tool for future turns, but requires a session reload/restart before the LLM's active tool schema updates.
 > 
 > **Recommended Dual-Path Strategy:**
@@ -204,7 +204,7 @@ init-context --remove-mcp github -g
 
 ---
 
-## 🛠️ Adding Custom Skills & Rules (কাস্টম স্কিল ও রুল যুক্ত করার নিয়ম)
+## 🛠️ Adding Custom Skills & Rules
 
 You can easily teach your AI assistants new abilities (**Skills**) or enforce custom guidelines (**Rules**), either for a **single project (Local)** or across your **entire computer (Global)**.
 
@@ -542,152 +542,6 @@ To prevent **Prompt Injection Leaks** and keep production secrets safe:
 * **GitHub Copilot Chat & Workspace**
 * **Windsurf IDE (Codeium)**
 * **Cline / Roo Code**
-
----
-
-## 🇧🇩 বাংলা নির্দেশিকা (Bengali Guide)
-
-### এটি কী এবং কেন প্রয়োজন?
-আমরা যখন এআই অ্যাসিস্ট্যান্ট (Antigravity, Cursor, Claude Code) দিয়ে কোডিং বা সার্ভার কনফিগার করি, তখন কিছুক্ষণ পর এআই আগের কনফিগারেশন, সার্ভার আইপি বা পুরোনো এরর ভুলে যায়। 
-
-**Auto-Context** আপনার প্রজেক্টের রুটে একটি স্বয়ংক্রিয় `context.md` এবং কিছু শক্তিশালী নিয়ম (Rules) সেট করে দেয়। ফলে:
-1. **আপনাকে আর মনে করিয়ে দিতে হবে না:** এআই নিজে থেকেই প্রতি কাজের শেষে `context.md` ফাইল আপডেট করে দেবে।
-2. **সমস্যার নিখুঁত সমাধান রেকর্ড থাকে:** টার্মিনালে কোনো এরর সমাধান করলে সেই এররটি কেন হয়েছিল এবং কী কমান্ড দিয়ে ঠিক করা হয়েছে তা চার্ট আকারে সেভ থাকবে।
-3. **পাসওয়ার্ড ও পোর্ট ভল্ট:** সার্ভারের স্ট্যাটিক আইপি, ক্লাউডফ্লেয়ার টানেল আইডি বা ডাটাবেজ পোর্ট সবসময় এক ফাইলে নিখুঁতভাবে থাকবে।
-
-### ইনস্টলেশন ও ব্যবহার:
-* **PyPI থেকে সরাসরি ইনস্টল করতে (সবার জন্য সহজ):**
-  ```bash
-  pip install auto-context-cli
-  # অথবা uv দিয়ে:
-  uv tool install auto-context-cli
-  ```
-* **উইন্ডোজ পাওয়ারশেল (1-Click Installer):**
-  ```powershell
-  irm https://raw.githubusercontent.com/Cyber-arghya/auto-context/main/install.ps1 | iex
-  ```
-* **লিনাক্স / WSL2 / macOS (1-Click Installer):**
-  ```bash
-  curl -sSL https://raw.githubusercontent.com/Cyber-arghya/auto-context/main/install.sh | bash
-  ```
-* **নতুন প্রজেক্টে ব্যবহার:**
-  যেকোনো প্রজেক্ট ফোল্ডারে ঢুকে টার্মিনালে শুধু লিখুন:
-  ```bash
-  init-context
-  ```
-  ব্যস! আপনার প্রজেক্টে স্বয়ংক্রিয় কনটেক্সট ট্র্যাকিং চালু হয়ে যাবে।
-
-### নতুন স্কিল বা রুল তৈরি করার নিয়ম:
-> [!IMPORTANT]
-> **এআই কোডিং এজেন্টের জন্য বাধ্যতামূলক নির্দেশিকা:**
-> - **জিরো টোকেন অপচয় (Zero Token Waste):** কোনো রুল বা স্কিল আগে থেকে আছে কিনা তা চেক করতে ম্যানুয়ালি ফাইল খোঁজা বা পড়ার কোনো প্রয়োজন নেই। সরাসরি `init-context -r <name> [-g]` রান করুন — সিএলআই স্বয়ংক্রিয়ভাবে ডুপ্লিকেট শনাক্ত ও কলিশন গার্ড দিয়ে প্রোটেক্ট করে।
-> - **বাধ্যতামূলক গ্লোবাল স্কোপ (Mandatory Global Scope):** ইউজার যখন "for future", "always" বা ভবিষ্যতের জন্য কোনো সাধারণ নিয়ম সেভ করতে বলবে, তখন অবশ্যই `--global` (`-g`) ব্যবহার করতে হবে এবং সাথে সাথে `init-context memory push` রান করে সেন্ট্রাল মেমরিতে সিঙ্ক করতে হবে।
-* **নতুন রুল (Rule) তৈরি করতে:**
-  ```bash
-  init-context -r my-rule-name       # বর্তমান প্রজেক্টের জন্য
-  init-context -r my-rule-name -g    # সকল প্রজেক্টের জন্য গ্লোবালি
-  ```
-* **নতুন স্কিল (Skill) তৈরি করতে:**
-  ```bash
-  init-context -s my-skill-name      # বর্তমান প্রজেক্টের জন্য
-  init-context -s my-skill-name -g   # সকল প্রজেক্টের জন্য গ্লোবালি
-  ```
-
-### 🛰️ হাব অ্যান্ড স্যাটেলাইট আর্কিটেকচার (< ৪০০ টোকেন সিলিং):
-সব রুট, ডাটাবেজ মডেল এবং হিস্ট্রি এক ফাইলে রাখলে `context.md` ১,০০০–৫,০০০ লাইন হয়ে টোকেন অপচয় করে। Auto-Context একে সমাধান করেছে **Hub & Satellite** মডেল দিয়ে:
-* **The Executive Hub (`context.md`):** প্রজেক্টের রুট ফাইল সবসময় সর্বোচ্চ **< ৮০ লাইন (< ৪০০ টোকেন)**-এ সীমাবদ্ধ থাকবে।
-* **স্ট্যাক-অ্যাডাপটিভ স্যাটেলাইট (`.agents/context/`):**
-  * `routes.md`: প্রজেক্টের এপিআই ও পেজ রুট ম্যাপ (শুধু রাউটিং কাজের সময় এআই পড়বে)।
-  * `schema.md`: ডাটাবেজ মডেল ও ওআরএম স্কিমা (শুধু ডাটাবেজ কাজের সময় পড়বে)।
-  * `gotchas.md`: বাস্তব টেকনিক্যাল ফাঁদ, পোর্ট কনফ্লিক্ট ও আর্কিটেকচারাল সীমাবদ্ধতা।
-
-### 🔍 কোডবেস স্ক্যানার (`init-context scan`):
-যেকোনো চলমান বা ৪০% শেষ হওয়া প্রজেক্টে টার্মিনালে রান করুন:
-```bash
-init-context scan
-```
-* **জিরো টোকেন খরচ:** সম্পূর্ণ অফলাইনে লোকাল প্রসেসর দিয়ে মাত্র ১০০ মিলিসেকেন্ডে প্রজেক্ট স্ক্যান করে স্যাটেলাইট ফাইল তৈরি করে।
-* **আইডেমপোটেন্সি প্রুফ ($f(f(x)) = f(x)$):** দিনে ১০০ বার কমান্ড চালালেও কোনো ডুপ্লিকেট কনটেন্ট হবে না বা ইউজারের নিজস্ব নোট ওভাররাইট হবে না।
-
-### ⚡ টু-টায়ার প্রোগ্রেসিভ ডিসক্লোজার (টোকেন সাশ্রয়ী আর্কিটেকচার):
-শুরুতেই সব স্কিলের বড় ফাইল লোড করে চ্যাট ভারী করা হয় না। এআই শুরুতে মাত্র ১৫০–২০০ টোকেনের একটি ইনডেক্স (`context.md` Section 5) পড়ে। যখন নির্দিষ্ট টাস্কের কিওয়ার্ড মিলবে (যেমন: "docker", "rebase", "diagnostics", "ui test"), কেবল তখনই সংশ্লিষ্ট পূর্ণাঙ্গ স্কিলটি অন-ডিমান্ড মেমরিতে লোড হয়। ফলে টোকেন খরচ প্রায় ৮০% হ্রাস পায়!
-
-### 🚀 রুল প্রমোশন ও অটো-হার্ভেস্টিং (Promote & Auto-Harvest):
-* **লোকাল রুলকে গ্লোবালে উন্নীত করা (`promote`):**
-  যদি কোনো নির্দিষ্ট প্রজেক্টে তৈরি করা রুল বা স্কিল আপনার কম্পিউটারের সকল প্রজেক্টের জন্য প্রয়োজন হয়, তবে এক কমান্ডে গ্লোবাল প্লাগইন ও সেন্ট্রাল মেমরিতে প্রমোট করতে পারবেন:
-  ```bash
-  init-context promote docker-multi-stage
-  ```
-* **অটো-হার্ভেস্টিং (Auto-Harvesting in Memory Push):**
-  যখন আপনি `init-context memory push` চালাবেন, তখন বর্তমান প্রজেক্টের লোকাল রুল ও স্কিলগুলো স্বয়ংক্রিয়ভাবে সেন্ট্রাল মেমরিতে হার্ভেস্ট (সংগ্রহ) হবে এবং সিক্রেট অডিট পাস করে প্রাইভেট গিটহাবে ব্যাকআপ হয়ে যাবে।
-
-### 🧠 সেন্ট্রাল মেমরি ব্রেইন ও ডটফাইলস (Disaster Recovery & Dotfiles):
-যেমনভাবে লিনাক্সে `.dotfiles` দিয়ে চোখের পলকে সব কনফিগারেশন সেটআপ করা যায়, তেমনি Auto-Context দিয়ে আপনার এআই এজেন্টের মেমরি ও স্কিল ক্লাউডে নিরাপদে সেভ থাকে:
-1. **প্রাইভেট মেমরি তৈরি (`memory init`):**
-   ```bash
-   init-context memory init          # স্বয়ংক্রিয়ভাবে গিটহাবে Private রিপোজিটরি তৈরি করবে
-   ```
-2. **জিরো-বাইপাস সিক্রেট অডিটর ও পুশ (`memory push`):**
-   মেমরি পুশ করার আগে স্ক্রিপ্টটি প্রতিটি ফাইল স্ক্যান করে। কোনো ফাইলে ভুলবশত টোকেন (`ghp_`, `sk_live_`, `AIza`, ইত্যাদি) বা `.env` ফাইল থাকলে স্ক্রিপ্ট তৎক্ষণাৎ Exit 1 দিয়ে আটকে দেয় এবং ফাইলের নাম ও লাইন নাম্বার দেখিয়ে দেয়:
-   ```bash
-   init-context memory push          # সিক্রেট অডিট পাস করলে তবেই পুশ হবে
-   ```
-3. **অন্যান্য পিসি বা ওএস-এ মেমরি রিকভারি (`memory pull`):**
-   ```bash
-   init-context memory pull <repo-url> # সম্পূর্ণ মেমরি ও স্কিল নতুন মেশিনে নিমেষেই সচল
-   ```
-4. **ইন্টারঅ্যাক্টিভ নতুন রেপো তৈরি ও সুইচ (`memory remote`):**
-   ```bash
-   init-context memory remote          # প্রম্পট দিয়ে নতুন প্রাইভেট রেপো তৈরি ও কানেক্ট করতে
-   init-context memory remote <name>   # নির্দিষ্ট নামে সরাসরি ডেডিকেটেড প্রাইভেট রেপো তৈরি করতে
-   ```
-5. **লোকাল মেমরি ক্যাশ রিসেট ও রি-হার্ভেস্ট (`memory reset`):**
-   ```bash
-   init-context memory reset           # লোকাল ভুল ক্যাশ মুছে বর্তমান প্রজেক্টের সঠিক রুলস নতুন করে ফ্রেশলি সাজাতে
-   ```
-
-### 🤝 গ্র্যানুলার শেয়ারিং ও কলিশন গার্ড (Share & Import):
-পুরো প্রাইভেট রিপো না পাঠিয়ে শুধুমাত্র একটি নির্দিষ্ট স্কিল বা রুল বন্ধুদের সাথে গিস্টের মাধ্যমে শেয়ার করতে পারবেন:
-* **স্কিল শেয়ার করতে:**
-  ```bash
-  init-context share git-workflow   # GitHub Gist লিংক তৈরি করে দেবে
-  ```
-* **শেয়ারকৃত স্কিল ইমপোর্ট করতে (ওভাররাইট সুরক্ষা):**
-  ```bash
-  init-context import <gist-url>    # লোকাল প্রজেক্টে যুক্ত করবে
-  init-context import <gist-url> -g # গ্লোবাল এআই প্লাগইনে যুক্ত করবে
-  ```
-  > **কলিশন গার্ড:** যদি একই নামের কোনো স্কিল আগে থেকেই থেকে থাকে, তবে এটি না জানিয়ে কখনো ওভাররাইট করবে না। টার্মিনালে আপনাকে ৩টি অপশন দেবে: `[O]verwrite / [R]ename / [C]ancel`।
-
-### 🔄 মডুলার আপস্ট্রিম আপডেট ও স্বয়ংক্রিয় নোটিফিকেশন (Update & Sync):
-অফিশিয়াল গিটহাব রিপোজিটরিতে নতুন কোনো রুলবুক, স্কিল বা এআই এজেন্ট টুল যুক্ত হলে ব্যবহারকারীরা খুব সহজে আপডেট পেতে পারেন:
-1. **স্বয়ংক্রিয় নোটিফিকেশন ব্যানার:** চব্বিশ ঘণ্টায় একবার ব্যাকগ্রাউন্ডে চেক করে নতুন রুল আসলে টার্মিনালে সুন্দর নোটিফিকেশন দেখাবে।
-2. **এক কমান্ডে নিরাপদ আপডেট (`init-context update`):**
-   ```bash
-   init-context update           # ফুল মডুলার আপডেট (CLI + গ্লোবাল প্লাগইন + সিস্টেম রুলস)
-   init-context update --check   # কোনো আপডেট আছে কিনা শুধু চেক করতে
-   init-context update -w        # শুধুমাত্র বর্তমান প্রজেক্টের সিস্টেম রুলস আপডেট করতে
-   ```
-> **ব্রেকিং-চেঞ্জ মুক্ত সুরক্ষা (Zero Breaking Guarantee):**
-> * আপনার প্রজেক্টের `context.md`, `context.local.md` বা `.env` ফাইলে **কখনোই হাত দেওয়া হবে না**।
-> * আপনার তৈরিকৃত কোনো কাস্টম রুল মুছে যাবে না।
-> * কোনো ফাইলে কাস্টম পরিবর্তন থাকলে স্বয়ংক্রিয়ভাবে `.bak` ব্যাকআপ তৈরি হবে।
-
-### নিরাপদ MCP টুল ম্যানেজমেন্ট (Secure Secrets via .env):
-টোকেন বা পাসওয়ার্ড কখনোই কনফিগ ফাইলে ওপেন টেক্সটে সেভ হয় না, বরং `.env` এবং `.gitignore`-এর মাধ্যমে নিরাপদ থাকে:
-* **টুল যুক্ত করতে (Node `npx` বা Python `uvx` সাপোর্ট):**
-  ```bash
-  init-context --add-mcp sqlite             # অটো ডিটেকশন (Node হলে npx, Python হলে uvx)
-  init-context --add-mcp sqlite --runtime uvx # পাইথন uvx প্যাকেজ রানার নিশ্চিত করতে
-  init-context --add-mcp duckdb             # পাইথন-বেসড DuckDB MCP সার্ভার
-  init-context --add-mcp github             # GitHub API (.env থেকে টোকেন পড়বে)
-  init-context --add-mcp postgres           # PostgreSQL (.env থেকে DATABASE_URL পড়বে)
-  ```
-* **টুল তালিকা দেখতে ও মুছতে:**
-  ```bash
-  init-context --list-mcp                   # সক্রিয় টুল দেখতে
-  init-context --remove-mcp github          # টুল মুছে ফেলতে
-  ```
 
 ---
 
