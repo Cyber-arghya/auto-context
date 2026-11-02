@@ -234,6 +234,7 @@ def _sync_local_to_memory(project_dir: Path) -> int:
 @app.command("push")
 def memory_push(
     harvest: Annotated[bool, typer.Option("--harvest/--no-harvest", "-h/-n", help="Auto-harvest local workspace rules/skills into central memory.")] = True,
+    repo: Annotated[Optional[str], typer.Option("--repo", "-r", help="Specify private GitHub repo name if remote needs creation.")] = None,
 ) -> None:
     """Audit secrets and push memory brain to private GitHub repo."""
     console.print(Panel(
@@ -279,30 +280,43 @@ def memory_push(
                     "404",
                 )
                 if any(sig in stderr.lower() for sig in not_found_signals):
-                    console.print(f"  [yellow][!] Remote repository not found (deleted or missing):[/] {remote}")
-                    repo_name = "auto-context-memory"
-                    m = re.search(r"[:/]([^/:]+?)(?:\.git)?$", remote)
-                    if m:
-                        repo_name = m.group(1)
+                    console.print(f"  [yellow][!] Remote repository not found or deleted:[/] {remote}")
 
                     if _has_gh():
-                        console.print(f"  [cyan][*] Auto-creating new private GitHub repository '{repo_name}' via gh...[/]")
+                        console.print("  [cyan]Create a new dedicated private GitHub repository now.[/]")
+                        try:
+                            chosen_name = repo or typer.prompt(
+                                "  [?] Enter private GitHub repository name",
+                                default="auto-context-memory",
+                            ).strip()
+                        except Exception:
+                            chosen_name = repo or "auto-context-memory"
+
+                        console.print(f"  [cyan][*] Creating private GitHub repository '{chosen_name}' via gh...[/]")
                         _git(MEMORY_DIR, "remote", "remove", "origin", check=False)
                         gh_res = subprocess.run(
-                            ["gh", "repo", "create", repo_name, "--private", f"--source={MEMORY_DIR}", "--remote=origin", "--push"],
+                            ["gh", "repo", "create", chosen_name, "--private", f"--source={MEMORY_DIR}", "--remote=origin", "--push"],
                             capture_output=True, text=True,
                         )
                         if gh_res.returncode == 0:
-                            console.print("  [green][✓] New private repository created and memory pushed successfully![/]")
+                            console.print(f"  [green][✓] New private repository '{chosen_name}' created and memory pushed successfully![/]")
+                            _write_profile(chosen_name)
                         else:
                             _git(MEMORY_DIR, "remote", "add", "origin", remote, check=False)
-                            console.print(f"  [red][✗] Failed to auto-create repo via gh:[/] {gh_res.stderr.strip()}")
-                            console.print("      You can re-connect a new repository manually with:")
-                            _print_manual_push(repo_name)
+                            console.print(f"  [red][✗] Failed to create repo via gh:[/] {gh_res.stderr.strip()}")
+                            _print_manual_push(chosen_name)
                     else:
                         console.print("  [yellow][!] GitHub CLI ('gh') not found. Reconnect a new private repository manually:[/]")
-                        console.print(f"      [cyan]git -C \"{MEMORY_DIR}\" remote set-url origin git@github.com:<username>/<new-repo>.git[/]")
-                        console.print("      [cyan]init-context memory push[/]")
+                        try:
+                            chosen_url = typer.prompt("  [?] Enter new remote Git repository URL (e.g. git@github.com:user/new-repo.git)").strip()
+                        except Exception:
+                            chosen_url = ""
+                        if chosen_url:
+                            _git(MEMORY_DIR, "remote", "set-url", "origin", chosen_url, check=False)
+                            console.print(f"  [green][✓] Remote updated to:[/] {chosen_url}")
+                            _git(MEMORY_DIR, "push", "origin", "main", check=False)
+                        else:
+                            _print_manual_push("new-repo-name")
                 else:
                     console.print(f"  [red][✗] Push failed:[/] {stderr}")
         else:
@@ -356,6 +370,70 @@ def memory_pull(
             f"[bold red][✗] Permission Denied Accessing Central Memory[/]\n"
             f"[yellow]   Path:[/] {MEMORY_DIR}\n\n"
             f"[white]   Fix:[/] Run in external terminal or enable unsandboxed execution mode.",
+            border_style="red",
+        ))
+        raise typer.Exit(1)
+
+
+# ── remote ───────────────────────────────────────────────────────────────────
+
+@app.command("remote")
+def memory_remote(
+    repo_name_or_url: Annotated[Optional[str], typer.Argument(help="New private repository name or git URL.")] = None,
+    create: Annotated[bool, typer.Option("--create/--no-create", "-c/-n", help="Create the repository on GitHub via gh if it does not exist.")] = True,
+) -> None:
+    """View or switch the remote private GitHub repository for central memory."""
+    console.print(Panel(
+        "[bold green]🧠 Central Memory Remote Management[/]\n"
+        f"[yellow]   Location:[/] {MEMORY_DIR}",
+        border_style="cyan",
+    ))
+
+    try:
+        current_remote = _git(MEMORY_DIR, "remote", "get-url", "origin", check=False).stdout.strip()
+        console.print(f"  [cyan]Current Remote:[/] {current_remote or '(none)'}\n")
+
+        target = repo_name_or_url
+        if not target:
+            target = typer.prompt(
+                "  [?] Enter new private repository name (e.g. 'my-agent-brain') or full Git URL",
+                default="auto-context-memory",
+            ).strip()
+
+        if not target:
+            console.print("  [yellow][*] No repository specified. Aborting.[/]")
+            return
+
+        if target.startswith(("git@", "https://", "http://")):
+            _git(MEMORY_DIR, "remote", "remove", "origin", check=False)
+            _git(MEMORY_DIR, "remote", "add", "origin", target, check=False)
+            console.print(f"  [green][✓] Updated remote origin to:[/] {target}")
+            return
+
+        repo_name = target.replace(".git", "")
+        if create and _has_gh():
+            console.print(f"  [cyan][*] Creating private GitHub repository '{repo_name}' via gh...[/]")
+            _git(MEMORY_DIR, "remote", "remove", "origin", check=False)
+            gh_res = subprocess.run(
+                ["gh", "repo", "create", repo_name, "--private", f"--source={MEMORY_DIR}", "--remote=origin", "--push"],
+                capture_output=True, text=True,
+            )
+            if gh_res.returncode == 0:
+                console.print(f"  [green][✓] Private repository '{repo_name}' created and connected![/]")
+                _write_profile(repo_name)
+            else:
+                console.print(f"  [red][✗] gh repo create error:[/] {gh_res.stderr.strip()}")
+                _print_manual_push(repo_name)
+        else:
+            _git(MEMORY_DIR, "remote", "remove", "origin", check=False)
+            console.print(f"  [yellow][!] Set remote URL manually or install gh CLI:[/]")
+            _print_manual_push(repo_name)
+
+    except PermissionError:
+        console.print(Panel(
+            f"[bold red][✗] Permission Denied Accessing Central Memory[/]\n"
+            f"[yellow]   Path:[/] {MEMORY_DIR}\n\n"
+            f"[white]   Fix:[/] Run in external host terminal (PowerShell / Bash).",
             border_style="red",
         ))
         raise typer.Exit(1)

@@ -36,3 +36,15 @@ def test_repo_name_extraction():
     assert m is not None
     assert m.group(1) == "custom-memory-brain"
 
+
+def test_memory_remote_url(tmp_path: Path):
+    fake_mem = tmp_path / "fake_mem_remote"
+    fake_mem.mkdir(parents=True)
+    memory._git(fake_mem, "init")
+
+    with patch.object(memory, "MEMORY_DIR", fake_mem):
+        memory.memory_remote("git@github.com:myuser/test-remote.git")
+        rem = memory._git(fake_mem, "remote", "get-url", "origin").stdout.strip()
+        assert rem == "git@github.com:myuser/test-remote.git"
+
+

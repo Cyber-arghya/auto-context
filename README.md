@@ -79,6 +79,7 @@ Auto-Context supports both modern subcommands (`init-context <command>`) and sta
 | `init-context memory push` | — | Auto-harvests workspace rules, audits secrets & pushes to private GitHub. |
 | `init-context memory pull` | — | Pulls and restores central brain on a new machine. |
 | `init-context memory status` | — | Displays central brain location, remote URL, and rules/skills count. |
+| `init-context memory remote [name]` | — | View, switch, or interactively create private remote GitHub repository. |
 | `init-context memory reset` | — | Resets and re-initializes local memory cache with optional auto-harvest. |
 | `init-context mcp add <name>`| `init-context --add-mcp` | Adds or updates an MCP tool (Node `npx` or Python `uvx`). |
 | `init-context mcp list` | `init-context --list-mcp` | Lists all active MCP server configurations. |

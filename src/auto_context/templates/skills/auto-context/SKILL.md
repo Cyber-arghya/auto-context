@@ -56,6 +56,7 @@ Use this skill when initializing context for a project, scaffolding new agent ru
    init-context memory push               # Zero-bypass secret audit & push to GitHub
    init-context memory pull [repo-url]    # Pull and synchronize brain to new machine
    init-context memory status             # Inspect central brain status, rules count & remote URL
+   init-context memory remote [name]      # View, switch, or interactively create dedicated private repo
    init-context memory reset [--force]    # Clean & rebuild local cache, safely preserving remote URL
    ```
    * Enforces `--private` flag during remote creation.
