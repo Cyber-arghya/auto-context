@@ -66,3 +66,29 @@ Upon completion of a major architectural update, new feature, or breaking change
 4. **Annotated Tag:** Create tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z: <summary>"`.
 5. **Remote Push:** Push both main and tag: `git push origin main && git push origin vX.Y.Z`.
 6. **Dual-Sync Pipeline:** Execute `init-context memory push` to update Central Memory & private repo.
+
+### 5. Zero-Footprint Git Protection & Autonomous Central Memory Sync Protocol
+`auto-context` operates strictly as a local development helper without leaving git footprint in client or application repositories.
+
+1. **Zero-Footprint Ignore Enforcement:**
+   - The following artifacts must NEVER be tracked or committed to user application repositories:
+     ```gitignore
+     .agents/
+     .gemini/
+     context.md
+     context.local.md
+     *.local.md
+     AGENTS.md
+     AGENTS.md.bak
+     GEMINI.md
+     GEMINI.md.bak
+     .auto-context/
+     auto-context/
+     ```
+   - Automatically ensured machine-wide in `~/.gitignore_global` and project `.gitignore`.
+
+2. **Autonomous Central Memory Sync Invariant:**
+   - Whenever any new rule/skill is codified, or existing domain files are modified:
+     - Follow Domain Consolidation (all guidelines for the same domain reside in that domain's single consolidated file, validated against `registry.json`).
+     - The AI assistant **MUST autonomously run `init-context memory push`** immediately upon concluding the task.
+     - The user must **NEVER** be required to manually run push commands.
