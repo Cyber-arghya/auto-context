@@ -34,10 +34,16 @@ Never blindly delete or truncate context:
 - When problem logs or debugging notes grow beyond 50 lines, distill and synthesize the technical root causes into high-density invariants inside `.agents/context/gotchas.md`.
 - Preserve 100% of the architectural wisdom with 90% fewer tokens.
 
-## 5. Local Sandbox Test Credentials (`.agents/context/local.md`)
-- **Chat Continuity:** When starting a new session or switching chats, always inspect `.agents/context/local.md` (if present) to identify local dev ports, seed users, and mock passwords (`admin@test.local`) before running browser automation or curl tests.
-- **Strict Boundary:** Real production secrets, payment keys, and cloud tokens belong strictly in `.env`.
-- Ensure `.agents/` is protected with `.gitignore` and `chmod 600`.
+## 5. Dynamic Domain Synthesis & 6-Step Ultra-Lean Action Loop
+- **Dynamic Domain Satellites:** As new architecture domains are implemented, dynamically create matching satellites in .agents/context/ (e.g. schema.md when DB models exist, integrations.md when 3rd-party APIs are integrated). Never create empty or placeholder .md files (Zero Ghost Files).
+- **Anti-Chain Traversal:** Never pre-fetch connected files speculatively. Only inspect targeted line ranges (#L30-L70) when directly required by execution.
+- **6-Step Action Pipeline:**
+  1. ACTION PLAN: 3-5 bullet list verified against .agents/project-goal.md.
+  2. IMPLEMENT: Defensive, SRP, type-safe code modifications.
+  3. TEST (Mandatory): Run executable test suite (must exit code 0).
+  4. DOCS: Update README.md (verified commands & architecture).
+  5. COMMIT: Conventional Git commit & autonomous memory push.
+  6. RELEASE TAG: If user-confirmed milestone -> bump version & git tag vX.Y.Z.
 
 ## 6. Autonomous Learning & Tooling
 - **Zero Token Waste:** DO NOT burn tokens manually searching directories to check for duplicates. Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.

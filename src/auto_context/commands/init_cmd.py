@@ -272,22 +272,10 @@ def init(
         else:
             _write_if_missing(hub_dest, hub_content, force=force, dry_run=dry_run)
 
-    # ── Local Test Credentials (.agents/context/local.md) ──────────────────────
-    is_web = any(w in (stack + framework).lower() for w in ("next", "react", "vue", "express", "fastapi", "flask", "django", "node", "web", "nest", "svelte"))
+    # ── Legacy Cleanup ─────────────────────────────────────────────────────────
     legacy_local = project_dir / "context.local.md"
-    local_dest = project_dir / AGENTS_SUBDIR / "context" / "local.md"
-    local_tmpl = templates / "context.local.template.md"
-
     if legacy_local.exists() and not dry_run:
-        if not local_dest.exists():
-            local_dest.parent.mkdir(parents=True, exist_ok=True)
-            local_dest.write_text(legacy_local.read_text(encoding="utf-8"), encoding="utf-8")
-            console.print(f"  [green][✓] Migrated:[/] context.local.md -> .agents/context/local.md")
         legacy_local.unlink(missing_ok=True)
-    elif is_web and local_tmpl.exists():
-        local_content = _render(local_tmpl, variables)
-        local_dest.parent.mkdir(parents=True, exist_ok=True)
-        _write_if_missing(local_dest, local_content, force=force, dry_run=dry_run)
 
     # ── Standing AI Assistant Instructions (Root AGENTS.md & GEMINI.md) ───────
     for tmpl_name, dest_name in [

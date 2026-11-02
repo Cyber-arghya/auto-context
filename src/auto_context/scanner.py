@@ -316,62 +316,21 @@ def discover_routes(project_dir: Path) -> list[str]:
     return routes[:35]  # Cap to prevent unbounded lists
 
 
-# ── Database Models Extractor ─────────────────────────────────────────────────
-
-def discover_database_models(project_dir: Path) -> list[str]:
-    """
-    Extract data models from Prisma, Django, SQLAlchemy, Drizzle schemas.
-    Returns list of discovered model names and schema files.
-    """
-    models: list[str] = []
-
-    try:
-        # 1. Prisma schema
-        for prisma_path in (project_dir / "prisma" / "schema.prisma", project_dir / "schema.prisma"):
-            if prisma_path.exists():
-                text = prisma_path.read_text(encoding="utf-8", errors="ignore")
-                found = re.findall(r"\bmodel\s+([A-Za-z0-9_]+)\s*\{", text)
-                for m in found:
-                    models.append(f"[Prisma] {m} ({prisma_path.relative_to(project_dir).as_posix()})")
-
-        # 2. Django / SQLAlchemy models.py
-        for models_file in project_dir.rglob("models.py"):
-            if "venv" not in models_file.parts and ".git" not in models_file.parts:
-                text = models_file.read_text(encoding="utf-8", errors="ignore")
-                found = re.findall(r"\bclass\s+([A-Za-z0-9_]+)\s*\(", text)
-                for m in found:
-                    if m not in ("Meta",):
-                        models.append(f"[Model] {m} ({models_file.relative_to(project_dir).as_posix()})")
-
-        # 3. Drizzle schema
-        for drizzle_file in project_dir.rglob("schema.ts"):
-            if "node_modules" not in drizzle_file.parts:
-                text = drizzle_file.read_text(encoding="utf-8", errors="ignore")
-                found = re.findall(r"export\s+const\s+([A-Za-z0-9_]+)\s+=\s+(?:pgTable|mysqlTable|sqliteTable)", text)
-                for m in found:
-                    models.append(f"[Drizzle] {m} ({drizzle_file.relative_to(project_dir).as_posix()})")
-
-    except Exception:
-        pass
-
-    return models[:30]
 
 
-# ── Satellites Generator (.agents/context/) ───────────────────────────────────
 
 def generate_satellites(project_dir: Path, force: bool = False) -> dict[str, Path]:
     """
-    Generate stack-adaptive satellite files in .agents/context/ on-demand.
-    Enforces strict idempotency and zero token bloat in the main hub.
+    Generate core adaptive satellite files in .agents/context/ on-demand.
+    AI agents dynamically create and maintain domain satellites (schema, integrations) as needed.
     """
     satellites_dir = project_dir / ".agents" / "context"
     satellites_dir.mkdir(parents=True, exist_ok=True)
     generated: dict[str, Path] = {}
 
     routes = discover_routes(project_dir)
-    models = discover_database_models(project_dir)
 
-    # 1. routes.md (if web routes detected)
+    # 1. routes.md (if web routes or CLI commands detected)
     if routes:
         routes_path = satellites_dir / "routes.md"
         routes_content = (
@@ -389,22 +348,7 @@ def generate_satellites(project_dir: Path, force: bool = False) -> dict[str, Pat
         write_idempotent(routes_path, routes_content, "Routes Satellite")
         generated["routes"] = routes_path
 
-    # 2. schema.md (if database models detected)
-    if models:
-        schema_path = satellites_dir / "schema.md"
-        schema_content = (
-            "# Database Schema & Entity Models\n\n"
-            "> Discovered data models and ORM schema definitions. Used by AI agents for database context.\n\n"
-            "| Model / Entity | Definition File |\n"
-            "| :--- | :--- |\n"
-        )
-        for m in models:
-            schema_content += f"| {m} |\n"
-
-        write_idempotent(schema_path, schema_content, "Schema Satellite")
-        generated["schema"] = schema_path
-
-    # 3. gotchas.md (Critical Traps & Anti-Patterns — Preserved even with --force to prevent knowledge loss)
+    # 2. gotchas.md (Critical Traps & Anti-Patterns — Preserved even with --force to prevent knowledge loss)
     gotchas_path = satellites_dir / "gotchas.md"
     if not gotchas_path.exists():
         gotchas_content = (
@@ -412,7 +356,7 @@ def generate_satellites(project_dir: Path, force: bool = False) -> dict[str, Pat
             "> Institutional knowledge and non-obvious traps that cannot be guessed from reading code.\n\n"
             "## ⚠️ Active Constraints & Traps\n\n"
             "1. **Port Invariants:** Inspect discovered ports before binding local services.\n"
-            "2. **Secret Isolation:** Production secrets belong in `.env`; dummy dev accounts belong in `context.local.md`.\n"
+            "2. **Secret Isolation:** Production secrets belong in `.env` (strictly git-ignored).\n"
             "3. **State Boundaries:** Verify migrations before initiating build or release cycles.\n"
             "4. **Verified Executable Runbooks:** Never accept or generate slash-separated placeholder commands (`cmd1 / cmd2`). Runbooks must only contain 100% executable commands parsed from manifests or verified CLI tools.\n"
         )

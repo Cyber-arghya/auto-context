@@ -76,7 +76,7 @@ def scan(
         runbook_table += "| Project Runbook | No startup scripts declared in manifests |\n"
     runbook_table += "| Rescan Codebase | `init-context scan` |\n"
 
-    # Build satellites index section
+    # Build clean satellites index section (Zero Ghost Files)
     satellites_index = ""
     goal_file = project_dir / ".agents" / "project-goal.md"
     if not goal_file.exists():
@@ -84,28 +84,40 @@ def scan(
     if goal_file.exists():
         satellites_index += f"- **Project Goals & ADR:** [`project-goal.md`](file://{goal_file.as_posix()})\n"
 
-    local_file = project_dir / ".agents" / "context" / "local.md"
-    if not local_file.exists():
-        local_file = project_dir / "context.local.md"
-    if local_file.exists():
-        satellites_index += f"- **Local Test Environment:** [`local.md`](file://{local_file.as_posix()})\n"
     if "routes" in satellites:
         satellites_index += f"- **Route Map:** [`routes.md`](file://{satellites['routes'].as_posix()})\n"
-    if "schema" in satellites:
-        satellites_index += f"- **Database Schemas:** [`schema.md`](file://{satellites['schema'].as_posix()})\n"
     if "gotchas" in satellites:
         satellites_index += f"- **Critical Gotchas:** [`gotchas.md`](file://{satellites['gotchas'].as_posix()})\n"
+
+    # Discover any dynamic domain satellites synthesized by AI
+    sat_dir = project_dir / ".agents" / "context"
+    if sat_dir.exists():
+        for extra in sorted(sat_dir.glob("*.md")):
+            if extra.name not in ("routes.md", "gotchas.md", "local.md"):
+                domain_title = extra.stem.replace("-", " ").title()
+                satellites_index += f"- **{domain_title} Domain:** [`{extra.name}`](file://{extra.as_posix()})\n"
+
+    # Clean stack formatting (removes ugly '(Not detected)')
+    clean_stack = stack if not framework or framework == "Not detected" else f"{stack} ({framework})"
 
     # Anchored block for idempotent synchronization
     anchored_block = (
         "<!-- AUTO-CONTEXT:DISCOVERY:START -->\n"
         "## 1. Discovered Ports & Network Vault\n\n"
         f"{ports_table}\n"
-        "## 2. Stack & Adaptive Satellites\n\n"
-        f"* **Stack:** {stack} ({framework})\n"
-        f"{satellites_index if satellites_index else '- Satellites: Core stack (no external routes/models detected)\n'}\n"
+        "## 2. Stack & Active Domain Satellites\n\n"
+        f"* **Stack:** {clean_stack}\n"
+        f"{satellites_index if satellites_index else '- Satellites: Core stack (no active satellites)\n'}\n"
         "## 3. Operations Runbook\n\n"
         f"{runbook_table}\n"
+        "## 4. Dynamic Domain Protocol (AI Rules of Engagement)\n\n"
+        "1. **On-Demand Domain Satellites:** As you implement new architecture domains, dynamically create matching satellites in `.agents/context/`:\n"
+        "   - Database / ORM models -> `.agents/context/schema.md`\n"
+        "   - Third-party Integrations (Stripe, OAuth, APIs) -> `.agents/context/integrations.md`\n"
+        "   - Infrastructure & Deployment -> `.agents/context/infra.md`\n"
+        "2. **Zero Ghost Files:** Never create empty or placeholder `.md` files. Only create a satellite when real domain entities exist.\n"
+        "3. **Precision Range Reading:** Never bulk-read full source files; use Grep / Symbol search to read only target line ranges (`#L30-L70`).\n"
+        "4. **Anti-Chain Traversal:** When reading imported files, never pre-fetch connected dependencies unless an error trace or signature explicitly demands it.\n"
         "<!-- AUTO-CONTEXT:DISCOVERY:END -->"
     )
 
