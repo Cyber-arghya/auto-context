@@ -6,7 +6,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/auto-context-cli.svg?color=blue)](https://pypi.org/project/auto-context-cli/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/auto-context-cli.svg)](https://pypi.org/project/auto-context-cli/)
-[![GitHub Release](https://img.shields.io/github/v/release/Cyber-arghya/auto-context?color=green)](https://github.com/Cyber-arghya/auto-context/releases/tag/v1.1.0)
+[![GitHub Release](https://img.shields.io/github/v/release/Cyber-arghya/auto-context?color=green)](https://github.com/Cyber-arghya/auto-context/releases/tag/v1.2.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux%20WSL2-success.svg)](#-quick-one-line-install)
 [![AI Supported](https://img.shields.io/badge/AI%20Supported-Antigravity%20%7C%20Cursor%20%7C%20Claude%20Code%20%7C%20Copilot%20%7C%20Windsurf-orange.svg)](#-supported-ai-assistants)
@@ -635,6 +635,15 @@ init-context scan
 3. **অন্যান্য পিসি বা ওএস-এ মেমরি রিকভারি (`memory pull`):**
    ```bash
    init-context memory pull <repo-url> # সম্পূর্ণ মেমরি ও স্কিল নতুন মেশিনে নিমেষেই সচল
+   ```
+4. **ইন্টারঅ্যাক্টিভ নতুন রেপো তৈরি ও সুইচ (`memory remote`):**
+   ```bash
+   init-context memory remote          # প্রম্পট দিয়ে নতুন প্রাইভেট রেপো তৈরি ও কানেক্ট করতে
+   init-context memory remote <name>   # নির্দিষ্ট নামে সরাসরি ডেডিকেটেড প্রাইভেট রেপো তৈরি করতে
+   ```
+5. **লোকাল মেমরি ক্যাশ রিসেট ও রি-হার্ভেস্ট (`memory reset`):**
+   ```bash
+   init-context memory reset           # লোকাল ভুল ক্যাশ মুছে বর্তমান প্রজেক্টের সঠিক রুলস নতুন করে ফ্রেশলি সাজাতে
    ```
 
 ### 🤝 গ্র্যানুলার শেয়ারিং ও কলিশন গার্ড (Share & Import):
