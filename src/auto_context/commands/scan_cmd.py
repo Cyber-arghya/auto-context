@@ -50,7 +50,9 @@ def scan(
     satellites = scanner.generate_satellites(project_dir, force=force)
 
     # 4. Render/Sync the compact Executive Hub (context.md)
-    hub_file = project_dir / "context.md"
+    hub_file = project_dir / ".agents" / "context.md"
+    if not hub_file.exists() and (project_dir / "context.md").exists():
+        hub_file = project_dir / "context.md"
     date_now = date.today().isoformat()
 
     # Build discovered ports table
@@ -76,9 +78,17 @@ def scan(
 
     # Build satellites index section
     satellites_index = ""
-    goal_file = project_dir / "project-goal.md"
+    goal_file = project_dir / ".agents" / "project-goal.md"
+    if not goal_file.exists():
+        goal_file = project_dir / "project-goal.md"
     if goal_file.exists():
         satellites_index += f"- **Project Goals & ADR:** [`project-goal.md`](file://{goal_file.as_posix()})\n"
+
+    local_file = project_dir / ".agents" / "context" / "local.md"
+    if not local_file.exists():
+        local_file = project_dir / "context.local.md"
+    if local_file.exists():
+        satellites_index += f"- **Local Test Environment:** [`local.md`](file://{local_file.as_posix()})\n"
     if "routes" in satellites:
         satellites_index += f"- **Route Map:** [`routes.md`](file://{satellites['routes'].as_posix()})\n"
     if "schema" in satellites:

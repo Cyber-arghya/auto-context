@@ -234,11 +234,18 @@ def init(
         content = _render(maintain_tmpl, variables)
         _write_if_missing(rules_dest / "maintain_context.md", content, force=force, dry_run=dry_run)
 
-    # ── Project Goals & North Star (project-goal.md) ──────────────────────────
+    # ── Project Goals & North Star (.agents/project-goal.md) ───────────────────
     goal_tmpl = templates / "project-goal.template.md"
     if goal_tmpl.exists():
         goal_content = _render(goal_tmpl, variables)
-        _write_if_missing(project_dir / "project-goal.md", goal_content, force=force, dry_run=dry_run)
+        goal_dest = project_dir / AGENTS_SUBDIR / "project-goal.md"
+        legacy_goal = project_dir / "project-goal.md"
+        if legacy_goal.exists() and not goal_dest.exists() and not dry_run:
+            goal_dest.write_text(legacy_goal.read_text(encoding="utf-8"), encoding="utf-8")
+            legacy_goal.unlink(missing_ok=True)
+            console.print(f"  [green][✓] Migrated:[/] project-goal.md -> .agents/project-goal.md")
+        else:
+            _write_if_missing(goal_dest, goal_content, force=force, dry_run=dry_run)
 
     # ── Skills ───────────────────────────────────────────────────────────────
     skills_dest = project_dir / AGENTS_SUBDIR / "skills"
@@ -252,12 +259,40 @@ def init(
                     force=force, dry_run=dry_run,
                 )
 
-    # ── Root context files ────────────────────────────────────────────────────
+    # ── Executive Architecture Hub (.agents/context.md) ───────────────────────
+    hub_tmpl = templates / "context.template.md"
+    if hub_tmpl.exists():
+        hub_content = _render(hub_tmpl, variables)
+        hub_dest = project_dir / AGENTS_SUBDIR / "context.md"
+        legacy_hub = project_dir / "context.md"
+        if legacy_hub.exists() and not hub_dest.exists() and not dry_run:
+            hub_dest.write_text(legacy_hub.read_text(encoding="utf-8"), encoding="utf-8")
+            legacy_hub.unlink(missing_ok=True)
+            console.print(f"  [green][✓] Migrated:[/] context.md -> .agents/context.md")
+        else:
+            _write_if_missing(hub_dest, hub_content, force=force, dry_run=dry_run)
+
+    # ── Local Test Credentials (.agents/context/local.md) ──────────────────────
+    is_web = any(w in (stack + framework).lower() for w in ("next", "react", "vue", "express", "fastapi", "flask", "django", "node", "web", "nest", "svelte"))
+    legacy_local = project_dir / "context.local.md"
+    local_dest = project_dir / AGENTS_SUBDIR / "context" / "local.md"
+    local_tmpl = templates / "context.local.template.md"
+
+    if legacy_local.exists() and not dry_run:
+        if not local_dest.exists():
+            local_dest.parent.mkdir(parents=True, exist_ok=True)
+            local_dest.write_text(legacy_local.read_text(encoding="utf-8"), encoding="utf-8")
+            console.print(f"  [green][✓] Migrated:[/] context.local.md -> .agents/context/local.md")
+        legacy_local.unlink(missing_ok=True)
+    elif is_web and local_tmpl.exists():
+        local_content = _render(local_tmpl, variables)
+        local_dest.parent.mkdir(parents=True, exist_ok=True)
+        _write_if_missing(local_dest, local_content, force=force, dry_run=dry_run)
+
+    # ── Standing AI Assistant Instructions (Root AGENTS.md & GEMINI.md) ───────
     for tmpl_name, dest_name in [
-        ("context.template.md",       "context.md"),
-        ("context.local.template.md", "context.local.md"),
-        ("GEMINI.template.md",        "GEMINI.md"),
-        ("AGENTS.template.md",        "AGENTS.md"),
+        ("GEMINI.template.md", "GEMINI.md"),
+        ("AGENTS.template.md", "AGENTS.md"),
     ]:
         tmpl = templates / tmpl_name
         if tmpl.exists():

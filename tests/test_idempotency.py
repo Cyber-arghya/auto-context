@@ -12,7 +12,7 @@ from auto_context import scanner
 def test_scan_idempotency_proof(tmp_path: Path):
     # Initialize basic project
     init_cmd.init(target=tmp_path)
-    context_file = tmp_path / "context.md"
+    context_file = tmp_path / ".agents" / "context.md"
     assert context_file.exists()
 
     # Add custom user note outside anchored discovery zone

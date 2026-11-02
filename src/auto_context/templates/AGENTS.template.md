@@ -7,7 +7,7 @@ As an AI coding assistant working in this repository (`{{PROJECT_DIR}}`), you ar
 Whenever exploring code or resolving tasks during an active session, follow the precision formula:
 $$\text{Precision Context} = \text{Route Map (Macro)} + \text{Grep/Symbol (Micro)} + \text{Targeted Range Read}$$
 - **Never bulk-read entire directories or loop through 50+ source files.**
-- First inspect `.agents/context/routes.md` or Section 2 of `context.md` for high-level file locations.
+- First inspect `.agents/context/routes.md` or `.agents/context.md` for high-level file locations.
 - Use `grep` or symbol search to pinpoint exact files and line numbers.
 - Read only the specific target line range (e.g. `#L30-L70`) rather than loading entire large files.
 
@@ -16,7 +16,7 @@ Before concluding any turn or session, the agent MUST inspect and update context
 - **Routes & Pages:** If any API endpoint or UI view is created, modified, or removed, immediately update `.agents/context/routes.md` (or run `init-context scan`).
 - **Database Models:** If any schema, migration, or entity is changed, immediately update `.agents/context/schema.md`.
 - **Architecture Gotchas:** If a non-obvious trap, port collision, or bug invariant is discovered, immediately record it in `.agents/context/gotchas.md`.
-- **Core Hub:** Keep `context.md` compact (< 400 tokens / 60 lines) as an executive routing hub.
+- **Core Hub:** Keep `.agents/context.md` compact (< 400 tokens / 60 lines) as an executive routing hub.
 
 ### 3. Domain Consolidation & Anti-Fragmentation (Single Responsibility)
 When codifying new guidelines or workflows, DO NOT create fragmented micro-files if a domain file already exists:
@@ -31,10 +31,10 @@ Never blindly delete or truncate context:
 - When problem logs or debugging notes grow beyond 50 lines, distill and synthesize the technical root causes into high-density invariants inside `.agents/context/gotchas.md`.
 - Preserve 100% of the architectural wisdom with 90% fewer tokens.
 
-### 5. Local Sandbox Test Credentials (`context.local.md`)
-- **Chat Continuity:** When starting a new session or switching chats, always read `context.local.md` to identify local dev ports, seed users, and mock passwords (`admin@test.local`) before running browser automation or curl tests.
+### 5. Local Sandbox Test Credentials (`.agents/context/local.md`)
+- **Chat Continuity:** When starting a new session or switching chats, always inspect `.agents/context/local.md` (if present) to identify local dev ports, seed users, and mock passwords (`admin@test.local`) before running browser automation or curl tests.
 - **Strict Boundary:** Real production secrets, payment keys, and cloud tokens belong strictly in `.env`.
-- Ensure `context.local.md` is protected with `.gitignore` and `chmod 600`.
+- Ensure `.agents/` is protected with `.gitignore` and `chmod 600`.
 
 ### 6. Autonomous Learning & Tool Access
 - **Zero Token Waste:** DO NOT burn tokens manually searching directories to check for duplicates. Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.

@@ -9,8 +9,7 @@ from auto_context.commands import init_cmd
 def test_init_scaffolds_complete_workspace(tmp_path: Path):
     init_cmd.init(target=tmp_path)
 
-    assert (tmp_path / "context.md").exists()
-    assert (tmp_path / "context.local.md").exists()
+    assert (tmp_path / ".agents" / "context.md").exists()
     assert (tmp_path / "AGENTS.md").exists()
     assert (tmp_path / "GEMINI.md").exists()
     assert (tmp_path / ".agents" / "rules" / "maintain_context.md").exists()
