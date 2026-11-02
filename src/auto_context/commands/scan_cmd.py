@@ -76,6 +76,9 @@ def scan(
 
     # Build satellites index section
     satellites_index = ""
+    goal_file = project_dir / "project-goal.md"
+    if goal_file.exists():
+        satellites_index += f"- **Project Goals & ADR:** [`project-goal.md`](file://{goal_file.as_posix()})\n"
     if "routes" in satellites:
         satellites_index += f"- **Route Map:** [`routes.md`](file://{satellites['routes'].as_posix()})\n"
     if "schema" in satellites:

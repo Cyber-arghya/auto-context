@@ -19,6 +19,7 @@
 ## 2. Stack & Adaptive Satellites
 
 * **Primary Stack:** {{STACK}} ({{FRAMEWORK}})
+* **Project Goals & ADR:** [`project-goal.md`](file://{{PROJECT_DIR}}/project-goal.md) — North Star, roadmap & architecture decisions
 * **Satellites Directory:** [`.agents/context/`](file://{{PROJECT_DIR}}/.agents/context/)
   - **Critical Gotchas:** [`gotchas.md`](file://{{PROJECT_DIR}}/.agents/context/gotchas.md) — Architecture invariants & traps
   - **Routes & Endpoints:** [`routes.md`](file://{{PROJECT_DIR}}/.agents/context/routes.md) — Discovered API & page map

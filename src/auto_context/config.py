@@ -96,6 +96,7 @@ ZERO_FOOTPRINT_PATTERNS: list[str] = [
     ".gemini/",
     "context.md",
     "context.local.md",
+    "project-goal.md",
     "*.local.md",
     "AGENTS.md",
     "AGENTS.md.bak",

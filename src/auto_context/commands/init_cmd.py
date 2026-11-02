@@ -206,6 +206,12 @@ def init(
         content = _render(maintain_tmpl, variables)
         _write_if_missing(rules_dest / "maintain_context.md", content, force=force, dry_run=dry_run)
 
+    # ── Project Goals & North Star (project-goal.md) ──────────────────────────
+    goal_tmpl = templates / "project-goal.template.md"
+    if goal_tmpl.exists():
+        goal_content = _render(goal_tmpl, variables)
+        _write_if_missing(project_dir / "project-goal.md", goal_content, force=force, dry_run=dry_run)
+
     # ── Skills ───────────────────────────────────────────────────────────────
     skills_dest = project_dir / AGENTS_SUBDIR / "skills"
     for skill_dir in (templates / "skills").iterdir():
