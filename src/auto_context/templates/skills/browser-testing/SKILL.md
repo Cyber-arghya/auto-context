@@ -1,14 +1,14 @@
 ---
 name: browser-testing
 version: 1.0.0
-description: Automated web UI verification, Playwright/Puppeteer automation, and dev endpoint testing using context.local.md.
+description: Automated web UI verification, Playwright/Puppeteer automation, and dev endpoint testing with environment isolation.
 triggers: ["browser", "playwright", "puppeteer", "ui-test", "login-test", "headless", "screenshot"]
 ---
 
 # Skill: Browser Testing & Local UI Verification
 
 ## Overview
-Automated procedures for conducting headful or headless browser testing, verifying web UI flows, performing login checks using mock fixtures from `context.local.md`, and preventing credential amnesia.
+Automated procedures for conducting headful or headless browser testing, verifying web UI flows, performing assertions using environment-isolated test fixtures, and capturing failure screenshots.
 
 ## When to Activate
 - When verifying frontend web pages, UI components, forms, or authentication flows.
@@ -17,42 +17,42 @@ Automated procedures for conducting headful or headless browser testing, verifyi
 
 ## Workflows & Procedures
 
-### 1. Pre-Flight Credential Resolution (The Mock Vault Rule)
-* **Rule:** Before launching any browser test or asking the user for test logins, **ALWAYS read `context.local.md`**.
-* Locate the seed user or admin account under Section 2:
-  ```markdown
-  | Role | Username / Email | Mock Password |
-  | Admin | admin@test.local | adminpass123 |
+### 1. Test Environment & Credential Isolation
+* **Rule:** Never hardcode passwords or production accounts in test scripts.
+* Load test targets and credentials via `.env.test` or system environment variables:
+  ```javascript
+  const BASE_URL = process.env.TEST_URL || 'http://localhost:3000';
+  const TEST_USER = process.env.TEST_USER_EMAIL;
+  const TEST_PASS = process.env.TEST_USER_PASSWORD;
   ```
-* NEVER hardcode real passwords or live user accounts into test scripts.
 
 ### 2. Playwright Quick Verification Script Pattern
 ```javascript
 import { test, expect } from '@playwright/test';
 
-test('Verify dev portal and mock login', async ({ page }) => {
-  // Navigate to local frontend URL defined in context.local.md
-  await page.goto('http://localhost:3000');
+test('Verify web portal and authenticated flow', async ({ page }) => {
+  const targetUrl = process.env.TEST_URL || 'http://localhost:3000';
+  await page.goto(targetUrl);
 
   // Verify page title
-  await expect(page).toHaveTitle(/Dev/);
+  await expect(page).toHaveTitle(/App|Portal/i);
 
-  // Fill credentials from context.local.md
-  await page.fill('input[name="email"]', 'admin@test.local');
-  await page.fill('input[name="password"]', 'adminpass123');
-  await page.click('button[type="submit"]');
-
-  // Assert dashboard entry
-  await expect(page.locator('text=Dashboard')).toBeVisible();
+  // Authenticate if credentials are provided in test environment
+  if (process.env.TEST_USER_EMAIL && process.env.TEST_USER_PASSWORD) {
+    await page.fill('input[type="email"]', process.env.TEST_USER_EMAIL);
+    await page.fill('input[type="password"]', process.env.TEST_USER_PASSWORD);
+    await page.click('button[type="submit"]');
+    await expect(page.locator('text=Dashboard')).toBeVisible();
+  }
 });
 ```
 
 ### 3. Capturing Visual Evidence & Debugging
-* Always save screenshots of failed assertions in a local temporary directory:
+* Always save screenshots of failed assertions in a local temporary directory (`scratch/` or `.tmp/`):
   ```javascript
   await page.screenshot({ path: 'scratch/error-state.png', fullPage: true });
   ```
-* Review browser console errors:
+* Capture browser console errors:
   ```javascript
   page.on('console', msg => console.log('BROWSER LOG:', msg.text()));
   page.on('pageerror', err => console.log('PAGE ERROR:', err.message));

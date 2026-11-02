@@ -75,14 +75,15 @@ echo -e "  ${GREEN}[✓] CLI 'init-context' installed successfully!${NC}"
 
 # 4. Install Global Antigravity / Gemini Plugin
 PLUGIN_DIR="$HOME/.gemini/config/plugins/auto-context"
-mkdir -p "$PLUGIN_DIR/rules" "$PLUGIN_DIR/skills/auto-context"
+mkdir -p "$PLUGIN_DIR/rules" "$PLUGIN_DIR/skills"
 
-if [ "$IS_LOCAL" = true ] && [ -d "$SCRIPT_DIR/plugin" ]; then
-    cp -rf "$SCRIPT_DIR/plugin"/* "$PLUGIN_DIR/" 2>/dev/null || true
+LOCAL_TEMPLATES="$SCRIPT_DIR/src/auto_context/templates"
+if [ "$IS_LOCAL" = true ] && [ -d "$LOCAL_TEMPLATES" ]; then
+    cp -f "$LOCAL_TEMPLATES/plugin.json" "$PLUGIN_DIR/" 2>/dev/null || true
+    cp -rf "$LOCAL_TEMPLATES/rules/"* "$PLUGIN_DIR/rules/" 2>/dev/null || true
+    cp -rf "$LOCAL_TEMPLATES/skills/"* "$PLUGIN_DIR/skills/" 2>/dev/null || true
 else
-    curl -sSL "$REPO_RAW/plugin/plugin.json" -o "$PLUGIN_DIR/plugin.json" 2>/dev/null || true
-    curl -sSL "$REPO_RAW/plugin/rules/AGENTS.md" -o "$PLUGIN_DIR/rules/AGENTS.md" 2>/dev/null || true
-    curl -sSL "$REPO_RAW/plugin/skills/auto-context/SKILL.md" -o "$PLUGIN_DIR/skills/auto-context/SKILL.md" 2>/dev/null || true
+    init-context update --global >/dev/null 2>&1 || true
 fi
 echo -e "  ${GREEN}[✓] Configured Global AI Agent Plugin in:${NC} $PLUGIN_DIR"
 

@@ -2,50 +2,50 @@
 name: server-diagnostics
 version: 1.0.0
 description: Real-time system health checks, RAM/swap usage, CPU load, open ports, and network connectivity diagnostics.
-triggers: ["health", "ram", "cpu", "swap", "diagnostics", "server", "port", "disk", "uptime"]
+triggers: ["health", "ram", "memory-check", "cpu", "ports", "disk", "diagnostics", "server-status"]
 ---
 
-# Skill: Server Diagnostics & Resource Health
+# Skill: Server Diagnostics & System Health Inspection
 
 ## Overview
-Comprehensive runbook for assessing server stability, inspecting hardware memory buffers, verifying swap allocation, auditing listening network ports, and monitoring active background processes.
+Standard operational procedures for inspecting host resources, diagnosing memory bottlenecks, verifying open network sockets, and monitoring process execution across Linux, WSL2, and POSIX containers.
 
 ## When to Activate
-- When experiencing system slowdowns, high latency, or OOM (Out-Of-Memory) kill events.
-- When checking server resource headroom before running heavy builds or containers.
-- When verifying open ports, firewall status, or Cloudflare tunnel connectivity.
+- When experiencing high RAM/swap usage or CPU thrashing during builds or runtime execution.
+- When a service fails to bind to a local port (e.g. `EADDRINUSE`).
+- When diagnosing slow disk I/O, zombie processes, or container health degradation.
 
-## Workflows & Procedures
+## Diagnostic Procedures & Runbooks
 
-### 1. Memory & Buffer Diagnostics
+### 1. Memory & Swap Health
 ```bash
-# Check physical RAM and swap file availability
-free -h
+# High-density real-time RAM and swap utilization in MB
+free -m -h
 
-# Check top 5 memory-consuming processes
-ps aux --sort=-%mem | head -n 6
+# Top 10 memory-consuming processes
+ps aux --sort=-%mem | head -n 11 | awk '{print $2, $3, $4, $11}'
 ```
-* **Critical Threshold:** Available memory below 200MB warrants immediate cache cleanup or swap expansion.
 
-### 2. CPU Load & Process Monitoring
+### 2. CPU Load & Process Throttling
 ```bash
-# Check system uptime and 1m, 5m, 15m load averages
+# Instant load averages (1m, 5m, 15m) and core counts
 uptime
+nproc
 
-# Check top 5 CPU-consuming processes
-ps aux --sort=-%cpu | head -n 6
+# Top CPU-consuming processes (snapshot)
+ps aux --sort=-%cpu | head -n 11 | awk '{print $2, $3, $4, $11}'
 ```
 
-### 3. Disk Storage & Inode Health
+### 3. Disk Space & Inode Saturation
 ```bash
-# Inspect filesystem disk usage
-df -h /
+# Check filesystem capacity (human-readable)
+df -hT -x tmpfs -x devtmpfs
 
-# Inspect inode utilization (detects micro-file exhaustion)
+# Check inode usage (prevents silent disk-full errors despite free space)
 df -i /
 ```
 
-### 4. Network Ports & Connectivity Audit
+### 4. Open Network Ports & Sockets
 ```bash
 # Check all active TCP/UDP listening sockets with process names
 sudo ss -tulpn
@@ -54,9 +54,8 @@ sudo ss -tulpn
 nslookup cloudflare.com 1.1.1.1
 ```
 
-### 5. Project Directory & Remote Server Path Resolution
-- **Lookup Protocol:** Always consult `context.local.md` (Section 1) to retrieve the verified local workspace path and remote server deployment directory before running diagnostic, build, or deployment commands.
-- **Server Path Identification:**
+### 5. Project Directory & Service Path Resolution
+- **Dynamic Server Path Identification:**
   ```bash
   # Check current server working directory
   pwd
@@ -67,4 +66,4 @@ nslookup cloudflare.com 1.1.1.1
   # Inspect Docker container working directory
   docker inspect --format '{{.Config.WorkingDir}}' <container_id>
   ```
-- **Privacy Invariant:** Machine-specific filesystem paths (e.g. `C:\Users\...` or `/home/...`) belong strictly in `context.local.md` and must never be committed to public git history or public docs.
+- **Privacy Invariant:** Machine-specific filesystem paths (e.g. `C:\Users\...` or `/home/...`) belong strictly to local runtime environments and must never be committed to public git history or public docs.

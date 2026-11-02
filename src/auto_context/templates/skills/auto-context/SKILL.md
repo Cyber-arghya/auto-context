@@ -16,7 +16,7 @@ Use this skill when initializing context for a project, scaffolding new agent ru
 
 1. **Scaffold or Repair Project Context:**
    Run `init-context` in any workspace directory to generate:
-   - `.agents/context.md` (Executive Hub < 60 lines / ~400 tokens)
+   - `.agents/context.md` (Executive Hub)
    - `GEMINI.md` and `AGENTS.md` (Standing rules)
    - `.agents/rules/` (Modular domain rules: `code-standards.md`, `security-boundaries.md`, `readme-docs-sync.md`)
    - `.agents/skills/` (Built-in operational skills)

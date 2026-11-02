@@ -216,7 +216,7 @@ def _download_text(url: str, timeout: float = 4.0) -> Optional[str]:
 
 def update_global_plugin() -> int:
     """
-    Sync upstream public rules and plugin definitions into ~/.gemini/config/plugins/auto-context/.
+    Sync canonical rules and plugin definitions from bundled package into ~/.gemini/config/plugins/auto-context/.
     Preserves all existing user-defined custom rules and private skills.
     """
     console.print(f"  [cyan][*] Syncing Global AI Plugin:[/] {config.GLOBAL_PLUGIN_DIR}")
@@ -224,7 +224,7 @@ def update_global_plugin() -> int:
 
     plugin_dir = config.GLOBAL_PLUGIN_DIR
     rules_dir = plugin_dir / "rules"
-    skills_dir = plugin_dir / "skills" / "auto-context"
+    skills_dir = plugin_dir / "skills"
 
     try:
         rules_dir.mkdir(parents=True, exist_ok=True)
@@ -233,47 +233,46 @@ def update_global_plugin() -> int:
         console.print(f"  [yellow][!] Sandbox notice: Permission denied creating {plugin_dir}. Run in host terminal.[/]")
         return 0
 
-    # Sync core plugin files from upstream repository
-    core_files = [
-        ("plugin.json", plugin_dir / "plugin.json"),
-        ("plugin/rules/AGENTS.md", rules_dir / "AGENTS.md"),
-        ("plugin/rules/code-standards.md", rules_dir / "code-standards.md"),
-        ("plugin/rules/security-boundaries.md", rules_dir / "security-boundaries.md"),
-                ("plugin/rules/readme-docs-sync.md", rules_dir / "readme-docs-sync.md"),
-        ("plugin/rules/registry.json", rules_dir / "registry.json"),
-        ("plugin/skills/auto-context/SKILL.md", skills_dir / "SKILL.md"),
-        ("plugin/skills/browser-testing/SKILL.md", plugin_dir / "skills" / "browser-testing" / "SKILL.md"),
-        ("plugin/skills/docker-ops/SKILL.md", plugin_dir / "skills" / "docker-ops" / "SKILL.md"),
-        ("plugin/skills/git-workflow/SKILL.md", plugin_dir / "skills" / "git-workflow" / "SKILL.md"),
-        ("plugin/skills/server-diagnostics/SKILL.md", plugin_dir / "skills" / "server-diagnostics" / "SKILL.md"),
-        ("plugin/skills/feature-verification/SKILL.md", plugin_dir / "skills" / "feature-verification" / "SKILL.md"),
-    ]
+    tmpl_dir = config.get_templates_dir()
 
-    for rel_path, dest_path in core_files:
-        dest_path.parent.mkdir(parents=True, exist_ok=True)
-        url = f"{config.RAW_GITHUB_BASE}/{rel_path}"
-        content = _download_text(url)
-        if content:
-            dest_path.write_text(content, encoding="utf-8")
-            console.print(f"  [green][✓] Updated public definition:[/] {dest_path.name}")
+    # 1. Plugin manifest
+    plugin_json = tmpl_dir / "plugin.json"
+    if plugin_json.exists():
+        shutil.copy2(plugin_json, plugin_dir / "plugin.json")
+        updated_count += 1
+
+    # 2. Canonical rules
+    rules_tmpl = tmpl_dir / "rules"
+    if rules_tmpl.is_dir():
+        for rule_file in rules_tmpl.glob("*.md"):
+            shutil.copy2(rule_file, rules_dir / rule_file.name)
             updated_count += 1
-        else:
-            # Fallback to locally bundled templates if offline
-            tmpl_dir = config.get_templates_dir()
-            fallback_map = {
-                "AGENTS.md": tmpl_dir / "AGENTS.template.md",
-                "SKILL.md": tmpl_dir / "skills" / dest_path.parent.name / "SKILL.md" if (tmpl_dir / "skills" / dest_path.parent.name / "SKILL.md").exists() else tmpl_dir / "skill.template.md",
-                "code-standards.md": tmpl_dir / "rules" / "code-standards.md",
-                "security-boundaries.md": tmpl_dir / "rules" / "security-boundaries.md",
-                                "readme-docs-sync.md": tmpl_dir / "rules" / "readme-docs-sync.md",
-                "registry.json": tmpl_dir / "rules" / "registry.json",
-            }
-            fb = fallback_map.get(dest_path.name)
-            if fb and fb.exists():
-                shutil.copy2(fb, dest_path)
-                console.print(f"  [green][✓] Restored from bundled template:[/] {dest_path.name}")
-                updated_count += 1
+        reg_file = rules_tmpl / "registry.json"
+        if reg_file.exists():
+            shutil.copy2(reg_file, rules_dir / "registry.json")
+            updated_count += 1
 
+    # 3. Standing rules
+    agents_tmpl = tmpl_dir / "AGENTS.template.md"
+    if agents_tmpl.exists():
+        content = agents_tmpl.read_text(encoding="utf-8")
+        content = content.replace("{{PROJECT_NAME}}", "Global").replace("{{PROJECT_DIR}}", str(Path.home()))
+        (rules_dir / "AGENTS.md").write_text(content, encoding="utf-8")
+        updated_count += 1
+
+    # 4. Canonical skills
+    skills_tmpl = tmpl_dir / "skills"
+    if skills_tmpl.is_dir():
+        for skill_dir in skills_tmpl.iterdir():
+            if skill_dir.is_dir():
+                target_skill_dir = skills_dir / skill_dir.name
+                target_skill_dir.mkdir(parents=True, exist_ok=True)
+                for f in skill_dir.glob("*"):
+                    if f.is_file():
+                        shutil.copy2(f, target_skill_dir / f.name)
+                        updated_count += 1
+
+    console.print(f"  [green][✓] Global plugin updated ({updated_count} assets synced).[/]")
     return updated_count
 
 

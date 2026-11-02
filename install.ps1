@@ -76,21 +76,23 @@ Write-Host "  [✓] CLI 'init-context' installed successfully!" -ForegroundColor
 # 4. Install Global Antigravity / Gemini Plugin
 $WinPluginDir = Join-Path $HOME ".gemini\config\plugins\auto-context"
 $WinRulesDir = Join-Path $WinPluginDir "rules"
-$WinSkillsDir = Join-Path $WinPluginDir "skills\auto-context"
+$WinSkillsDir = Join-Path $WinPluginDir "skills"
 
 New-Item -ItemType Directory -Path $WinRulesDir -Force | Out-Null
 New-Item -ItemType Directory -Path $WinSkillsDir -Force | Out-Null
 
-if ($IsLocal -and (Test-Path (Join-Path $ScriptDir "plugin"))) {
-    Copy-Item -Path (Join-Path $ScriptDir "plugin\*") -Destination $WinPluginDir -Recurse -Force
+$LocalTemplates = Join-Path $ScriptDir "src\auto_context\templates"
+if ($IsLocal -and (Test-Path $LocalTemplates)) {
+    Copy-Item -Path (Join-Path $LocalTemplates "plugin.json") -Destination $WinPluginDir -Force
+    Copy-Item -Path (Join-Path $LocalTemplates "rules\*") -Destination $WinRulesDir -Recurse -Force
+    Copy-Item -Path (Join-Path $LocalTemplates "skills\*") -Destination $WinSkillsDir -Recurse -Force
 } else {
     try {
-        Invoke-RestMethod -Uri "$RepoRaw/plugin/plugin.json" -OutFile (Join-Path $WinPluginDir "plugin.json") -ErrorAction SilentlyContinue
-        Invoke-RestMethod -Uri "$RepoRaw/plugin/rules/AGENTS.md" -OutFile (Join-Path $WinRulesDir "AGENTS.md") -ErrorAction SilentlyContinue
-        Invoke-RestMethod -Uri "$RepoRaw/plugin/skills/auto-context/SKILL.md" -OutFile (Join-Path $WinSkillsDir "SKILL.md") -ErrorAction SilentlyContinue
+        & init-context update --global 2>$null
     } catch {}
 }
 Write-Host "  [✓] Configured Global AI Agent Plugin in: $WinPluginDir" -ForegroundColor Green
+
 
 Write-Host ""
 Write-Host "=====================================================================" -ForegroundColor Cyan

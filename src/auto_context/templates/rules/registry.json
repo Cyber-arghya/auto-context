@@ -157,12 +157,12 @@
           ]
         },
         {
-          "id": "local-sandbox-test-data-isolation",
-          "title": "Local Sandbox Test Data Isolation",
+          "id": "environment-test-isolation",
+          "title": "Environment & Test Isolation",
           "keywords": [
-            "context.local.md",
+            ".env.test",
             "mock credentials",
-            "dummy logins",
+            "test fixtures",
             "test accounts",
             "git-ignored"
           ]

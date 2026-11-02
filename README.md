@@ -331,8 +331,8 @@ Auto-Context solves this with the **Hub & Satellite Architecture**:
 
 ```
 project-root/
-├── context.md                    <─── The Executive Hub (Executive routing hub)
 └── .agents/
+    ├── context.md                <─── The Executive Hub (Executive routing hub)
     └── context/                  <─── Stack-Adaptive Satellites (Loaded on-demand)
         ├── routes.md             (API Endpoints & UI Page Map — loaded only for route tasks)
         ├── schema.md             (Database Schemas & ORM Models — loaded only for DB tasks)
@@ -547,13 +547,7 @@ auto-context/
 │       │   ├── mcp.py               # Native JSON MCP registry & runtime selector
 │       │   ├── share.py             # Granular Gist publishing via gh / httpx
 │       │   └── import_cmd.py        # Remote URL / Gist import & collision guard
-│       └── templates/               # Package-bundled Markdown & JSON templates
-├── plugin/                          # Antigravity Global Plugin bundle (Auto-synced SSOT)
-│   ├── plugin.json                  # Manifest
-│   ├── rules/                       # Global standing & domain rules
-│   └── skills/                      # Progressive disclosure skills
-├── scripts/
-│   └── sync_plugin.py               # Canonical SSOT synchronizer (templates -> plugin)
+│       └── templates/               # Canonical SSOT: rules/, skills/, plugin.json & templates
 ├── install.sh                       # 1-Click universal installer (Linux / WSL2 / macOS)
 ├── install.ps1                      # 1-Click universal installer (Windows PowerShell)
 ├── setup.bat                        # Double-clickable Windows setup
