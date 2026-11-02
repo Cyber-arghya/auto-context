@@ -53,3 +53,18 @@ sudo ss -tulpn
 # Verify internet DNS resolution
 nslookup cloudflare.com 1.1.1.1
 ```
+
+### 5. Project Directory & Remote Server Path Resolution
+- **Lookup Protocol:** Always consult `context.local.md` (Section 1) to retrieve the verified local workspace path and remote server deployment directory before running diagnostic, build, or deployment commands.
+- **Server Path Identification:**
+  ```bash
+  # Check current server working directory
+  pwd
+  
+  # Locate systemd service working directory
+  systemctl show <service_name> --property=WorkingDirectory
+  
+  # Inspect Docker container working directory
+  docker inspect --format '{{.Config.WorkingDir}}' <container_id>
+  ```
+- **Privacy Invariant:** Machine-specific filesystem paths (e.g. `C:\Users\...` or `/home/...`) belong strictly in `context.local.md` and must never be committed to public git history or public docs.

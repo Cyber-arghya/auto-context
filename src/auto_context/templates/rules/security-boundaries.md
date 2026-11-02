@@ -19,3 +19,7 @@ Prevent credential leakage, indirect prompt injection, and unauthorized network 
    - `context.local.md` must remain strictly git-ignored (`chmod 600`).
 3. **Public Exposure Boundaries:**
    - Raw database and internal service ports must bind to `127.0.0.1` unless encapsulated by secure tunneling.
+4. **Local & Server Directory Path Isolation (`context.local.md`):**
+   - Every project's absolute local workspace directory (e.g. `C:\Users\...` or `/home/...`) and target remote server/container deployment path (e.g. `/var/www/...` or `/app`) MUST be documented inside `context.local.md`.
+   - Never commit machine-specific local filesystem paths into public git repositories or public documentation.
+   - The AI assistant must always inspect `context.local.md` (Section 1) to resolve working directories, server paths, and remote deployment targets before executing operations.
