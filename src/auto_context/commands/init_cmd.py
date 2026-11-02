@@ -217,9 +217,12 @@ def init(
     if not dry_run:
         _ensure_gitignore_entries(project_dir, [
             "context.local.md",
+            "*.local.md",
             ".env",
             ".env.local",
             ".env.*.local",
+            ".auto-context/",
+            "auto-context/",
         ])
 
         # ── Stack-Adaptive Satellites & Executive Hub Sync ────────────────────
