@@ -12,7 +12,7 @@ def test_init_scaffolds_complete_workspace(tmp_path: Path):
     assert (tmp_path / ".agents" / "context.md").exists()
     assert (tmp_path / "AGENTS.md").exists()
     assert (tmp_path / "GEMINI.md").exists()
-    assert (tmp_path / ".agents" / "rules" / "maintain_context.md").exists()
+    assert (tmp_path / ".agents" / "rules" / "code-standards.md").exists()
     assert (tmp_path / ".agents" / "skills" / "docker-ops" / "SKILL.md").exists()
     assert (tmp_path / ".gitignore").exists()
 

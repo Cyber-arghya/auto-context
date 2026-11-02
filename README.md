@@ -121,7 +121,7 @@ init-context update
 ```
 - **Upgrades CLI Package:** Automatically updates `auto-context-cli` via `uv tool`, `pipx`, or `pip`.
 - **Syncs Global Plugin:** Updates `~/.gemini/config/plugins/auto-context/` (`rules/AGENTS.md`, `skills/auto-context/SKILL.md`) with upstream instructions.
-- **Syncs Workspace System Rules:** Updates system rules (`.agents/rules/maintain_context.md`, `AGENTS.md`, `GEMINI.md`).
+- **Syncs Workspace System Rules:** Updates standing rules (`AGENTS.md`, `GEMINI.md`).
 
 > [!TIP]
 > **Strict Non-Breaking Guarantees:**
@@ -377,9 +377,9 @@ To avoid context window bloat and burning 20k–30k tokens at session startup, A
 ### 📦 Default Starter Pack (Built-in Rules & Skills)
 Every initialized project automatically comes equipped with:
 * **Default Rules:**
-  1. `maintain_context.md`: Autonomous context sync, self-evolution, and progressive disclosure protocol.
-  2. `security-boundaries.md`: Zero plaintext secrets in Git, strict `.env` isolation.
-  3. `code-standards.md`: Clean code, DRY principles, early returns, and conventional commits.
+  1. `code-standards.md`: Clean code, defensive coding, DRY principles, early returns, conventional commits.
+  2. `security-boundaries.md`: Zero plaintext secrets in Git, strict `.env` isolation, boundary checks.
+  3. `readme-docs-sync.md`: Mandatory README synchronization, executable verification, and automated tagging.
 * **Default Skills:**
   1. `docker-ops`: Multi-stage Dockerfiles, compose setups, container diagnostics, cleanup.
   2. `git-workflow`: Conventional commits, branch hygiene, safe rebasing, merge conflict resolution.
@@ -486,7 +486,7 @@ init-context import <gist-url> --as custom-deploy-skill
 flowchart TD
     RunCLI["1. User runs 'init-context' in project"] --> Detect["2. Auto-detects Language & Stack (Node, Python, Go, Rust, etc.)"]
     Detect --> GenContext["3. Generates 5-Section 'context.md' (Vault, Problem Log, Architecture, Runbook)"]
-    Detect --> GenRules["4. Generates Standing Agent Rules (GEMINI.md, AGENTS.md, maintain_context.md)"]
+    Detect --> GenRules["4. Generates Standing Agent Rules (GEMINI.md, AGENTS.md)"]
     Detect --> InitGit["5. Initializes Git repository if missing"]
     
     subgraph ActiveDevelopment ["Autonomous Pair Programming"]
@@ -512,7 +512,7 @@ Whenever an AI coding assistant operates in an `auto-context` repository:
 | [`context.local.md`](./templates/context.local.template.md) | 🔒 Local Sandbox & Dummy Vault: Mock test logins, seed users, local ports. | STRICTLY GIT-IGNORED (`chmod 600`) |
 | [`GEMINI.md`](./templates/GEMINI.template.md) | Project-level standing rule enforcing continuous autonomous synchronization. | Tracked in Git |
 | [`AGENTS.md`](./templates/AGENTS.template.md) | Universal agent instruction file for non-Antigravity environments. | Tracked in Git |
-| [`.agents/rules/maintain_context.md`](./templates/maintain_context.template.md) | Native Antigravity progressive disclosure rule (`trigger: always_on`). | Tracked in Git |
+| [`.agents/context/routes.md`](./templates/context.template.md) | Smart Intent & Domain Dispatch Map for precision navigation. | Dynamic / Git-tracked |
 
 ---
 

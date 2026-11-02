@@ -239,8 +239,7 @@ def update_global_plugin() -> int:
         ("plugin/rules/AGENTS.md", rules_dir / "AGENTS.md"),
         ("plugin/rules/code-standards.md", rules_dir / "code-standards.md"),
         ("plugin/rules/security-boundaries.md", rules_dir / "security-boundaries.md"),
-        ("plugin/rules/hub-satellite-architecture.md", rules_dir / "hub-satellite-architecture.md"),
-        ("plugin/rules/readme-docs-sync.md", rules_dir / "readme-docs-sync.md"),
+                ("plugin/rules/readme-docs-sync.md", rules_dir / "readme-docs-sync.md"),
         ("plugin/rules/registry.json", rules_dir / "registry.json"),
         ("plugin/skills/auto-context/SKILL.md", skills_dir / "SKILL.md"),
         ("plugin/skills/browser-testing/SKILL.md", plugin_dir / "skills" / "browser-testing" / "SKILL.md"),
@@ -266,8 +265,7 @@ def update_global_plugin() -> int:
                 "SKILL.md": tmpl_dir / "skills" / dest_path.parent.name / "SKILL.md" if (tmpl_dir / "skills" / dest_path.parent.name / "SKILL.md").exists() else tmpl_dir / "skill.template.md",
                 "code-standards.md": tmpl_dir / "rules" / "code-standards.md",
                 "security-boundaries.md": tmpl_dir / "rules" / "security-boundaries.md",
-                "hub-satellite-architecture.md": tmpl_dir / "rules" / "hub-satellite-architecture.md",
-                "readme-docs-sync.md": tmpl_dir / "rules" / "readme-docs-sync.md",
+                                "readme-docs-sync.md": tmpl_dir / "rules" / "readme-docs-sync.md",
                 "registry.json": tmpl_dir / "rules" / "registry.json",
             }
             fb = fallback_map.get(dest_path.name)
@@ -287,7 +285,7 @@ def update_workspace(target_dir: Path, force: bool = False) -> int:
     - NEVER touches context.md (preserves project architecture, credentials & problem log).
     - NEVER touches context.local.md or .env (zero test credential or secret loss).
     - NEVER touches custom user rules in .agents/rules/*.md.
-    - Only updates system standing rules (maintain_context.md, AGENTS.md, GEMINI.md).
+    - Only updates system standing rules (AGENTS.md, GEMINI.md).
     """
     console.print(f"  [cyan][*] Updating workspace system rules:[/] {target_dir.name}")
     updated_count = 0
@@ -295,8 +293,7 @@ def update_workspace(target_dir: Path, force: bool = False) -> int:
 
     # System-managed files to refresh
     system_rules = [
-        (templates / "maintain_context.template.md", target_dir / config.AGENTS_SUBDIR / "rules" / "maintain_context.md"),
-        (templates / "AGENTS.template.md", target_dir / "AGENTS.md"),
+                (templates / "AGENTS.template.md", target_dir / "AGENTS.md"),
         (templates / "GEMINI.template.md", target_dir / "GEMINI.md"),
     ]
 
@@ -304,6 +301,13 @@ def update_workspace(target_dir: Path, force: bool = False) -> int:
         "PROJECT_NAME": target_dir.name,
         "PROJECT_DIR": str(target_dir),
     }
+
+    # Clean up legacy meta-rules from .agents/rules to enforce DRY
+    rules_dir = target_dir / config.AGENTS_SUBDIR / "rules"
+    for legacy_name in ("maintain_context.md", "maintain_context.md.bak", "hub-satellite-architecture.md"):
+        legacy_file = rules_dir / legacy_name
+        if legacy_file.exists():
+            legacy_file.unlink(missing_ok=True)
 
     for tmpl_path, dest_path in system_rules:
         if not tmpl_path.exists():

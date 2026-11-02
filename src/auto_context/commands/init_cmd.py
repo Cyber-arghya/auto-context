@@ -229,10 +229,10 @@ def init(
     if reg_tmpl.exists():
         _copy_if_missing(reg_tmpl, rules_dest / "registry.json", force=force, dry_run=dry_run)
 
-    maintain_tmpl = templates / "maintain_context.template.md"
-    if maintain_tmpl.exists():
-        content = _render(maintain_tmpl, variables)
-        _write_if_missing(rules_dest / "maintain_context.md", content, force=force, dry_run=dry_run)
+    # Clean up legacy meta-rules from rules directory (AGENTS.md and GEMINI.md are the single source of truth)
+    if not dry_run:
+        for legacy_rule in (rules_dest / "maintain_context.md", rules_dest / "maintain_context.md.bak", rules_dest / "hub-satellite-architecture.md"):
+            legacy_rule.unlink(missing_ok=True)
 
     # ── Project Goals & North Star (.agents/project-goal.md) ───────────────────
     goal_tmpl = templates / "project-goal.template.md"

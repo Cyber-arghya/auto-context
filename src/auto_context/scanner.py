@@ -266,12 +266,77 @@ def discover_runbook_commands(project_dir: Path) -> list[tuple[str, str]]:
 
 # ── Routes & Endpoints Extractor ──────────────────────────────────────────────
 
-def discover_routes(project_dir: Path) -> list[str]:
+def extract_intent(file_path: Path) -> str:
     """
-    Extract API and UI routes using Next.js, Express, FastAPI, and Django conventions.
-    Returns clean list of detected route paths.
+    Extract high-level intent / docstring summary from a source file.
+    Supports Python, JavaScript, TypeScript, Go, and Rust.
     """
-    routes: list[str] = []
+    try:
+        content = file_path.read_text(encoding="utf-8", errors="ignore")
+
+        # 1. Python docstring
+        py_match = re.search(r'^[ \t]*(?:r|u)?[\'\"]{3}([\s\S]*?)[\'\"]{3}', content, re.MULTILINE)
+        if py_match:
+            doc = py_match.group(1).strip()
+            first_line = [l.strip() for l in doc.splitlines() if l.strip()][0]
+            clean = re.sub(r'^[a-zA-Z0-9_\-\./\\ ]+\s*[—\-:]\s*', '', first_line)
+            return clean.strip(",. ")
+
+        # 2. JS/TS block comment /** ... */
+        js_match = re.search(r'/\*\*([\s\S]*?)\*/', content)
+        if js_match:
+            doc = js_match.group(1).strip()
+            lines = [re.sub(r'^\s*\*+\s*', '', l).strip() for l in doc.splitlines() if l.strip()]
+            if lines:
+                return lines[0].strip(",. ")
+
+        # 3. Leading line comments (# or //)
+        for line in content.splitlines()[:15]:
+            line = line.strip()
+            if line.startswith(("#", "//")) and not line.startswith(("#!", "# -*-")):
+                comment = re.sub(r'^[#/]+\s*', '', line).strip()
+                if len(comment) > 5 and not any(skip in comment.lower() for skip in ("eslint", "prettier", "ts-check", "type:", "pragma")):
+                    return comment.strip(",. ")
+    except Exception:
+        pass
+
+    stem = file_path.stem.replace("_cmd", "").replace("_", " ").capitalize()
+    return f"{stem} execution handler"
+
+
+def discover_routes(project_dir: Path) -> list[tuple[str, str, str, str]]:
+    """
+    Extract API, UI, and CLI routes as a Smart Intent & Domain Dispatch Map.
+    Returns list of (TaskDomain, RouteOrCmd, HandlerRelFile, IntentScope).
+    """
+    routes: list[tuple[str, str, str, str]] = []
+
+    # Detect CLI binary name if workspace provides a CLI tool
+    cli_name = ""
+    for d in _get_project_search_roots(project_dir):
+        pyproj = d / "pyproject.toml"
+        if pyproj.exists():
+            try:
+                data = tomllib.loads(pyproj.read_text(encoding="utf-8", errors="ignore")) if tomllib else {}
+                scripts = data.get("project", {}).get("scripts", {})
+                if scripts:
+                    cli_name = next(iter(scripts.keys()))
+                    break
+            except Exception:
+                pass
+        pkg_json = d / "package.json"
+        if pkg_json.exists():
+            try:
+                data = json.loads(pkg_json.read_text(encoding="utf-8", errors="ignore"))
+                bin_field = data.get("bin")
+                if isinstance(bin_field, dict) and bin_field:
+                    cli_name = next(iter(bin_field.keys()))
+                    break
+                elif isinstance(bin_field, str):
+                    cli_name = data.get("name", "")
+                    break
+            except Exception:
+                pass
 
     try:
         # 1. Next.js App Router (app/ or src/app/)
@@ -281,8 +346,11 @@ def discover_routes(project_dir: Path) -> list[str]:
                 if file_path.is_file() and file_path.name in ("route.ts", "route.js", "page.tsx", "page.jsx"):
                     rel = file_path.parent.relative_to(app_dir).as_posix()
                     route_path = "/" if rel == "." else f"/{rel}"
-                    kind = "API" if file_path.name.startswith("route") else "Page"
-                    routes.append(f"[{kind}] {route_path} -> {file_path.relative_to(project_dir).as_posix()}")
+                    is_api = file_path.name.startswith("route")
+                    scope_tag = rel.split("/")[-1].capitalize() if rel != "." else "Root"
+                    domain = f"API / {scope_tag}" if is_api else f"UI / {scope_tag}"
+                    intent = extract_intent(file_path) if is_api else f"Page view renderer for {route_path}"
+                    routes.append((domain, route_path, file_path.relative_to(project_dir).as_posix(), intent))
 
         # 2. Next.js Pages Router (pages/ or src/pages/)
         page_dirs = [d for d in (project_dir / "pages", project_dir / "src" / "pages") if d.is_dir()]
@@ -291,8 +359,11 @@ def discover_routes(project_dir: Path) -> list[str]:
                 if not file_path.name.startswith("_"):
                     rel = file_path.relative_to(page_dir).with_suffix("").as_posix()
                     route_path = "/" if rel == "index" else f"/{rel.replace('/index', '')}"
-                    kind = "API" if "api" in rel else "Page"
-                    routes.append(f"[{kind}] {route_path} -> {file_path.relative_to(project_dir).as_posix()}")
+                    is_api = "api" in rel
+                    scope_tag = rel.split("/")[-1].capitalize() if rel != "index" else "Home"
+                    domain = f"API / {scope_tag}" if is_api else f"UI / {scope_tag}"
+                    intent = extract_intent(file_path) if is_api else f"Page view renderer for {route_path}"
+                    routes.append((domain, route_path, file_path.relative_to(project_dir).as_posix(), intent))
 
         # 3. Modular Route, Controller & CLI Command Folders (Deep Convention Search)
         target_dirs = ("routes", "controllers", "routers", "endpoints", "commands", "handlers", "views", "api")
@@ -303,20 +374,25 @@ def discover_routes(project_dir: Path) -> list[str]:
                 if any(ignored in folder.parts for ignored in ignore_parts):
                     continue
 
-                label = "Command" if folder.name in ("commands", "cli") else "Route"
+                is_cli = folder.name in ("commands", "cli")
                 for ext in ("*.ts", "*.tsx", "*.js", "*.jsx", "*.py", "*.go", "*.rs"):
                     for f in folder.glob(ext):
                         if not f.name.startswith(("_", ".")):
                             rel_file = f.relative_to(project_dir).as_posix()
-                            routes.append(f"[{label}] {f.stem} -> {rel_file}")
+                            raw_stem = f.stem.replace("_cmd", "")
+                            intent = extract_intent(f)
+                            if is_cli:
+                                domain = f"CLI / {raw_stem.capitalize()}"
+                                route_cmd = f"{cli_name} {raw_stem}" if cli_name else raw_stem
+                            else:
+                                domain = f"API / {raw_stem.capitalize()}"
+                                route_cmd = f"/{raw_stem}"
+                            routes.append((domain, route_cmd, rel_file, intent))
 
     except Exception:
         pass
 
     return routes[:35]  # Cap to prevent unbounded lists
-
-
-
 
 
 def generate_satellites(project_dir: Path, force: bool = False) -> dict[str, Path]:
@@ -330,20 +406,17 @@ def generate_satellites(project_dir: Path, force: bool = False) -> dict[str, Pat
 
     routes = discover_routes(project_dir)
 
-    # 1. routes.md (if web routes or CLI commands detected)
+    # 1. routes.md (Smart Intent & Domain Dispatch Map)
     if routes:
         routes_path = satellites_dir / "routes.md"
         routes_content = (
             "# System Route & Endpoint Map\n\n"
             "> Discovered automatically via convention scanner. Used by AI agents for precision navigation.\n\n"
-            "| Kind | Route Path | Implementation File |\n"
-            "| :--- | :--- | :--- |\n"
+            "| Task Domain | Route / Command | Handler Implementation | Intent & Scope |\n"
+            "| :--- | :--- | :--- | :--- |\n"
         )
-        for r in routes:
-            parts = r.split(" -> ")
-            kind_path = parts[0]
-            impl = parts[1] if len(parts) > 1 else ""
-            routes_content += f"| {kind_path} | `{impl}` |\n"
+        for domain, route_cmd, impl, intent in sorted(routes):
+            routes_content += f"| {domain} | `{route_cmd}` | `{impl}` | {intent} |\n"
 
         write_idempotent(routes_path, routes_content, "Routes Satellite")
         generated["routes"] = routes_path
