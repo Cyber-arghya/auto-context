@@ -118,6 +118,36 @@ def detect_stack(project_dir: Path) -> tuple[str, str]:
 
 # ── .gitignore helper ─────────────────────────────────────────────────────────
 
+def _ensure_global_gitignore(entries: list[str]) -> None:
+    """Ensure protected auto-context patterns exist in user's global gitignore."""
+    import subprocess
+    try:
+        res = subprocess.run(
+            ["git", "config", "--global", "core.excludesfile"],
+            capture_output=True, text=True, check=False,
+        )
+        global_path_str = res.stdout.strip()
+        if not global_path_str:
+            global_path = Path.home() / ".gitignore_global"
+            subprocess.run(
+                ["git", "config", "--global", "core.excludesfile", str(global_path)],
+                capture_output=True, text=True, check=False,
+            )
+        else:
+            global_path = Path(global_path_str).expanduser()
+
+        existing = global_path.read_text(encoding="utf-8") if global_path.exists() else ""
+        missing = [e for e in entries if e not in existing]
+        if missing:
+            with global_path.open("a", encoding="utf-8") as fh:
+                if "# auto-context: global protected files" not in existing:
+                    fh.write("\n# auto-context: global protected files\n")
+                fh.write("\n".join(missing) + "\n")
+            console.print(f"  [green][✓] Registered Global Git Ignore:[/] {global_path.name} ({', '.join(missing)})")
+    except Exception:
+        pass
+
+
 def _ensure_gitignore_entries(project_dir: Path, entries: list[str]) -> None:
     """Append *entries* to .gitignore if not already present."""
     gitignore = project_dir / ".gitignore"
@@ -213,8 +243,14 @@ def init(
                 force=force, dry_run=dry_run,
             )
 
-    # ── .gitignore ────────────────────────────────────────────────────────────
+    # ── Global & Project .gitignore ───────────────────────────────────────────
     if not dry_run:
+        _ensure_global_gitignore([
+            "context.local.md",
+            "*.local.md",
+            ".auto-context/",
+            "auto-context/",
+        ])
         _ensure_gitignore_entries(project_dir, [
             "context.local.md",
             "*.local.md",

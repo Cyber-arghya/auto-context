@@ -55,6 +55,36 @@ def _git(cwd: Path, *args: str, check: bool = True) -> subprocess.CompletedProce
     )
 
 
+def _ensure_global_gitignore(entries: list[str]) -> None:
+    """Ensure protected auto-context patterns exist in user's global gitignore."""
+    import subprocess
+    try:
+        res = subprocess.run(
+            ["git", "config", "--global", "core.excludesfile"],
+            capture_output=True, text=True, check=False,
+        )
+        global_path_str = res.stdout.strip()
+        if not global_path_str:
+            global_path = Path.home() / ".gitignore_global"
+            subprocess.run(
+                ["git", "config", "--global", "core.excludesfile", str(global_path)],
+                capture_output=True, text=True, check=False,
+            )
+        else:
+            global_path = Path(global_path_str).expanduser()
+
+        existing = global_path.read_text(encoding="utf-8") if global_path.exists() else ""
+        missing = [e for e in entries if e not in existing]
+        if missing:
+            with global_path.open("a", encoding="utf-8") as fh:
+                if "# auto-context: global protected files" not in existing:
+                    fh.write("\n# auto-context: global protected files\n")
+                fh.write("\n".join(missing) + "\n")
+            console.print(f"  [green][✓] Registered Global Git Ignore:[/] {global_path.name} ({', '.join(missing)})")
+    except Exception:
+        pass
+
+
 def _has_gh() -> bool:
     return shutil.which("gh") is not None
 
@@ -85,6 +115,14 @@ def memory_init(
     exclude_file = MEMORY_DIR / ".git" / "info" / "exclude"
     if exclude_file.parent.exists():
         exclude_file.write_text(_GITIGNORE_ENTRIES, encoding="utf-8")
+
+    # Global gitignore registration
+    _ensure_global_gitignore([
+        "context.local.md",
+        "*.local.md",
+        ".auto-context/",
+        "auto-context/",
+    ])
 
     # profile.md
     _write_profile(repo_name)
@@ -213,6 +251,14 @@ def memory_push(
             console.print(f"[red][✗] Memory directory not found:[/] {MEMORY_DIR}")
             console.print("    Run: [cyan]init-context memory init[/]")
             raise typer.Exit(1)
+
+        # Ensure global gitignore protection across all machine projects
+        _ensure_global_gitignore([
+            "context.local.md",
+            "*.local.md",
+            ".auto-context/",
+            "auto-context/",
+        ])
 
         # Harvest local rules/skills if in a project directory
         if harvest:
