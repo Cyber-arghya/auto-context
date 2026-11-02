@@ -243,23 +243,15 @@ def init(
                 force=force, dry_run=dry_run,
             )
 
-    # ── Global & Project .gitignore ───────────────────────────────────────────
+    # ── Zero-Footprint Global & Project .gitignore ────────────────────────────
     if not dry_run:
-        _ensure_global_gitignore([
-            "context.local.md",
-            "*.local.md",
-            ".auto-context/",
-            "auto-context/",
-        ])
-        _ensure_gitignore_entries(project_dir, [
-            "context.local.md",
-            "*.local.md",
+        _ensure_global_gitignore(config.ZERO_FOOTPRINT_PATTERNS)
+        project_ignores = list(config.ZERO_FOOTPRINT_PATTERNS) + [
             ".env",
             ".env.local",
             ".env.*.local",
-            ".auto-context/",
-            "auto-context/",
-        ])
+        ]
+        _ensure_gitignore_entries(project_dir, project_ignores)
 
         # ── Stack-Adaptive Satellites & Executive Hub Sync ────────────────────
         try:

@@ -116,13 +116,8 @@ def memory_init(
     if exclude_file.parent.exists():
         exclude_file.write_text(_GITIGNORE_ENTRIES, encoding="utf-8")
 
-    # Global gitignore registration
-    _ensure_global_gitignore([
-        "context.local.md",
-        "*.local.md",
-        ".auto-context/",
-        "auto-context/",
-    ])
+    # Global zero-footprint gitignore registration
+    _ensure_global_gitignore(config.ZERO_FOOTPRINT_PATTERNS)
 
     # profile.md
     _write_profile(repo_name)
@@ -252,13 +247,8 @@ def memory_push(
             console.print("    Run: [cyan]init-context memory init[/]")
             raise typer.Exit(1)
 
-        # Ensure global gitignore protection across all machine projects
-        _ensure_global_gitignore([
-            "context.local.md",
-            "*.local.md",
-            ".auto-context/",
-            "auto-context/",
-        ])
+        # Ensure global zero-footprint gitignore protection across all machine projects
+        _ensure_global_gitignore(config.ZERO_FOOTPRINT_PATTERNS)
 
         # Harvest local rules/skills if in a project directory
         if harvest:

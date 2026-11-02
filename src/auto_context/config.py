@@ -89,4 +89,18 @@ CACHE_DIR: Path = get_cache_dir()
 UPDATE_CACHE_FILE: Path = CACHE_DIR / "update_check.json"
 UPDATE_CHECK_INTERVAL: int = 86400  # 24 hours in seconds
 
-
+# ── Zero-Footprint Git Protection Patterns ──────────────────────────────────
+# Prevents auto-context development helper files from polluting project git history
+ZERO_FOOTPRINT_PATTERNS: list[str] = [
+    ".agents/",
+    ".gemini/",
+    "context.md",
+    "context.local.md",
+    "*.local.md",
+    "AGENTS.md",
+    "AGENTS.md.bak",
+    "GEMINI.md",
+    "GEMINI.md.bak",
+    ".auto-context/",
+    "auto-context/",
+]

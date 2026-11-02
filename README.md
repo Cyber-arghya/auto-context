@@ -91,6 +91,15 @@ Auto-Context supports both modern subcommands (`init-context <command>`) and sta
 
 ---
 
+## 🛡️ Zero Git Footprint Guarantee (প্রজেক্ট রিপোজিটরি সুরক্ষা)
+
+`auto-context` is engineered strictly as a **local development helper tool**. It never pollutes your project's Git commit history:
+- **Global & Project Protection:** Automatically registers all AI assistant artifacts (`.agents/`, `.gemini/`, `context.md`, `context.local.md`, `AGENTS.md`, `GEMINI.md`, `*.bak`, `.auto-context/`, `auto-context/`) in your global Git excludesfile (`~/.gitignore_global`) and project `.gitignore`.
+- **Clean Commits:** When committing or pushing your project repository, only your actual application source code is tracked.
+- **Background Synchronization:** Your personal rules and skills remain safely backed up to your private Central Memory (`init-context memory push`), leaving zero unwanted files in client or personal project repositories.
+
+---
+
 ## 🔄 Modular Upstream Sync & Non-Breaking Updates (আপডেট ও সিঙ্ক)
 
 When new public rules, skills, or agent capabilities are added to the official [Cyber-arghya/auto-context](https://github.com/Cyber-arghya/auto-context) repository:
