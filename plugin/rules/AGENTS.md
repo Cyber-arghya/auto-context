@@ -40,12 +40,15 @@ Never blindly delete or truncate context:
 ### 6. Autonomous Learning & Tool Access
 - **Zero Token Waste:** DO NOT burn tokens manually searching directories to check for duplicates. Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.
 - **Mandatory Global Scope:** When the user mentions "for future", "always", or defines a reusable standard, **MANDATORY: Always pass `--global` (`-g`)** and immediately follow with `init-context memory push`.
-- Available CLI commands:
+- **Core Autonomous CLI Commands:**
   - `init-context scan`: Refresh stack-adaptive satellites (`routes.md`, `schema.md`, `gotchas.md`).
-  - `init-context -r <name> [-g]`: Create rule.
-  - `init-context -s <name> [-g]`: Create skill.
+  - `init-context -r <name> [-g]`: Create or append to domain rule with collision guards.
+  - `init-context -s <name> [-g]`: Create or update operational skill.
   - `init-context update`: Safely sync public rules and upstream capabilities (non-breaking).
-  - `init-context memory push`: Push updates to central memory.
+  - `init-context memory push`: Audit secrets and push updates to central memory.
+  - `init-context memory status`: Inspect central memory health & remote sync state.
+  - `init-context memory pull`: Pull and restore central knowledge from remote.
+- **Full CLI Command & Skill Reference:** For complete syntax (MCP tooling, sharing, memory reset, collision guards), inspect [`.agents/skills/auto-context/SKILL.md`](file://{{PROJECT_DIR}}/.agents/skills/auto-context/SKILL.md) or [`.agents/context/routes.md`](file://{{PROJECT_DIR}}/.agents/context/routes.md).
 
 ### 7. First-Principles Gatekeeper: Idempotency, KISS, DRY & The Brutal Truth Filter
 - **Strict Idempotency Proof ($f(f(x)) = f(x)$):** All code generation, filesystem operations, and context sync commands must be 100% idempotent. Running them once or 100 times must yield the exact same deterministic state without duplication or side-effects.

@@ -35,3 +35,4 @@ def test_repo_name_extraction():
     m = re.search(r"[:/]([^/:]+?)(?:\.git)?$", url)
     assert m is not None
     assert m.group(1) == "custom-memory-brain"
+

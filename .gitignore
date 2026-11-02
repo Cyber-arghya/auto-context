@@ -51,4 +51,3 @@ GEMINI.md.bak
 .env.local
 .env.*.local
 .auto-context/
-auto-context/

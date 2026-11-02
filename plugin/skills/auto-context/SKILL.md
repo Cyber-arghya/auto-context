@@ -16,11 +16,17 @@ Use this skill when initializing context for a project, scaffolding new agent ru
 
 1. **Scaffold or Repair Project Context:**
    Run `init-context` in any workspace directory to generate:
-   - `context.md` (5-tier single source of truth)
+   - `.agents/context.md` (Executive Hub < 60 lines / ~400 tokens)
    - `GEMINI.md` and `AGENTS.md` (Standing rules)
-   - `.agents/rules/maintain_context.md` (Always-on rule)
+   - `.agents/rules/` (Modular domain rules: `code-standards.md`, `security-boundaries.md`, `readme-docs-sync.md`)
+   - `.agents/skills/` (Built-in operational skills)
 
-2. **Codify a New Rule (Constraints, Styles, Security):**
+2. **Codebase Inspection & Satellites:**
+   ```bash
+   init-context scan                      # Refresh stack-adaptive satellites (routes.md, gotchas.md)
+   ```
+
+3. **Codify a New Rule (Constraints, Styles, Security):**
    ```bash
    init-context -r <rule-name> [--global]
    ```
@@ -28,14 +34,14 @@ Use this skill when initializing context for a project, scaffolding new agent ru
    * Built-in collision guard prevents overwrites automatically.
    * Populate with guidelines, constraints, and prohibited patterns.
 
-3. **Codify a New Skill (Workflows, Runbooks, Multi-Step Tasks):**
+4. **Codify a New Skill (Workflows, Runbooks, Multi-Step Tasks):**
    ```bash
    init-context -s <skill-name> [--global]
    ```
    * Creates `.agents/skills/<skill-name>/SKILL.md` (or globally with `-g`).
    * Populate with when-to-activate triggers, step-by-step procedure, and verification steps.
 
-4. **Manage MCP Tooling & Runtimes (uvx / npx):**
+5. **Manage MCP Tooling & Runtimes (uvx / npx):**
    ```bash
    init-context mcp add <name> [--runtime uvx|npx] [--args <args>]
    init-context mcp list
@@ -44,20 +50,17 @@ Use this skill when initializing context for a project, scaffolding new agent ru
    * Automatically aligns stdio tools to `uvx` (Python) or `npx` (Node) based on project markers.
    * Tokens and secrets reference `${VAR_NAME}` from `.env` and are protected from Git.
 
-5. **Local Sandbox Test Fixtures (`context.local.md`):**
-   * Automatically generated with `chmod 600` and protected by `.gitignore`.
-   * Holds mock logins, seed users (`admin@test.local`), and local dev ports for browser testing.
-   * Real production secrets are strictly prohibited (they reside in `.env`).
-
 6. **Central Memory Brain & Disaster Recovery:**
    ```bash
-   init-context memory init [repo-name]   # Creates strictly private GitHub brain
+   init-context memory init [repo-name]   # Creates strictly private GitHub brain (~/.auto-context/memory)
    init-context memory push               # Zero-bypass secret audit & push to GitHub
    init-context memory pull [repo-url]    # Pull and synchronize brain to new machine
-   init-context memory status             # Inspect central brain status
+   init-context memory status             # Inspect central brain status, rules count & remote URL
+   init-context memory reset [--force]    # Clean & rebuild local cache, safely preserving remote URL
    ```
    * Enforces `--private` flag during remote creation.
-   * Scans every file for tokens, keys, and `.env` before pushing (hard-blocks with Exit 1 on secret detection).
+   * Scans every file for tokens, keys, and `.env` before pushing (hard-blocks on secret detection).
+   * Self-healing: Automatically detects deleted/missing remote 404 and re-creates private repository via `gh`.
 
 7. **Granular Skill Sharing & Safe Import:**
    ```bash
@@ -65,3 +68,8 @@ Use this skill when initializing context for a project, scaffolding new agent ru
    init-context import <url> [--as <name>] # Import external skill with Collision Guard
    ```
    * Collision Guard protects against accidental overwrites with `[O]verwrite / [R]ename / [C]ancel`.
+
+8. **Upstream Rule & Capability Updates:**
+   ```bash
+   init-context update                    # Safely sync public rules and upstream capabilities
+   ```
