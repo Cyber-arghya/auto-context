@@ -1,13 +1,13 @@
 ---
 name: code-standards
-description: Enforces clean code principles, DRY architecture, early return patterns, and defensive error handling.
+description: Enforces clean code principles, DRY architecture, early return patterns, defensive error handling, and mandatory feature verification.
 trigger: always_on
 ---
 
 # Rule: Code Quality & Architecture Standards
 
 ## Objective
-Maintain readable, maintainable, modular, and type-safe codebases with clear error handling.
+Maintain readable, maintainable, modular, and type-safe codebases with clear error handling and verified feature delivery.
 
 ## Guidelines & Constraints
 1. **Defensive Coding & Early Return:**
@@ -28,3 +28,7 @@ Maintain readable, maintainable, modular, and type-safe codebases with clear err
 6. **Named Constants Over Magic Values:**
    - Replace literal strings and magic numbers with descriptive, uppercase module-level constants.
 7. **Immutable Data Structures**
+8. **Mandatory Feature Verification & Test Reporting:**
+   - Every new feature, behavior modification, or bug fix must be verified with executable tests or automated scripts before concluding the turn.
+   - Never declare completion based on unverified assumptions; run tests and confirm zero errors (exit code 0).
+   - Conclude each feature with a structured Verification Report detailing: (a) Feature scope, (b) Executed test commands, (c) Concrete output/proof, and (d) Edge cases validated.

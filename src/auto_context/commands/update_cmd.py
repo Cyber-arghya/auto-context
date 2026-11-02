@@ -247,6 +247,7 @@ def update_global_plugin() -> int:
         ("plugin/skills/docker-ops/SKILL.md", plugin_dir / "skills" / "docker-ops" / "SKILL.md"),
         ("plugin/skills/git-workflow/SKILL.md", plugin_dir / "skills" / "git-workflow" / "SKILL.md"),
         ("plugin/skills/server-diagnostics/SKILL.md", plugin_dir / "skills" / "server-diagnostics" / "SKILL.md"),
+        ("plugin/skills/feature-verification/SKILL.md", plugin_dir / "skills" / "feature-verification" / "SKILL.md"),
     ]
 
     for rel_path, dest_path in core_files:
