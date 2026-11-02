@@ -8,22 +8,20 @@
 <!-- AUTO-CONTEXT:DISCOVERY:START -->
 ## 1. Network & Configuration Vault
 
-> 🔒 **Sandbox Isolation:** Mock dev accounts and local ports live in [`context.local.md`](file://{{PROJECT_DIR}}/context.local.md). Production secrets belong exclusively in `.env`.
+> 🔒 **Security Boundary:** All private secrets and environment variables belong exclusively in `.env` (protected by `.gitignore`). Never commit live credentials to version control.
 
 | Service / Key | Port / Setting | Source / Mode |
 | :--- | :--- | :--- |
-| **App Server** | `3000` (Default) | Development |
-| **Test Fixtures** | `context.local.md` | Mock accounts (chmod 600) |
+| **Network Ports** | `None detected` | Runtime / Discovered |
 | **Runtime Secrets** | `.env` | Protected by .gitignore |
 
 ## 2. Stack & Adaptive Satellites
 
 * **Primary Stack:** {{STACK}} ({{FRAMEWORK}})
-* **Project Goals & ADR:** [`project-goal.md`](file://{{PROJECT_DIR}}/project-goal.md) — North Star, roadmap & architecture decisions
+* **Project Goals & ADR:** [`.agents/project-goal.md`](file://{{PROJECT_DIR}}/.agents/project-goal.md) — North Star, roadmap & architecture decisions
 * **Satellites Directory:** [`.agents/context/`](file://{{PROJECT_DIR}}/.agents/context/)
   - **Critical Gotchas:** [`gotchas.md`](file://{{PROJECT_DIR}}/.agents/context/gotchas.md) — Architecture invariants & traps
-  - **Routes & Endpoints:** [`routes.md`](file://{{PROJECT_DIR}}/.agents/context/routes.md) — Discovered API & page map
-  - **Database Schemas:** [`schema.md`](file://{{PROJECT_DIR}}/.agents/context/schema.md) — Discovered models & ORM entities
+  - **Adaptive Satellites:** Maintained on-demand as project scales (`routes.md` for APIs/pages, `schema.md` for database models)
 
 ## 3. Operations Runbook
 
@@ -37,8 +35,8 @@
 
 > ⚠️ Consult [`.agents/context/gotchas.md`](file://{{PROJECT_DIR}}/.agents/context/gotchas.md) before modifying database models, port bindings, or build pipelines.
 
-1. **Token Conservation:** Do NOT read full component bodies; use Grep / Symbol targeting.
-2. **Secret Safety:** Never commit plaintext credentials or test keys.
+1. **Precision Targeting:** Do NOT read full component bodies; use Grep / Symbol targeting.
+2. **Secret Safety:** Never commit plaintext credentials or private tokens.
 
 ---
 
@@ -49,4 +47,4 @@
 | **`docker-ops`** | `docker`, `compose` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/docker-ops/SKILL.md) |
 | **`git-workflow`** | `git`, `commit`, `rebase` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/git-workflow/SKILL.md) |
 | **`server-diagnostics`** | `health`, `ram`, `port` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/server-diagnostics/SKILL.md) |
-| **`browser-testing`** | `browser`, `playwright` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/browser-testing/SKILL.md) |
+| **`feature-verification`** | `test`, `verify`, `check` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/feature-verification/SKILL.md) |
