@@ -27,15 +27,15 @@ When codifying new guidelines or workflows, DO NOT create fragmented micro-files
 - **Security Boundaries:** Update/append to `.agents/rules/security-boundaries.md`.
 - Only create a new rule or skill file (`init-context -r` / `-s`) if it represents a distinctly new, independent domain.
 
-### 4. Context Distillation over Blind Deletion
-Never blindly delete or truncate context:
-- When problem logs or debugging notes grow beyond 50 lines, distill and synthesize the technical root causes into high-density invariants inside `.agents/context/gotchas.md`.
-- Preserve 100% of the architectural wisdom with 90% fewer tokens.
+### 4. Architectural Invariants over Problem Logs (Zero Dead Logs)
+Prohibit maintaining chronological problem logs or debugging diaries (Git already tracks commit history):
+- **Never maintain problem logs or bug diaries:** Do not dump or retain chronological problem logs or solved bug diaries.
+- **Distill Technical Invariants into `gotchas.md`:** When a critical, non-obvious architecture trap, port collision, or bug invariant is discovered, immediately record the distilled technical root cause and invariant inside `.agents/context/gotchas.md`.
+- **100% Wisdom with Zero Waste:** Retain institutional architecture wisdom as reusable invariants while burning zero tokens on solved bug dumps.
 
-### 5. Local Sandbox Test Credentials (`context.local.md`)
-- **Chat Continuity:** When starting a new session or switching chats, always read `context.local.md` to identify local dev ports, seed users, and mock passwords (`admin@test.local`) before running browser automation or curl tests.
-- **Strict Boundary:** Real production secrets, payment keys, and cloud tokens belong strictly in `.env`.
-- Ensure `context.local.md` is protected with `.gitignore` and `chmod 600`.
+### 5. Security Boundaries & Zero-Leak Protocol
+- **Strict Boundary:** Real production secrets, payment keys, and cloud tokens belong strictly in `.env` (protected by `.gitignore`).
+- **Never Commit Credentials:** Zero plaintext secrets in Git, markdown files, or configuration repositories.
 
 ### 6. Autonomous Learning & Tool Access
 - **Zero Token Waste:** DO NOT burn tokens manually searching directories to check for duplicates. Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.

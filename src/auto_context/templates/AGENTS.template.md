@@ -26,10 +26,11 @@ When codifying new guidelines or workflows, DO NOT create fragmented micro-files
 - **Security Boundaries:** Update/append to `.agents/rules/security-boundaries.md`.
 - Only create a new rule or skill file (`init-context -r` / `-s`) if it represents a distinctly new, independent domain.
 
-### 4. Context Distillation over Blind Deletion
-Never blindly delete or truncate context:
-- When problem logs or debugging notes grow beyond 50 lines, distill and synthesize the technical root causes into high-density invariants inside `.agents/context/gotchas.md`.
-- Preserve 100% of the architectural wisdom with 90% fewer tokens.
+### 4. Architectural Invariants over Problem Logs (Zero Dead Logs)
+Prohibit maintaining chronological problem logs or debugging diaries (Git already tracks commit history):
+- **Never maintain problem logs or bug diaries:** Do not dump or retain chronological problem logs or solved bug diaries.
+- **Distill Technical Invariants into `gotchas.md`:** When a critical, non-obvious architecture trap, port collision, or bug invariant is discovered, immediately record the distilled technical root cause and invariant inside `.agents/context/gotchas.md`.
+- **100% Wisdom with Zero Waste:** Retain institutional architecture wisdom as reusable invariants while burning zero tokens on solved bug dumps.
 
 ### 5. Dynamic Domain Synthesis & 6-Step Ultra-Lean Action Loop
 - **Dynamic Domain Satellites:** As new architecture domains are implemented, dynamically create matching satellites in `.agents/context/` (e.g. `schema.md` when DB models exist, `integrations.md` when 3rd-party APIs are integrated). Never create empty or placeholder `.md` files (Zero Ghost Files).
