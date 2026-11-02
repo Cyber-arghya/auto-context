@@ -8,6 +8,7 @@ Subcommands: init, push, pull, status
 """
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 from datetime import datetime
@@ -269,7 +270,41 @@ def memory_push(
             if result.returncode == 0:
                 console.print("  [green][✓] Memory brain pushed successfully![/]")
             else:
-                console.print(f"  [red][✗] Push failed:[/] {result.stderr.strip()}")
+                stderr = result.stderr.strip()
+                not_found_signals = (
+                    "repository not found",
+                    "does not appear to be a git repository",
+                    "could not read from remote repository",
+                    "fatal: remote error",
+                    "404",
+                )
+                if any(sig in stderr.lower() for sig in not_found_signals):
+                    console.print(f"  [yellow][!] Remote repository not found (deleted or missing):[/] {remote}")
+                    repo_name = "auto-context-memory"
+                    m = re.search(r"[:/]([^/:]+?)(?:\.git)?$", remote)
+                    if m:
+                        repo_name = m.group(1)
+
+                    if _has_gh():
+                        console.print(f"  [cyan][*] Auto-creating new private GitHub repository '{repo_name}' via gh...[/]")
+                        _git(MEMORY_DIR, "remote", "remove", "origin", check=False)
+                        gh_res = subprocess.run(
+                            ["gh", "repo", "create", repo_name, "--private", f"--source={MEMORY_DIR}", "--remote=origin", "--push"],
+                            capture_output=True, text=True,
+                        )
+                        if gh_res.returncode == 0:
+                            console.print("  [green][✓] New private repository created and memory pushed successfully![/]")
+                        else:
+                            _git(MEMORY_DIR, "remote", "add", "origin", remote, check=False)
+                            console.print(f"  [red][✗] Failed to auto-create repo via gh:[/] {gh_res.stderr.strip()}")
+                            console.print("      You can re-connect a new repository manually with:")
+                            _print_manual_push(repo_name)
+                    else:
+                        console.print("  [yellow][!] GitHub CLI ('gh') not found. Reconnect a new private repository manually:[/]")
+                        console.print(f"      [cyan]git -C \"{MEMORY_DIR}\" remote set-url origin git@github.com:<username>/<new-repo>.git[/]")
+                        console.print("      [cyan]init-context memory push[/]")
+                else:
+                    console.print(f"  [red][✗] Push failed:[/] {stderr}")
         else:
             console.print("  [yellow][!] No remote 'origin' configured. Run memory init first.[/]")
 
@@ -323,6 +358,87 @@ def memory_pull(
             f"[white]   Fix:[/] Run in external terminal or enable unsandboxed execution mode.",
             border_style="red",
         ))
+        raise typer.Exit(1)
+
+
+# ── reset ────────────────────────────────────────────────────────────────────
+
+@app.command("reset")
+def memory_reset(
+    force: Annotated[bool, typer.Option("--force", "-f", help="Force reset without confirmation prompt.")] = False,
+    harvest: Annotated[bool, typer.Option("--harvest/--no-harvest", "-h/-n", help="Auto-harvest local workspace rules/skills after reset.")] = True,
+) -> None:
+    """Reset and re-initialize local central memory brain cache."""
+    console.print(Panel(
+        "[bold yellow]⚠️ Resetting Central Memory Brain[/]\n"
+        f"[yellow]   Location:[/] {MEMORY_DIR}",
+        border_style="yellow",
+    ))
+
+    try:
+        if not force:
+            confirmed = typer.confirm(
+                "Are you sure you want to reset the local central memory cache? (Remote repository will remain untouched)",
+                default=False,
+            )
+            if not confirmed:
+                console.print("  [yellow][*] Reset aborted by user.[/]")
+                return
+
+        existing_remote = ""
+        if (MEMORY_DIR / ".git").exists():
+            res = _git(MEMORY_DIR, "remote", "get-url", "origin", check=False)
+            if res.returncode == 0:
+                existing_remote = res.stdout.strip()
+
+        if MEMORY_DIR.exists():
+            for item in MEMORY_DIR.iterdir():
+                if item.is_dir():
+                    shutil.rmtree(item, ignore_errors=True)
+                else:
+                    item.unlink(missing_ok=True)
+        else:
+            MEMORY_DIR.mkdir(parents=True, exist_ok=True)
+
+        (MEMORY_DIR / "rules").mkdir(parents=True, exist_ok=True)
+        (MEMORY_DIR / "skills").mkdir(parents=True, exist_ok=True)
+
+        _git(MEMORY_DIR, "init")
+        _git(MEMORY_DIR, "branch", "-M", "main", check=False)
+
+        exclude_file = MEMORY_DIR / ".git" / "info" / "exclude"
+        if exclude_file.parent.exists():
+            exclude_file.write_text(_GITIGNORE_ENTRIES, encoding="utf-8")
+        _ensure_global_gitignore(config.ZERO_FOOTPRINT_PATTERNS)
+
+        repo_label = existing_remote.split("/")[-1].replace(".git", "") if existing_remote else "auto-context-memory"
+        _write_profile(repo_label)
+
+        if existing_remote:
+            _git(MEMORY_DIR, "remote", "add", "origin", existing_remote, check=False)
+            console.print(f"  [green][✓] Restored Remote Origin:[/] {existing_remote}")
+
+        if harvest:
+            harvested = _sync_local_to_memory(Path.cwd().resolve())
+            if harvested:
+                console.print(f"  [green][✓] Re-harvested {harvested} rules/skills from current workspace[/]")
+
+        _git(MEMORY_DIR, "add", "-A", check=False)
+        _git(MEMORY_DIR, "commit", "-m", f"{config.GIT_COMMIT_INIT} [reset]", check=False)
+
+        console.print("\n[bold green]✨ Central memory reset completed successfully![/]\n")
+
+    except PermissionError:
+        console.print(Panel(
+            f"[bold red][✗] Permission Denied Accessing Central Memory[/]\n"
+            f"[yellow]   Path:[/] {MEMORY_DIR}\n\n"
+            f"[white]   Cause:[/] Sandboxed IDE terminal lacks access to host directory ~/.auto-context.\n"
+            f"[cyan]   Fix:[/] Run 'init-context memory reset' in your host terminal (PowerShell / Bash), or grant filesystem access.",
+            border_style="red",
+        ))
+        raise typer.Exit(1)
+    except OSError as err:
+        console.print(f"[red][✗] Central memory reset error:[/] {err}")
         raise typer.Exit(1)
 
 

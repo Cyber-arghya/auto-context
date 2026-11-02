@@ -79,6 +79,7 @@ Auto-Context supports both modern subcommands (`init-context <command>`) and sta
 | `init-context memory push` | — | Auto-harvests workspace rules, audits secrets & pushes to private GitHub. |
 | `init-context memory pull` | — | Pulls and restores central brain on a new machine. |
 | `init-context memory status` | — | Displays central brain location, remote URL, and rules/skills count. |
+| `init-context memory reset` | — | Resets and re-initializes local memory cache with optional auto-harvest. |
 | `init-context mcp add <name>`| `init-context --add-mcp` | Adds or updates an MCP tool (Node `npx` or Python `uvx`). |
 | `init-context mcp list` | `init-context --list-mcp` | Lists all active MCP server configurations. |
 | `init-context mcp remove <name>`| `init-context --remove-mcp` | Safely removes an MCP server configuration. |
@@ -315,6 +316,10 @@ The CLI automatically:
 3. **Audits Secrets:** Runs the Zero-Bypass security audit.
 4. **Pushes to Private Remote:** Backs up everything to your private GitHub repo.
 Even if an agent originally codified a rule locally, running `memory push` guarantees zero knowledge loss!
+
+#### 🛡️ Resilient Remote Recovery & Local Reset:
+- **Auto-Recreate on Remote 404:** If your remote repository is deleted or missing on GitHub, `init-context memory push` detects the 404 and automatically re-creates a new private repository via GitHub CLI (`gh`), reconnecting and pushing seamlessly.
+- **Local Brain Reset (`init-context memory reset`):** Reset and re-scaffold local central memory cache while safely preserving your remote URL and re-harvesting active workspace rules.
 
 ---
 
