@@ -8,6 +8,5 @@
 | [Command] init_cmd | `src/auto_context/commands/init_cmd.py` |
 | [Command] mcp | `src/auto_context/commands/mcp.py` |
 | [Command] memory | `src/auto_context/commands/memory.py` |
-| [Command] scan_cmd | `src/auto_context/commands/scan_cmd.py` |
 | [Command] share | `src/auto_context/commands/share.py` |
 | [Command] update_cmd | `src/auto_context/commands/update_cmd.py` |

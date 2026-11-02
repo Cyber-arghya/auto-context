@@ -20,7 +20,6 @@
 | :--- | :--- |
 | Run CLI (init-context) | `uv run init-context` |
 | Run Tests | `uv run pytest` |
-| Rescan Codebase | `init-context scan` |
 
 <!-- AUTO-CONTEXT:DISCOVERY:END -->
 

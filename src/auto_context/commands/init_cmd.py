@@ -278,15 +278,11 @@ def init(
         legacy_local.unlink(missing_ok=True)
 
     # ── Standing AI Assistant Instructions (Root AGENTS.md & GEMINI.md) ───────
-    for tmpl_name, dest_name in [
-        ("GEMINI.template.md", "GEMINI.md"),
-        ("AGENTS.template.md", "AGENTS.md"),
-    ]:
-        tmpl = templates / tmpl_name
-        if tmpl.exists():
-            content = _render(tmpl, variables)
+    agents_tmpl = templates / "AGENTS.template.md"
+    if agents_tmpl.exists():
+        content = _render(agents_tmpl, variables)
+        for dest_name in ("GEMINI.md", "AGENTS.md"):
             _write_if_missing(project_dir / dest_name, content, force=force, dry_run=dry_run)
-
     # ── MCP config stub ───────────────────────────────────────────────────────
     mcp_tmpl = templates / "mcp_config.template.json"
     if mcp_tmpl.exists():

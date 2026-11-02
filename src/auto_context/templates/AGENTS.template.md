@@ -13,10 +13,10 @@ $$\text{Precision Context} = \text{Route Map (Macro)} + \text{Grep/Symbol (Micro
 
 ### 2. Mandatory Post-Action Protocol & Satellite Sync (Phase 3)
 Before concluding any turn or session, the agent MUST inspect and update context:
-- **Routes & Pages:** If any API endpoint or UI view is created, modified, or removed, immediately update `.agents/context/routes.md` (or run `init-context scan`).
+- **Routes & Pages:** If any API endpoint or UI view is created, modified, or removed, immediately update `.agents/context/routes.md`.
 - **Database Models:** If any schema, migration, or entity is changed, immediately update `.agents/context/schema.md`.
 - **Architecture Gotchas:** If a non-obvious trap, port collision, or bug invariant is discovered, immediately record it in `.agents/context/gotchas.md`.
-- **Core Hub:** Keep `.agents/context.md` compact (< 400 tokens / 60 lines) as an executive routing hub.
+- **Core Hub:** Keep `.agents/context.md` compact as an executive routing hub.
 
 ### 3. Domain Consolidation & Anti-Fragmentation (Single Responsibility)
 When codifying new guidelines or workflows, DO NOT create fragmented micro-files if a domain file already exists:

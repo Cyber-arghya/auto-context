@@ -1,7 +1,7 @@
 # {{PROJECT_NAME}} — Executive Context Hub
 
 > **Last Updated:** {{DATE_NOW}} | **Stack:** {{STACK}} ({{FRAMEWORK}})  
-> **Directory:** `{{PROJECT_DIR}}` | **Model:** Hub & Satellite (< 400 Tokens)
+> **Directory:** `{{PROJECT_DIR}}` | **Model:** Hub & Satellite
 
 ---
 

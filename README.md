@@ -6,14 +6,14 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/auto-context-cli.svg?color=blue)](https://pypi.org/project/auto-context-cli/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/auto-context-cli.svg)](https://pypi.org/project/auto-context-cli/)
-[![GitHub Release](https://img.shields.io/github/v/release/Cyber-arghya/auto-context?color=green)](https://github.com/Cyber-arghya/auto-context/releases/tag/v1.3.0)
+[![GitHub Release](https://img.shields.io/github/v/release/Cyber-arghya/auto-context?color=green)](https://github.com/Cyber-arghya/auto-context/releases/tag/v1.4.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux%20WSL2-success.svg)](#-quick-one-line-install)
 [![AI Supported](https://img.shields.io/badge/AI%20Supported-Antigravity%20%7C%20Cursor%20%7C%20Claude%20Code%20%7C%20Copilot%20%7C%20Windsurf-orange.svg)](#-supported-ai-assistants)
 
 *Never lose context, forgotten architecture decisions, or unlogged bug fixes again.*
 
-[Installation](#-quick-one-line-install) • [CLI Usage](#-cli-usage) • [How It Works](#-how-it-works) • [Architecture](#-hub--satellite-modular-architecture--400-token-budget)
+[Installation](#-quick-one-line-install) • [CLI Usage](#-cli-usage) • [How It Works](#-how-it-works) • [Architecture](#-hub--satellite-modular-architecture)
 
 </div>
 
@@ -68,7 +68,6 @@ Auto-Context supports both modern subcommands (`init-context <command>`) and sta
 | Command | Shorthand / Flag | Description |
 | :--- | :--- | :--- |
 | `init-context init [DIR]` | `init-context [DIR]` | Scaffolds 5-tier context in active or specified directory. |
-| `init-context scan [DIR]` | `init-context --scan` | Stack-adaptive codebase scanner: generates satellites (.agents/context/). |
 | `init-context rule <name>` | `init-context -r <name> [-a]` | Scaffolds a rule or appends to a domain with `registry.json` duplicate protection. |
 | `init-context skill <name>` | `init-context -s <name>` | Scaffolds a new agent skill directory with triggers & runbook. |
 | `init-context promote <name>` | — | Promotes local workspace rule/skill to Global Plugin & Central Memory. |
@@ -324,7 +323,7 @@ Even if an agent originally codified a rule locally, running `memory push` guara
 
 ---
 
-## 🛰️ Hub & Satellite Modular Architecture (< 400 Token Budget)
+## 🛰️ Hub & Satellite Modular Architecture
 
 Dumping routes, models, problem logs, credentials, and runbooks into a single monolithic `context.md` causes context file bloat (1,000–5,000 lines). Every turn burns thousands of unnecessary tokens simply reading the context file!
 
@@ -332,7 +331,7 @@ Auto-Context solves this with the **Hub & Satellite Architecture**:
 
 ```
 project-root/
-├── context.md                    <─── The Executive Hub (Capped at < 80 lines / ~400 tokens!)
+├── context.md                    <─── The Executive Hub (Executive routing hub)
 └── .agents/
     └── context/                  <─── Stack-Adaptive Satellites (Loaded on-demand)
         ├── routes.md             (API Endpoints & UI Page Map — loaded only for route tasks)
@@ -549,10 +548,12 @@ auto-context/
 │       │   ├── share.py             # Granular Gist publishing via gh / httpx
 │       │   └── import_cmd.py        # Remote URL / Gist import & collision guard
 │       └── templates/               # Package-bundled Markdown & JSON templates
-├── plugin/                          # Antigravity Global Plugin bundle
+├── plugin/                          # Antigravity Global Plugin bundle (Auto-synced SSOT)
 │   ├── plugin.json                  # Manifest
-│   ├── rules/AGENTS.md              # Global standing rule
-│   └── skills/auto-context/SKILL.md # Progressive disclosure skill
+│   ├── rules/                       # Global standing & domain rules
+│   └── skills/                      # Progressive disclosure skills
+├── scripts/
+│   └── sync_plugin.py               # Canonical SSOT synchronizer (templates -> plugin)
 ├── install.sh                       # 1-Click universal installer (Linux / WSL2 / macOS)
 ├── install.ps1                      # 1-Click universal installer (Windows PowerShell)
 ├── setup.bat                        # Double-clickable Windows setup
