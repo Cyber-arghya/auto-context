@@ -43,3 +43,4 @@ Before proposing or accepting any new feature, verify against this checklist:
 - [ ] **Simplicity:** Is there an industry-standard simpler way to achieve this?
 - [ ] **Worth-It Test:** Does it pass "The Brutal Truth Filter" (is the value worth the added code and maintenance cost)?
 - [ ] **Deviation Rationale:** If deviating from standard industry practices, is the specific reason documented in Section 4 above?
+

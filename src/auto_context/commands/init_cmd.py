@@ -160,6 +160,34 @@ def _ensure_gitignore_entries(project_dir: Path, entries: list[str]) -> None:
         console.print(f"  [green][✓] Updated:[/] .gitignore ({', '.join(missing)})")
 
 
+def _untrack_zero_footprint_files(project_dir: Path, patterns: list[str]) -> None:
+    """If project is a git repository, untrack zero-footprint files from git index so git respects .gitignore without deleting local files."""
+    import subprocess
+    try:
+        check_git = subprocess.run(
+            ["git", "-C", str(project_dir), "rev-parse", "--is-inside-work-tree"],
+            capture_output=True, text=True, check=False,
+        )
+        if check_git.returncode != 0 or check_git.stdout.strip() != "true":
+            return
+
+        untracked = []
+        for pat in patterns:
+            clean_pat = pat.rstrip("/")
+            target_path = project_dir / clean_pat
+            if target_path.exists():
+                res = subprocess.run(
+                    ["git", "-C", str(project_dir), "rm", "--cached", "-r", "--ignore-unmatch", clean_pat],
+                    capture_output=True, text=True, check=False,
+                )
+                if res.returncode == 0 and "rm " in (res.stdout or ""):
+                    untracked.append(clean_pat)
+        if untracked:
+            console.print(f"  [green][✓] Untracked From Git Index:[/] {', '.join(untracked)}")
+    except Exception:
+        pass
+
+
 # ── init command ──────────────────────────────────────────────────────────────
 
 def init(
@@ -258,6 +286,7 @@ def init(
             ".env.*.local",
         ]
         _ensure_gitignore_entries(project_dir, project_ignores)
+        _untrack_zero_footprint_files(project_dir, project_ignores)
 
         # ── Stack-Adaptive Satellites & Executive Hub Sync ────────────────────
         try:

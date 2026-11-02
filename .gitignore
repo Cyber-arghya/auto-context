@@ -44,6 +44,9 @@ Thumbs.db
 # auto-context: protected files
 context.local.md
 *.local.md
+AGENTS.md.bak
+GEMINI.md.bak
+*.bak
 .env
 .env.local
 .env.*.local

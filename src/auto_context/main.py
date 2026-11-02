@@ -71,7 +71,7 @@ def root(
             try:
                 v = pkg_version("auto-context")
             except Exception:
-                v = "1.0.7"
+                v = "1.0.8"
         console.print(f"init-context v{v}")
         raise typer.Exit()
 
