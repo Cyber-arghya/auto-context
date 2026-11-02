@@ -81,9 +81,10 @@ def memory_init(
         _git(MEMORY_DIR, "init")
         console.print("  [green][✓] Initialized Git repository[/]")
 
-    # Hardened .gitignore
-    (MEMORY_DIR / ".gitignore").write_text(_GITIGNORE_ENTRIES, encoding="utf-8")
-    console.print("  [green][✓] Hardened .gitignore written[/]")
+    # Local repository exclude (keeps remote test-memory repository clean without committing a .gitignore)
+    exclude_file = MEMORY_DIR / ".git" / "info" / "exclude"
+    if exclude_file.parent.exists():
+        exclude_file.write_text(_GITIGNORE_ENTRIES, encoding="utf-8")
 
     # profile.md
     _write_profile(repo_name)
