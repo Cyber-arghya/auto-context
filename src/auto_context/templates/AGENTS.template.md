@@ -15,7 +15,7 @@ $$\text{Precision Context} = \text{Route Map (Macro)} + \text{Grep/Symbol (Micro
 Before concluding any turn or session, the agent MUST inspect and update context:
 - **Routes & Pages:** If any API endpoint or UI view is created, modified, or removed, immediately update `.agents/context/routes.md`.
 - **Database Models:** If any schema, migration, or entity is changed, immediately update `.agents/context/schema.md`.
-- **Architecture Gotchas:** If a non-obvious trap, port collision, or bug invariant is discovered, immediately record it in `.agents/context/gotchas.md`.
+- **Architecture Invariants:** If a non-obvious trap, port collision, or bug invariant is discovered, immediately record it in `.agents/context.md` (Section: Active Architecture Invariants).
 - **Core Hub:** Keep `.agents/context.md` compact as an executive routing hub.
 
 ### 3. Domain Consolidation & Anti-Fragmentation (Single Responsibility)
@@ -29,7 +29,7 @@ When codifying new guidelines or workflows, DO NOT create fragmented micro-files
 ### 4. Architectural Invariants over Problem Logs (Zero Dead Logs)
 Prohibit maintaining chronological problem logs or debugging diaries (Git already tracks commit history):
 - **Never maintain problem logs or bug diaries:** Do not dump or retain chronological problem logs or solved bug diaries.
-- **Distill Technical Invariants into `gotchas.md`:** When a critical, non-obvious architecture trap, port collision, or bug invariant is discovered, immediately record the distilled technical root cause and invariant inside `.agents/context/gotchas.md`.
+- **Distill Technical Invariants into `.agents/context.md`:** When a critical, non-obvious architecture trap, port collision, or bug invariant is discovered, immediately record the distilled technical root cause and invariant inside `.agents/context.md` (Active Architecture Invariants).
 - **100% Wisdom with Zero Waste:** Retain institutional architecture wisdom as reusable invariants while burning zero tokens on solved bug dumps.
 
 ### 5. Dynamic Domain Synthesis & 6-Step Ultra-Lean Action Loop
@@ -53,7 +53,7 @@ Prohibit maintaining chronological problem logs or debugging diaries (Git alread
   - `init-context memory push`: Audit secrets and push updates to central memory.
   - `init-context memory status`: Inspect central memory health & remote sync state.
   - `init-context memory pull`: Pull and restore central knowledge from remote.
-- **Full CLI Command & Skill Reference:** For complete syntax (MCP tooling, sharing, memory reset, collision guards), inspect [`.agents/skills/auto-context/SKILL.md`](file://{{PROJECT_DIR}}/.agents/skills/auto-context/SKILL.md) or [`.agents/context/routes.md`](file://{{PROJECT_DIR}}/.agents/context/routes.md).
+- **Full CLI Command & Skill Reference:** For complete syntax (MCP tooling, sharing, memory reset, collision guards), inspect [`.agents/skills/auto-context/SKILL.md`](file://{{PROJECT_DIR}}/.agents/skills/auto-context/SKILL.md) or [`.agents/context.md`](file://{{PROJECT_DIR}}/.agents/context.md).
 
 ### 7. First-Principles Gatekeeper: Idempotency, KISS, DRY & The Brutal Truth Filter
 - **Strict Idempotency Proof ($f(f(x)) = f(x)$):** All code generation, filesystem operations, and context sync commands must be 100% idempotent. Running them once or 100 times must yield the exact same deterministic state without duplication or side-effects.

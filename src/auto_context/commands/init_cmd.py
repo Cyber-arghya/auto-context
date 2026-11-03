@@ -307,21 +307,6 @@ def init(
         _ensure_gitignore_entries(project_dir, project_ignores)
         _untrack_zero_footprint_files(project_dir, project_ignores)
 
-        # ── Gotchas Satellite Provisioning ──────────────────────────────────
-        gotchas_path = project_dir / config.AGENTS_SUBDIR / "context" / "gotchas.md"
-        gotchas_path.parent.mkdir(parents=True, exist_ok=True)
-        if not gotchas_path.exists():
-            gotchas_content = (
-                "# Critical Gotchas, Anti-Patterns & Architecture Invariants\n\n"
-                "> Institutional knowledge and non-obvious traps that cannot be guessed from reading code.\n\n"
-                "## ⚠️ Active Constraints & Traps\n\n"
-                "1. **Port Invariants:** Inspect discovered ports before binding local services.\n"
-                "2. **Secret Isolation:** Production secrets belong in `.env` (strictly git-ignored).\n"
-                "3. **State Boundaries:** Verify migrations before initiating build or release cycles.\n"
-                "4. **Verified Executable Runbooks:** Never accept or generate slash-separated placeholder commands (`cmd1 / cmd2`). Runbooks must only contain 100% executable commands parsed from manifests or verified CLI tools.\n"
-            )
-            gotchas_path.write_text(gotchas_content, encoding="utf-8")
-
     console.print(Panel(
         "[bold green]✨ Project scaffold complete![/]\n"
         "Edit [cyan]context.md[/] and [cyan]GEMINI.md[/] to customise your AI workspace.",

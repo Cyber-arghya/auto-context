@@ -183,7 +183,7 @@
     "hub-satellite-architecture": {
       "file": "hub-satellite-architecture.md",
       "name": "Hub & Satellite Modular Architecture & Idempotency Proof",
-      "description": "Context budget, satelittes, deterministic idempotency, and gotchas invariants",
+      "description": "Context budget, stack-adaptive satellites, deterministic idempotency, and architecture invariants",
       "rules": [
         {
           "id": "hub-satellite-token-budget",
@@ -193,7 +193,7 @@
             "satellites",
             "routes.md",
             "schema.md",
-            "gotchas.md",
+            "invariants",
             "token budget"
           ]
         },
@@ -212,11 +212,11 @@
           "id": "brutal-truth-filter",
           "title": "The Brutal Truth Filter (Zero Dead Logs)",
           "keywords": [
-            "gotchas.md",
+            "invariants",
             "anti-patterns",
             "dead logs",
             "bug cemeteries",
-            "invariants"
+            "constraints"
           ]
         },
         {

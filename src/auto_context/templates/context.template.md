@@ -15,21 +15,7 @@
 | **Network Ports** | `None detected` | Runtime / Discovered |
 | **Runtime Secrets** | `.env` | Protected by .gitignore |
 
-## 2. Satellites & On-Demand Dispatch Directory
-
-* **Primary Stack:** {{STACK}} ({{FRAMEWORK}})
-* **Satellites Root:** [`.agents/`](file://{{PROJECT_DIR}}/.agents/)
-
-> 🧭 **Progressive Disclosure Rule:** Do NOT bulk-read satellite files. Inspect the specific satellite file ONLY when your active task matches its trigger condition:
-
-| Domain / Intent | When to Read (Task Triggers) | Target Satellite File |
-| :--- | :--- | :--- |
-| **Architecture Traps & Invariants** | Before modifying architecture, ports, state, or build pipelines | [`gotchas.md`](file://{{PROJECT_DIR}}/.agents/context/gotchas.md) |
-| **API Endpoints & UI Pages** | When creating, modifying, or querying routes, endpoints, or UI views | [`routes.md`](file://{{PROJECT_DIR}}/.agents/context/routes.md) |
-| **Database Schemas & Models** | When modifying database tables, ORM models, or migrations | [`schema.md`](file://{{PROJECT_DIR}}/.agents/context/schema.md) |
-| **Project Roadmap & ADR** | When aligning features with long-term goals or architectural decisions | [`project-goal.md`](file://{{PROJECT_DIR}}/.agents/project-goal.md) |
-
-## 3. Operations Runbook
+## 2. Operations Runbook
 
 | Action | Command |
 | :--- | :--- |
@@ -37,12 +23,25 @@
 
 ---
 
-## 4. Active Invariants & Critical Gotchas
+## 3. Active Architecture Invariants
 
-> ⚠️ Consult [`.agents/context/gotchas.md`](file://{{PROJECT_DIR}}/.agents/context/gotchas.md) before modifying database models, port bindings, or build pipelines.
+> ⚡ **System Constraints:** Non-obvious rules, traps, and invariants specific to this codebase that cannot be inferred from code alone.
 
-1. **Precision Targeting:** Do NOT read full component bodies; use Grep / Symbol targeting.
+1. **Precision Targeting:** Do NOT bulk-read entire files; use targeted Grep / Symbol navigation.
 2. **Secret Safety:** Never commit plaintext credentials or private tokens.
+3. **Verified Executable Runbooks:** Only record 100% executable commands parsed from manifests or verified tools.
+
+---
+
+## 4. Stack-Adaptive Satellites & Domain Maps (On-Demand)
+
+> 🧭 Satellites reside in [`.agents/context/`](file://{{PROJECT_DIR}}/.agents/context/) and are created/inspected **only when the corresponding domain exists** (Zero Ghost Files):
+
+| Domain | Satellite File | Condition / When Needed |
+| :--- | :--- | :--- |
+| **Project North Star & ADR** | [`project-goal.md`](file://{{PROJECT_DIR}}/.agents/project-goal.md) | Scope verification, milestone alignment, or architectural decisions |
+| **API Endpoints & UI Views** | `routes.md` | Web/API projects only (when creating or modifying endpoints/pages) |
+| **Database Schemas & Models** | `schema.md` | Database/ORM projects only (when altering tables or migrations) |
 
 ---
 
