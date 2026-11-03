@@ -13,7 +13,7 @@
 
 *Never lose context, forgotten architecture decisions, or unlogged invariants again.*
 
-[What It Does](#-what-is-auto-context) • [Quick Install](#-quick-install) • [Core Philosophy](#-core-philosophy) • [Command Runbook](#-complete-cli-command-runbook) • [Project Layout](#-generated-project-layout) • [Architecture](#-repository-architecture)
+[What It Does](#-what-is-auto-context) • [How It Works](#️-how-auto-context-works) • [Quick Install](#-quick-install) • [Core Philosophy](#-core-philosophy) • [Command Runbook](#-complete-cli-command-runbook) • [Project Layout](#-generated-project-layout) • [Architecture](#-repository-architecture)
 
 </div>
 
@@ -21,16 +21,78 @@
 
 ## 📖 What is Auto-Context?
 
-**Auto-Context** is an autonomous context orchestration and instruction management protocol for AI coding assistants (Antigravity, Cursor, Claude Code, Copilot, Windsurf).
+**Auto-Context** is an autonomous context orchestration, instruction management, and persistent memory protocol designed for modern AI coding assistants (Antigravity, Cursor, Claude Code, Copilot, Windsurf).
 
-### The Problem It Solves:
-* **Context Bloat:** Dumping entire codebases, database schemas, and 500 lines of error logs into a giant context file burns 10,000+ tokens on *every single prompt*.
-* **AI Amnesia:** When you switch sessions or start a new chat, the AI forgets architectural invariants, port setups, and coding guidelines unless repeatedly reminded.
+It transforms how AI agents interact with your codebase by replacing raw, token-burning context dumps with an intelligent, self-guiding **360° End-to-End Execution Pipeline**.
 
-### How Auto-Context Works (The 3 Context Tiers):
-1. **Executive Hub (.agents/context.md):** A lightweight macro routing index loaded at session boot so the AI immediately knows your active stack, ports, and operations runbook without burning tokens.
-2. **Continuous Rules (.agents/rules/ & AGENTS.md):** Standing guardrails injected into the prompt context on **every chat turn** to enforce security boundaries, clean code standards, and doc sync.
-3. **Adaptive Satellites & Skills (.agents/context/ & .agents/skills/):** Loaded **on-demand** only when a task requires them (e.g. database schema migrations, route implementations, or Docker deployments).
+### 🛑 The Problems It Solves:
+
+* **Context Window Pollution & Token Burn:** Dumping entire directories, database schemas, and 500 lines of error logs into monolithic context files burns 10,000+ tokens on *every single prompt*, degrading AI reasoning and triggering premature context compaction.
+* **Context Drift & AI Amnesia:** When opening a new chat session or switching agents, the AI forgets architectural invariants, local port bindings, and coding conventions unless repeatedly reminded.
+* **Lack of Execution Discipline:** Unassisted AI assistants frequently jump straight into writing code without verifying project scope, hallucinate completion without running automated tests, or repeat previously resolved bugs.
+
+---
+
+## ⚙️ How Auto-Context Works
+
+Auto-Context establishes a deterministic, multi-phase execution loop that every AI assistant executes automatically from the very first turn:
+
+```text
+┌────────────────────────────────────────────────────────┐
+│ Phase 0: Scope & Gatekeeper (.agents/project-goal.md)   │
+└──────────────────────────┬─────────────────────────────┘
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│ Phase 1: Constitutional Guardrails (.agents/rules/)    │
+└──────────────────────────┬─────────────────────────────┘
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│ Phase 2: Macro Context (.agents/context.md)            │
+└──────────────────────────┬─────────────────────────────┘
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│ Phase 3: Targeted Discovery (.agents/context/*.md)     │
+└──────────────────────────┬─────────────────────────────┘
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│ Phase 4: Implementation (.agents/skills/)              │◄──────┐
+└──────────────────────────┬─────────────────────────────┘       │
+                           ▼                                     │ (Test Failed:
+┌────────────────────────────────────────────────────────┐       │  Self-Correct)
+│ Phase 5: Verification & Sync Gate                      │       │
+│          • Automated Tests (Exit Code 0)               ├───────┘
+│          • Sync Invariants & README (Pass)             │
+└────────────────────────────────────────────────────────┘
+```
+
+### The 6-Phase Autonomous Execution Pipeline
+
+1. **Phase 0: Scope & Gatekeeper (`.agents/project-goal.md`)**
+   - **Autonomous Synthesis:** On first run, the AI automatically inspects your repository and populates the project goal, core purpose, active milestones, and anti-goals (what *not* to build).
+   - **Context Pruning:** If the project is a CLI, library, or script, it automatically prunes non-existent network ports and DB tables from `context.md`.
+   - **The Brutal Truth Filter:** The AI actively challenges inefficient, over-complicated, or out-of-scope requests before writing code.
+
+2. **Phase 1: Constitutional Guardrails (`.agents/rules/*.md`)**
+   - **Continuous Compliance:** Standing, non-negotiable boundaries enforced on every turn (zero hardcoded secrets, early returns, clean git commits, documentation parity).
+   - **Dynamic Discovery:** Any rule created via `init-context rule` or synced from Central Memory is instantly recognized and enforced without manual config.
+
+3. **Phase 2: Macro Context Hub (`.agents/context.md`)**
+   - **Strict Token Budget (< 80 lines / ~400 tokens):** Serves as an executive routing index containing the project archetype, active runtime toolchain, verified runbook commands (build, lint, test), and failure invariants.
+
+4. **Phase 3: Targeted Discovery & Precision Reads**
+   - **Zero Bulk Reading:** Prohibits dumping 50+ files into context. Follows the precision formula:
+     $$\text{Precision Context} = \text{Macro Route Map} + \text{Grep / Symbol Search} + \text{Targeted Range Read (\#L30-L70)}$$
+   - Specialised satellites (`routes.md`, `schema.md`) are loaded strictly on-demand when relevant.
+
+5. **Phase 4: Dynamic Skills Execution (`.agents/skills/*/SKILL.md`)**
+   - **On-Demand Procedural Runbooks:** Reusable operational workflows (Docker ops, Git releases, Browser automation, Server diagnostics) that activate only when their declared triggers match the task.
+
+6. **Phase 5: Verification & Self-Correction Gate**
+   - **Automated Verification:** The AI runs repository test commands and enforces **Exit Code 0**.
+   - **Self-Correction Feedback Loop:** If any test fails, completion is blocked—the agent automatically loops back to Phase 4, diagnoses the root cause, applies fixes, and re-verifies until all tests pass.
+   - **State & Invariants Sync:** Upon passing, newly discovered architecture invariants are recorded in `context.md`, and any modified CLI flags or APIs are synchronized into `README.md`.
+
+> ⚡ **Fast-Track Exception:** For read-only explanations or trivial single-file edits under 10 lines (without architectural impact), the AI skips Phases 0, 2, and 3, jumping straight to Phase 1 guardrails and targeted verification.
 
 ---
 
@@ -72,21 +134,20 @@ Dumping routes, schemas, credentials, and runbooks into a single monolithic cont
 ```text
 your-project/
 ├── .agents/
-│   ├── context.md                <─── Executive Context Hub (Compact system routing)
-│   ├── project-goal.md           <─── North Star, goals & ADR
+│   ├── context.md                <─── Executive Context Hub (Compact system routing & invariants)
+│   ├── project-goal.md           <─── North Star, goals, active milestones & ADRs
 │   ├── context/                  <─── Adaptive Satellites (Loaded on-demand)
-│   │   ├── gotchas.md            (Architecture Invariants, Port Traps & Edge Cases)
 │   │   ├── routes.md             (API Endpoints & UI Page Map — loaded for route tasks)
 │   │   └── schema.md             (Database Schemas & Models — loaded for DB tasks)
-│   ├── rules/                    <─── Domain Rules (Continuous guardrails)
+│   ├── rules/                    <─── Domain Rules (Continuous constitutional guardrails)
 │   └── skills/                   <─── Operational Skills (On-demand procedural runbooks)
-├── AGENTS.md                     <─── Universal standing instructions
+├── AGENTS.md                     <─── Universal standing instructions (Core Execution Loop)
 └── GEMINI.md                     <─── Antigravity / Gemini standing instructions
 ```
 
 ### 2. Zero Dead Logs & The Brutal Truth Filter
 - **Zero Bug Diaries:** Chronological diaries of trivial solved bugs waste context tokens. Git history already records past commits!
-- **Gotchas Over History:** Auto-Context replaces bug logs with high-density technical invariants in `.agents/context/gotchas.md` (non-obvious architecture traps, port collisions, and constraints that cannot be guessed from reading code).
+- **Active Invariants Over Dead Logs:** Auto-Context replaces dead bug logs with high-density technical invariants directly inside `.agents/context.md` (Section 3: non-obvious architecture traps, port collisions, and constraints that cannot be guessed from reading code).
 
 ### 3. Rule vs. Skill: The Boundary
 | Concept | Location | Type | Lifecycle & Purpose |
@@ -296,8 +357,7 @@ Running `init-context` inside any project establishes a clean 5-tier architectur
 
 | Artifact | Location | Purpose | Tracked in Git |
 | :--- | :--- | :--- | :--- |
-| **Executive Context Hub** | [`.agents/context.md`](file://.agents/context.md) | Compact macro navigation hub, stack info & operations runbook. | Yes |
-| **Critical Gotchas** | [`.agents/context/gotchas.md`](file://.agents/context/gotchas.md) | High-density architecture invariants, traps, and port bindings. | Yes |
+| **Executive Context Hub** | [`.agents/context.md`](file://.agents/context.md) | Compact macro navigation hub, stack info, runbooks & architecture invariants. | Yes |
 | **Endpoint Map** | [`.agents/context/routes.md`](file://.agents/context/routes.md) | Discovered API routes and page views for precision targeting. | Yes |
 | **Project Goals & ADR** | [`.agents/project-goal.md`](file://.agents/project-goal.md) | Project objectives, architectural milestones, and ADR decisions. | Yes |
 | **Domain Rules** | [`.agents/rules/*.md`](file://.agents/rules/) | Continuous coding standards, security rules, and doc sync. | Yes |
