@@ -34,13 +34,22 @@ You are an autonomous engineering assistant in `{{PROJECT_DIR}}`. Every turn mus
 
 ---
 
-### Phase 0: Scope & Gatekeeper
+### Phase 0: Scope & Gatekeeper (Autonomous Synthesis & Alignment)
 *Reference: [`.agents/project-goal.md`](file://{{PROJECT_DIR}}/.agents/project-goal.md)*
 
-1. **Milestone Check:** Verify that the task advances the active milestone in Section 2.
-2. **Anti-Goals Check:** Ensure the request does not violate boundaries in Section 3.
-3. **Challenge Inefficient Requests:** If an approach introduces unwarranted complexity, violates KISS/DRY, or tackles the wrong problem, halt and propose a leaner technical alternative before implementing.
-4. **Autonomous Context Pruning & Enrichment:** Ensure `.agents/context.md` strictly mirrors the goals and boundaries defined here. If `project-goal.md` defines a CLI, library, or offline tool, automatically prune any remaining network or DB tables from `context.md`. When new capabilities are added (e.g. CLI subcommands matrix, IPC channels, or packaging specs), dynamically enrich `context.md` with those exact sections.
+1. **Autonomous Project Goal Synthesis:** On initial interaction or when `project-goal.md` contains unpopulated placeholders, the AI agent MUST autonomously inspect the codebase (manifests, README, structure) and populate `project-goal.md`:
+   - Core Purpose & Target Audience (Section 1)
+   - Active Milestone & Immediate Priorities (Section 2)
+   - Anti-Goals / Out-of-Scope boundaries (Section 3)
+   - Initial Architectural Decisions & Tradeoffs (Section 4)
+2. **Milestone Check:** Verify that the task advances the active milestone in Section 2.
+3. **Anti-Goals Check:** Ensure the request does not violate boundaries in Section 3.
+4. **Challenge Inefficient Requests:** If an approach introduces unwarranted complexity, violates KISS/DRY, or tackles the wrong problem, halt and propose a leaner technical alternative before implementing.
+5. **Autonomous Context Pruning & Enrichment:** Ensure `.agents/context.md` strictly mirrors the goals and archetype defined in `project-goal.md`:
+   - Classify and set the **Project Archetype** (Section 0).
+   - If `project-goal.md` defines a CLI, library, or offline tool, automatically prune any remaining network or DB tables from `context.md` and record runtime config/flags instead.
+   - If the project is a Web/API service, populate active ports and service endpoints.
+   - Dynamically enrich `context.md` with sections required by active project goals (e.g. CLI subcommands matrix, IPC channels, or packaging specs).
 
 ---
 

@@ -3,13 +3,13 @@
 > **Last Updated:** {{DATE_NOW}} | **Stack:** {{STACK}} ({{FRAMEWORK}})  
 > **Directory:** `{{PROJECT_DIR}}` | **Model:** Hub & Stack-Adaptive Satellites
 >
-> 🧭 **Agent Instruction:** Check the **Project Archetype** below first. Only inspect and enforce sections marked relevant for this archetype. Do not hallucinate or scan for non-existent network ports or databases in CLI/Library projects.
+> 🧭 **Agent Instruction:** On initial interaction or when unpopulated, classify the **Project Archetype** below and populate this cockpit strictly aligned with `.agents/project-goal.md`. Prune any non-applicable sections (e.g. ports for CLI/Library) and enrich with project-specific runtime configuration.
 
 ---
 
 ## Section 0: Project Archetype & Metadata
 
-- **Project Archetype:** {{ARCHETYPE}}
+- **Project Archetype:** `[ Web / Fullstack | Backend API | CLI / Automation | Library / SDK | Desktop / Mobile | Infra / DevOps ]`
 - **Primary Runtime / Toolchain:** {{STACK}} ({{FRAMEWORK}})
 - **Entry Points:**
   - Main Runtime: `src/` (e.g. `cli.py`, `main.py`, `index.ts`, `lib.rs`, `main.go`)
@@ -17,56 +17,57 @@
 
 ---
 
-{{SECTION_1_CONTENT}}
+## Section 1: Network & Config Vault (Conditional)
+
+<!-- 
+RULE FOR AI AGENT:
+- For Web / API / Services: Record active host, ports, and healthcheck endpoints below.
+- For CLI / Library / Standalone Scripts: Replace the table with: "N/A - Standalone execution (no background network listeners)." and list config paths/flags only.
+-->
+
+### Service Endpoints
+| Service / Dependency | Host / Base URL | Default Port | Config Key | Health Check / Protocol |
+| :--- | :--- | :--- | :--- | :--- |
+| **Primary App** | `localhost` | `3000` | `PORT=3000` | `http://localhost:3000/api/health` |
+
+### Runtime Configuration & Local Paths
+- **Config Storage:** `.env` (derived from `.env.example`) or `~/.config/{{PROJECT_NAME}}/config.json`
+- **Key Flags / Envs:**
+  - `DEBUG` / `LOG_LEVEL`: Controls verbosity (`info`, `debug`, `trace`).
+  - `CACHE_DIR`: Local disk cache or temporary build directory.
 
 ---
 
 ## Section 2: Operations Runbook (Standardized Commands)
 
-Use only these verified commands for build, test, lint, and run execution.
+Use only verified commands for build, test, lint, and run execution.
 
 ### 1. Installation & Environment
 ```bash
-# Clean dependency install
 <package-manager> install
-# Example: npm ci | pnpm install --frozen-lockfile | uv sync | cargo build
 ```
 
 ### 2. Linting & Type Integrity
 ```bash
-# Read-only audit (Must exit code 0)
 <lint-command> && <typecheck-command>
-# Example: npm run lint && npm run typecheck | ruff check . && mypy . | cargo clippy
-
-# Automatic formatting and safe fixes
-<format-command>
-# Example: npm run format:fix | ruff format . | cargo fmt
 ```
 
 ### 3. Test Suites & Verification Gate
 ```bash
 # Fast unit tests (in-memory / mock only)
 <test-unit-command>
-# Example: npm run test:unit | pytest tests/unit -q | cargo test --lib
 
 # Targeted single test run (use during development)
 <test-single-command> <path-to-file>
-# Example: pnpm test tests/auth.test.ts | pytest tests/unit/test_cli.py -k "test_arg"
 
 # Full regression / integration suite (Mandatory before task completion)
 <test-all-command>
-# Example: npm run test | pytest | cargo test
 ```
 
 ### 4. Build, Run & Dev
 ```bash
-# Local development execution
 <dev-command>
-# Example: npm run dev | python -m my_pkg | cargo run
-
-# Production compile / bundle build
 <build-command>
-# Example: npm run build | uv build | cargo build --release
 ```
 
 ---
@@ -78,4 +79,4 @@ Use only these verified commands for build, test, lint, and run execution.
 
 1. **Verified Executable Runbooks:** Only record 100% executable commands in Section 2 parsed from manifests or verified CLI tools.
 2. **Secret Safety:** Never commit plaintext credentials or private tokens into version control.
-<!-- Add project-specific invariants below as they are discovered (e.g. "Windows sandbox requires BypassSandbox for pnpm", "DB timezone must be UTC") -->
+<!-- Add project-specific invariants below as discovered -->
