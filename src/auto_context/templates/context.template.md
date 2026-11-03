@@ -21,7 +21,7 @@
 
 <!-- 
 RULE: 
-- For Web / API / Microservices: Fill the table below.
+- For Web / API / Microservices: Record host, ports, and healthcheck endpoints.
 - For CLI / Library / Standalone Scripts: Mark table as "N/A" and list configuration flags/paths only.
 -->
 
@@ -30,7 +30,6 @@ RULE:
 | :--- | :--- | :--- | :--- | :--- |
 | **Primary App** | `localhost` | `3000` | `PORT=3000` | `http://localhost:3000/api/health` |
 | **Database** | `127.0.0.1` | `5432` | `DATABASE_URL` | PostgreSQL 16 (via Docker) |
-| **Cache / Queue** | `127.0.0.1` | `6379` | `REDIS_URL` | Redis 7.x |
 <!-- If CLI or Library, replace table above with: "N/A - Standalone execution, no network listeners." -->
 
 ### Runtime Configuration & Local Paths
@@ -91,45 +90,11 @@ Use only these verified commands for build, test, lint, and run execution.
 
 ---
 
-## Section 3: Active Architecture Invariants & Traps
+## Section 3: Project Architecture Invariants & Traps
 
-Record enduring system rules, operational boundaries, and distilled bug root causes. Never log transient stack traces or historical bug cemeteries.
+> ⚡ **Codebase Constraints:** Non-obvious traps, OS/toolchain quirks, port allocations, or environmental invariants discovered *in this specific project* that cannot be inferred from code alone.
+> (Record enduring constraints here as distilled invariants. Do NOT dump transient error stack traces or solved bug diaries).
 
-### Architecture Invariants
-1. **Boundary Validation:** Every external input (CLI arguments, HTTP request payloads, env variables) must be validated at the boundary using schema validation (e.g. Zod, Pydantic, Clap) before passing to core logic.
-2. **Side-Effect Isolation:** Pure functions for core logic; isolate filesystem mutations, network I/O, or OS calls to dedicated adapter layers.
-3. **Strict Idempotency:** Any file-generation, database migration, or state synchronization task must produce identical output if re-run ($f(f(x)) = f(x)$).
-
-### Known Traps & Gotchas
-- **Trap:** Cross-Platform File Paths & Permissions
-  - **Context:** POSIX vs. Windows path separators or missing executable permissions (`chmod +x`).
-  - **Rule:** Always use language-native path modules (`path.join()`, `pathlib.Path`) and never hardcode `/` or `\\`.
-- **Trap:** Unhandled Process Exits / Dangling Locks
-  - **Context:** Interrupting a script mid-run leaves lock files or temporary files intact.
-  - **Rule:** Register clean-up handlers for SIGINT / SIGTERM to unlink temp directories and close connection pools.
-- **Trap:** Resource Leak on Async Failure
-  - **Context:** Crashing inside an async stream or file reader leaves file descriptors open.
-  - **Rule:** Always wrap file and network resource usage in scoped cleanup constructs (`try...finally`, `with` statement, or using disposable patterns).
-
----
-
-## Section 4: Stack-Adaptive Satellites & Domain Maps (On-Demand)
-
-> 🧭 Satellites reside in [`.agents/context/`](file://{{PROJECT_DIR}}/.agents/context/) and are created/inspected **only when the corresponding domain exists** (Zero Ghost Files):
-
-| Domain | Satellite File | Condition / When Needed |
-| :--- | :--- | :--- |
-| **Project North Star & ADR** | [`project-goal.md`](file://{{PROJECT_DIR}}/.agents/project-goal.md) | Scope verification, milestone alignment, or architectural decisions |
-| **API Endpoints & UI Views** | `routes.md` | Web/API projects only (when creating or modifying endpoints/pages) |
-| **Database Schemas & Models** | `schema.md` | Database/ORM projects only (when altering tables or migrations) |
-
----
-
-## Section 5: Skills & Progressive Disclosure Routing
-
-| Skill | Triggers | Location |
-| :--- | :--- | :--- |
-| **`docker-ops`** | `docker`, `compose` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/docker-ops/SKILL.md) |
-| **`git-workflow`** | `git`, `commit`, `rebase` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/git-workflow/SKILL.md) |
-| **`server-diagnostics`** | `health`, `ram`, `port` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/server-diagnostics/SKILL.md) |
-| **`feature-verification`** | `test`, `verify`, `check` | [SKILL.md](file://{{PROJECT_DIR}}/.agents/skills/feature-verification/SKILL.md) |
+1. **Verified Executable Runbooks:** Only record 100% executable commands in Section 2 parsed from manifests or verified CLI tools.
+2. **Secret Safety:** Never commit plaintext credentials or private tokens into version control.
+<!-- Add project-specific invariants below as they are discovered (e.g. "Windows sandbox requires BypassSandbox for pnpm", "DB timezone must be UTC") -->

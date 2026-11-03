@@ -68,7 +68,7 @@ Targeted Context Formula:
 $$\text{Context} = \text{Route Map (Macro)} + \text{Symbol / Grep (Micro)} + \text{Targeted Range Read}$$
 
 - **Zero Unnecessary Reads:** Read only line ranges (`#L20-L80`) rather than dumping whole files.
-- **Context Routing:** Consult specialized domain satellites referenced in `.agents/context.md` (Section 4) ONLY when the active task requires deep domain context (e.g. API routes, DB schemas). For CLI tools, libraries, or standalone scripts without satellite files, navigate directly to entry points or manifests.
+- **Context Routing:** Consult specialized domain satellites in `.agents/context/*.md` ONLY when the active task requires deep domain context (e.g. `routes.md` for Web APIs, `schema.md` for DB schemas). For CLI tools, libraries, or standalone scripts without satellite files, navigate directly to entry points or manifests.
 
 ---
 
