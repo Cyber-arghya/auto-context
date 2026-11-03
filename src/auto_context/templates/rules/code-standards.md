@@ -34,6 +34,7 @@ Maintain readable, maintainable, modular, and type-safe codebases with clear err
 8. **Anti-Fragmentation & DRY Architecture:**
    - Never create fragmented micro-files when a canonical domain rule or skill already exists. Update existing domain files instead of scattering logic.
 9. **Mandatory Feature Verification & Test Reporting:**
-   - Every new feature, behavior modification, or bug fix must be verified with executable tests or automated scripts before concluding the turn.
-   - Never declare completion based on unverified assumptions; run tests and confirm zero errors (exit code 0).
+   - Every new feature, behavior modification, architectural change, or bug fix MUST be verified with dedicated, executable test cases specifically targeting the new/modified functionality before concluding the turn.
+   - Never rely on legacy, superficial, or obsolete tests to declare completion; tests must actively reflect and validate the current state, active commands, and true behavior of the codebase.
+   - When a new capability or architectural refactor is introduced, write or update test files to directly exercise the new logic and prove it functions as expected with zero errors (exit code 0).
    - Conclude each feature with a structured Verification Report detailing: (a) Feature scope, (b) Executed test commands, (c) Concrete output/proof, and (d) Edge cases validated.

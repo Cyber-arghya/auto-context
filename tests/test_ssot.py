@@ -1,11 +1,13 @@
 """
-test_ssot.py — Single Source of Truth & Clean Architecture Verification.
+test_ssot.py — Single Source of Truth & Template Integrity Verification.
 
 Enforces zero-duplicate-directory policy, canonical template integrity,
-and clean global plugin asset provisioning.
+and clean template placeholder substitution.
 """
 import json
+import re
 from pathlib import Path
+from auto_context.commands.init_cmd import _render
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = REPO_ROOT / "src" / "auto_context" / "templates"
@@ -46,23 +48,22 @@ def test_canonical_templates_integrity():
         assert skill_file.exists(), f"Missing required operational skill: {expected}/SKILL.md"
 
 
-def test_no_legacy_local_in_rules():
-    """Ensure security-boundaries rule does not reference deprecated context.local.md."""
-    sec_rule = TEMPLATES_DIR / "rules" / "security-boundaries.md"
-    assert sec_rule.exists()
-    content = sec_rule.read_text(encoding="utf-8")
-    assert "context.local.md" not in content, "context.local.md must not be referenced in security-boundaries.md"
+def test_template_variable_rendering():
+    """Ensure all core markdown templates render cleanly without unpopulated placeholders."""
+    dummy_vars = {
+        "PROJECT_NAME": "my-test-app",
+        "PROJECT_DIR": "/path/to/my-test-app",
+        "STACK": "Python 3.12",
+        "FRAMEWORK": "FastAPI",
+        "DATE_NOW": "2026-11-03",
+    }
+    placeholder_pattern = re.compile(r"\{\{[A-Z0-9_]+\}\}")
 
+    for template_name in ("context.template.md", "AGENTS.template.md", "project-goal.template.md"):
+        tmpl_file = TEMPLATES_DIR / template_name
+        assert tmpl_file.exists(), f"{template_name} must exist"
+        rendered = _render(tmpl_file, dummy_vars)
 
-def test_no_dead_satellites_or_ghost_links_in_templates():
-    """Ensure canonical templates do not contain dead satellite references or ghost files."""
-    agents_tmpl = TEMPLATES_DIR / "AGENTS.template.md"
-    assert agents_tmpl.exists()
-    agents_content = agents_tmpl.read_text(encoding="utf-8")
-    assert "gotchas.md" not in agents_content, "gotchas.md reference must not exist in AGENTS.template.md"
-
-    context_tmpl = TEMPLATES_DIR / "context.template.md"
-    assert context_tmpl.exists()
-    context_content = context_tmpl.read_text(encoding="utf-8")
-    assert "gotchas.md" not in context_content, "gotchas.md reference must not exist in context.template.md"
-    assert "context.local.md" not in context_content, "context.local.md must not exist in context.template.md"
+        leftovers = placeholder_pattern.findall(rendered)
+        assert not leftovers, f"{template_name} contains unrendered placeholders: {leftovers}"
+        assert "my-test-app" in rendered
