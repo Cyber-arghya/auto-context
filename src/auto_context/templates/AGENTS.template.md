@@ -1,61 +1,92 @@
 # Standing Agent Rules for {{PROJECT_NAME}}
 
-## Critical Mandate: Autonomous Context Synchronization & Precision Architecture
-As an AI coding assistant working in this repository (`{{PROJECT_DIR}}`), you are **strictly mandated** to maintain the Hub & Satellite context architecture, navigate codebases with laser precision, and autonomously crystallize new rules and skills. The user must **never** need to remind or instruct you.
+## Critical Mandate: The 360° End-to-End Autonomous Execution Loop
+As an AI coding assistant in this repository (`{{PROJECT_DIR}}`), you are **strictly mandated** to follow this exact sequential execution pipeline on every single turn and user request. Do not skip or reorder any phase:
 
-### 1. Precision Context Navigation Protocol
-Whenever exploring code or resolving tasks during an active session, follow the precision formula:
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│ Phase 0: Strategic Scope & North Star Gate (.agents/project-goal.md)   │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ Phase 1: Constitutional Guardrails (.agents/rules/)                    │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ Phase 2: Project Cockpit & Macro Discovery (.agents/context.md)        │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ Phase 3: Targeted Navigation & Domain Satellites (.agents/context/*.md)│
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ Phase 4: Procedural Action & Skills Execution (.agents/skills/)        │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ Phase 5: Verification, Sync & Completion Gate (Tests, Docs, Invariants)│
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Phase 0: Strategic Scope & North Star Gate (Evaluate Intent First)
+Before planning code or editing files, evaluate the user request against [`.agents/project-goal.md`](file://{{PROJECT_DIR}}/.agents/project-goal.md):
+1. **Milestone Match:** Does this task directly advance the active milestone in Section 2?
+2. **Anti-Goals Check:** Is this request forbidden under Section 3 (Anti-Goals / Out-of-Scope)?
+3. **The Brutal Truth Filter:** Does it pass Section 5? If an approach adds needless complexity, breaks DRY/KISS, or solves the wrong problem, **immediately STOP and challenge the request** with technical rationale instead of blindly building flawed requests.
+
+### Phase 1: Constitutional Guardrails (Active Boundaries)
+Operate strictly within the continuous guardrails defined in [`.agents/rules/`](file://{{PROJECT_DIR}}/.agents/rules/):
+- **Security Boundaries (`security-boundaries.md`):** Zero hardcoded secrets; load tokens exclusively from `.env` (git-ignored).
+- **Code Standards (`code-standards.md`):** Early returns, guard clauses, single responsibility (SRP), explicit type annotations, and clean error handling.
+- **Documentation Sync (`readme-docs-sync.md`):** Every new feature, command, or option must be immediately documented in `README.md`.
+
+### Phase 2: Project Cockpit & Macro Discovery (State Map)
+Inspect [`.agents/context.md`](file://{{PROJECT_DIR}}/.agents/context.md) to ground yourself in the active runtime environment:
+- **Network & Config Vault (Section 1):** Check discovered local ports and service endpoints.
+- **Operations Runbook (Section 2):** Check verified build, test, and run commands.
+- **Active Architecture Invariants (Section 3):** Review critical system invariants and traps before modifying state or architecture.
+
+### Phase 3: Targeted Navigation & Domain Satellites (Micro Navigation)
+Follow the precision formula:
 $$\text{Precision Context} = \text{Route Map (Macro)} + \text{Grep/Symbol (Micro)} + \text{Targeted Range Read}$$
-- **Never bulk-read entire directories or loop through 50+ source files.**
-- First inspect `.agents/context/routes.md` or `.agents/context.md` for high-level file locations.
-- Use `grep` or symbol search to pinpoint exact files and line numbers.
-- Read only the specific target line range (e.g. `#L30-L70`) rather than loading entire large files.
+- **Zero Ghost Files:** Inspect domain satellites in `.agents/context/` ONLY if they exist for this stack:
+  - Web/API Projects: Consult `routes.md` when modifying endpoints or pages.
+  - Database Projects: Consult `schema.md` when modifying models or migrations.
+  - CLI/Library/Infra: Do NOT look for route/schema files; navigate directly to CLI entrypoints or manifests.
+- **Token Efficiency:** Never bulk-read entire directories or load 50+ files. Read targeted line ranges (`#L30-L70`).
 
-### 2. Mandatory Post-Action Protocol & Satellite Sync (Phase 3)
-Before concluding any turn or session, the agent MUST inspect and update context:
-- **Routes & Pages:** If any API endpoint or UI view is created, modified, or removed, immediately update `.agents/context/routes.md`.
-- **Database Models:** If any schema, migration, or entity is changed, immediately update `.agents/context/schema.md`.
-- **Architecture Invariants:** If a non-obvious trap, port collision, or bug invariant is discovered, immediately record it in `.agents/context.md` (Section: Active Architecture Invariants).
-- **Core Hub:** Keep `.agents/context.md` compact as an executive routing hub.
+### Phase 4: Procedural Action & Skills Execution (Doing the Work)
+Execute tasks using specialized runbooks from [`.agents/skills/`](file://{{PROJECT_DIR}}/.agents/skills/):
+- **Containerization:** Follow [`.agents/skills/docker-ops/SKILL.md`](file://{{PROJECT_DIR}}/.agents/skills/docker-ops/SKILL.md) for lean multi-stage Docker builds.
+- **Automated Verification:** Follow [`.agents/skills/feature-verification/SKILL.md`](file://{{PROJECT_DIR}}/.agents/skills/feature-verification/SKILL.md) for test execution SOPs.
+- **Git Commits & Release:** Follow [`.agents/skills/git-workflow/SKILL.md`](file://{{PROJECT_DIR}}/.agents/skills/git-workflow/SKILL.md) for Conventional Commits and tagging.
+- **CLI & Context Management:** Follow [`.agents/skills/auto-context/SKILL.md`](file://{{PROJECT_DIR}}/.agents/skills/auto-context/SKILL.md) for `init-context` operations.
 
-### 3. Domain Consolidation & Anti-Fragmentation (Single Responsibility)
-When codifying new guidelines or workflows, DO NOT create fragmented micro-files if a domain file already exists:
-- **Docker & Containerization:** Update/append to `.agents/skills/docker-ops/SKILL.md`.
-- **Git & Release Workflows:** Update/append to `.agents/skills/git-workflow/SKILL.md`.
-- **Coding Standards & Patterns:** Update/append to `.agents/rules/code-standards.md`.
-- **Security Boundaries:** Update/append to `.agents/rules/security-boundaries.md`.
-- Only create a new rule or skill file (`init-context -r` / `-s`) if it represents a distinctly new, independent domain.
+### Phase 5: Verification, Sync & Completion Gate (Post-Action Audit)
+Before declaring any task complete or concluding the turn, you MUST execute this audit:
+1. **Mandatory Test Verification:** Run executable tests via the command in `context.md` (must exit code 0). Never claim completion based on unverified assumptions.
+2. **README Sync:** If any CLI command, argument, or workflow changed, update `README.md` immediately.
+3. **Architecture Invariants Sync:** If a non-obvious trap, port collision, or bug invariant was discovered, record the distilled root cause inside `.agents/context.md` (Section 3). Never dump raw error logs or bug cemeteries (Git tracks commit history).
+4. **Domain Satellite Sync:** If web routes or DB schemas were added/modified in a web/DB project, immediately sync `routes.md` or `schema.md`.
+5. **ADR Alignment:** If an architectural direction changed, record the decision and trade-offs in `.agents/project-goal.md` Section 4.
+6. **Autonomous Memory Push:** When the user mentions "for future", "always", or defines a reusable standard, run `init-context -r/-s <name> -g` followed by `init-context memory push`.
 
-### 4. Architectural Invariants over Problem Logs (Zero Dead Logs)
-Prohibit maintaining chronological problem logs or debugging diaries (Git already tracks commit history):
-- **Never maintain problem logs or bug diaries:** Do not dump or retain chronological problem logs or solved bug diaries.
-- **Distill Technical Invariants into `.agents/context.md`:** When a critical, non-obvious architecture trap, port collision, or bug invariant is discovered, immediately record the distilled technical root cause and invariant inside `.agents/context.md` (Active Architecture Invariants).
-- **100% Wisdom with Zero Waste:** Retain institutional architecture wisdom as reusable invariants while burning zero tokens on solved bug dumps.
+---
 
-### 5. Dynamic Domain Synthesis & 6-Step Ultra-Lean Action Loop
-- **Dynamic Domain Satellites:** As new architecture domains are implemented, dynamically create matching satellites in `.agents/context/` (e.g. `schema.md` when DB models exist, `integrations.md` when 3rd-party APIs are integrated). Never create empty or placeholder `.md` files (Zero Ghost Files).
-- **Anti-Chain Traversal:** Never pre-fetch connected files speculatively. Only inspect targeted line ranges (`#L30-L70`) when directly required by execution.
-- **6-Step Action Pipeline:**
-  1. ACTION PLAN: 3-5 bullet list verified against `.agents/project-goal.md`.
-  2. IMPLEMENT: Defensive, SRP, type-safe code modifications.
-  3. TEST (Mandatory): Run executable test suite (must exit code 0).
-  4. DOCS: Update README.md (verified commands & architecture).
-  5. COMMIT: Conventional Git commit & autonomous memory push.
-  6. RELEASE TAG: If user-confirmed milestone -> bump version & git tag vX.Y.Z.
+## Universal Architectural Principles
 
-### 6. Autonomous Learning & Tool Access
-- **Zero Token Waste:** DO NOT burn tokens manually searching directories to check for duplicates. Directly run `init-context -r <name> [-g]` — the CLI has instant built-in duplicate detection and collision guards.
-- **Mandatory Global Scope:** When the user mentions "for future", "always", or defines a reusable standard, **MANDATORY: Always pass `--global` (`-g`)** and immediately follow with `init-context memory push`.
-- **Core Autonomous CLI Commands:**
-  - `init-context -r <name> [-g]`: Create or append to domain rule with collision guards.
-  - `init-context -s <name> [-g]`: Create or update operational skill.
-  - `init-context update`: Safely sync public rules and upstream capabilities (non-breaking).
-  - `init-context memory push`: Audit secrets and push updates to central memory.
-  - `init-context memory status`: Inspect central memory health & remote sync state.
-  - `init-context memory pull`: Pull and restore central knowledge from remote.
-- **Full CLI Command & Skill Reference:** For complete syntax (MCP tooling, sharing, memory reset, collision guards), inspect [`.agents/skills/auto-context/SKILL.md`](file://{{PROJECT_DIR}}/.agents/skills/auto-context/SKILL.md) or [`.agents/context.md`](file://{{PROJECT_DIR}}/.agents/context.md).
+### 1. Domain Consolidation & Anti-Fragmentation
+DO NOT create fragmented micro-files if a domain file already exists:
+- Docker & Containers -> `.agents/skills/docker-ops/SKILL.md`
+- Git & Release -> `.agents/skills/git-workflow/SKILL.md`
+- Coding Standards -> `.agents/rules/code-standards.md`
+- Security Boundaries -> `.agents/rules/security-boundaries.md`
 
-### 7. First-Principles Gatekeeper: Idempotency, KISS, DRY & The Brutal Truth Filter
-- **Strict Idempotency Proof ($f(f(x)) = f(x)$):** All code generation, filesystem operations, and context sync commands must be 100% idempotent. Running them once or 100 times must yield the exact same deterministic state without duplication or side-effects.
-- **Modular, KISS & DRY:** Maintain clean separation of concerns. Prohibit copy-paste duplication, unnecessary abstractions, and monolithic bloat across all project code and context.
-- **The Brutal Truth Filter:** Every idea, design proposal, or architectural suggestion must pass first-principles scrutiny. If an idea or approach fails "The Brutal Truth Filter" (adds needless complexity, breaks DRY/KISS, or solves the wrong problem), **immediately DROP the idea** and proactively notify the user with clear technical rationale instead of blindly building flawed requests.
+### 2. Strict Idempotency Proof ($f(f(x)) = f(x)$)
+All code generation, filesystem operations, and context sync commands must be 100% idempotent. Running them once or 100 times must yield the exact same deterministic state without duplication or side-effects.
+
+### 3. Modular, KISS & DRY
+Maintain clean separation of concerns. Prohibit copy-paste duplication, unnecessary abstractions, and monolithic bloat across all project code and context.
