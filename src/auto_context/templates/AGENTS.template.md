@@ -10,7 +10,7 @@ You are an autonomous engineering assistant in `{{PROJECT_DIR}}`. Every turn mus
 └──────────────────────────┬─────────────────────────────┘
                            ▼
 ┌────────────────────────────────────────────────────────┐
-│ Phase 1: Guardrails (.agents/rules/)                   │
+│ Phase 1: Constitutional Guardrails (.agents/rules/)    │
 └──────────────────────────┬─────────────────────────────┘
                            ▼
 ┌────────────────────────────────────────────────────────┐
@@ -46,9 +46,9 @@ You are an autonomous engineering assistant in `{{PROJECT_DIR}}`. Every turn mus
 ### Phase 1: Constitutional Guardrails
 *Reference: [`.agents/rules/`](file://{{PROJECT_DIR}}/.agents/rules/)*
 
-- **Security (`rules/security-boundaries.md`):** Zero secrets in code. Read sensitive config strictly via environment variables loaded from git-ignored files.
-- **Code Standards (`rules/code-standards.md`):** Use early returns, explicit error typing, single-responsibility functions, and guard clauses.
-- **Documentation Parity (`rules/readme-docs-sync.md`):** Any modified CLI flags, public APIs, or environment variables must be immediately reflected in `README.md`.
+Enforce all active domain rules located in `.agents/rules/*.md`. These guardrails apply continuously to all generated and modified code:
+- **Continuous Compliance:** Strictly enforce security boundaries, clean code standards, idempotency, git cleanliness, and documentation parity.
+- **Dynamic Rule Discovery:** When new rules are added via `init-context -r` or synced from Central Memory, enforce them automatically without requiring changes to this pipeline.
 
 ---
 
@@ -56,7 +56,7 @@ You are an autonomous engineering assistant in `{{PROJECT_DIR}}`. Every turn mus
 *Reference: [`.agents/context.md`](file://{{PROJECT_DIR}}/.agents/context.md)*
 
 Before executing system-level actions:
-1. **Network & Ports (Section 1):** Validate active ports, services, and base URLs.
+1. **Network & Ports (Section 1):** Check active ports, services, and base URLs relevant to this project's archetype.
 2. **Operations Runbook (Section 2):** Use verified repository build, lint, and test scripts.
 3. **System Invariants (Section 3):** Review known failure modes and architectural invariants before altering state.
 
@@ -68,21 +68,16 @@ Targeted Context Formula:
 $$\text{Context} = \text{Route Map (Macro)} + \text{Symbol / Grep (Micro)} + \text{Targeted Range Read}$$
 
 - **Zero Unnecessary Reads:** Read only line ranges (`#L20-L80`) rather than dumping whole files.
-- **Context Routing:**
-  - **API/Web:** Check `.agents/context/routes.md` only when modifying routes or controllers.
-  - **Data/ORM:** Check `.agents/context/schema.md` only when modifying models or migrations.
-  - **CLI/Libs:** Navigate directly to entry points or manifests; do not seek route or schema files.
+- **Context Routing:** Consult specialized domain satellites referenced in `.agents/context.md` (Section 4) ONLY when the active task requires deep domain context (e.g. API routes, DB schemas). For CLI tools, libraries, or standalone scripts without satellite files, navigate directly to entry points or manifests.
 
 ---
 
 ### Phase 4: Implementation & Skills Execution
 *Reference: [`.agents/skills/`](file://{{PROJECT_DIR}}/.agents/skills/)*
 
-Invoke the dedicated runbook for the corresponding domain:
-- **Docker / Infra:** [`.agents/skills/docker-ops/SKILL.md`](file://{{PROJECT_DIR}}/.agents/skills/docker-ops/SKILL.md)
-- **Testing & Verification:** [`.agents/skills/feature-verification/SKILL.md`](file://{{PROJECT_DIR}}/.agents/skills/feature-verification/SKILL.md)
-- **Git & Releases:** [`.agents/skills/git-workflow/SKILL.md`](file://{{PROJECT_DIR}}/.agents/skills/git-workflow/SKILL.md) (Conventional Commits, atomic changes)
-- **Context Management:** [`.agents/skills/auto-context/SKILL.md`](file://{{PROJECT_DIR}}/.agents/skills/auto-context/SKILL.md)
+- **Dynamic Skill Dispatch:** Match task requirements against active operational skills in `.agents/skills/*/SKILL.md`.
+- **On-Demand Execution:** Consult the corresponding skill runbook only when performing procedural tasks (e.g. container operations, verification SOPs, git releases, or context CLI management).
+- **Extensible:** Any new skill created via `init-context -s` or pulled from Central Memory is immediately available for execution based on its declared triggers.
 
 ---
 
@@ -92,14 +87,6 @@ Every task must satisfy this checklist before completion:
 1. **Automated Verification:** Execute project tests using the command in `context.md`. Exit code must be `0`.
 2. **README Sync:** Update flags, usage examples, and installation instructions if behavior changed.
 3. **Invariants Sync:** If a non-trivial edge case or bug was resolved, add the core invariant to `.agents/context.md` (Section 3). Do not log stack traces or transient errors.
-4. **Domain Satellite Sync:** Update `routes.md` or `schema.md` if endpoints or data models shifted.
+4. **Domain Satellite Sync:** Update relevant satellites in `.agents/context/` if endpoints, data models, or state structures shifted.
 5. **Architectural Decisions (ADR):** If architectural scope or conventions shifted, document the decision in `.agents/project-goal.md` (Section 4).
-6. **Rule Consolidation:** When user instructions define an enduring convention ("always", "from now on"), write them to `.agents/rules/` or run `init-context -r/-s <name> -g` followed by `init-context memory push`.
-
----
-
-### Operating Principles
-
-- **Anti-Fragmentation:** Never create redundant satellite files if a canonical domain file exists (`docker-ops`, `git-workflow`, `code-standards`, `security-boundaries`).
-- **Idempotency ($f(f(x)) = f(x)$):** All scripts, file modifications, and automation steps must be strictly idempotent.
-- **Git Cleanliness:** Never commit temporary files, debug outputs, or untracked state artifacts. Keep working trees clean.
+6. **Rule & Skill Crystallization:** When user instructions define an enduring convention ("always", "from now on"), codify them using `init-context -r <name> -g` or `init-context -s <name> -g` followed by `init-context memory push`.
