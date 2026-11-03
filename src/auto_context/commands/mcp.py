@@ -131,8 +131,10 @@ def _load_mcp_config(path: Path) -> dict:
             data = json.loads(path.read_text(encoding="utf-8"))
             if isinstance(data, dict):
                 return data
-        except json.JSONDecodeError:
-            pass
+        except json.JSONDecodeError as exc:
+            import shutil
+            shutil.copy2(path, path.with_suffix(".json.bak"))
+            console.print(f"[yellow][!] Corrupted JSON in {path}: {exc}. Backed up to {path.name}.bak[/]")
     return {"mcpServers": {}}
 
 

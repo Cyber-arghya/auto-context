@@ -44,7 +44,11 @@ def get_installed_version() -> str:
             return get_pkg_version(pkg)
         except Exception:
             pass
-    return "1.0.1"
+    try:
+        import auto_context
+        return getattr(auto_context, "__version__", "1.5.0")
+    except Exception:
+        return "1.5.0"
 
 
 # ── Update Checking & Cache Engine ────────────────────────────────────────────

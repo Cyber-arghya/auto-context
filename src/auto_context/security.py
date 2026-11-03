@@ -92,6 +92,8 @@ def _scan_file(path: Path) -> list[Violation]:
 
     # Content scan (skip binary-looking files gracefully)
     try:
+        if path.stat().st_size > 10 * 1024 * 1024:
+            return violations
         lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
     except OSError:
         return violations
