@@ -13,9 +13,24 @@
 
 *Never lose context, forgotten architecture decisions, or unlogged invariants again.*
 
-[Quick Install](#-quick-install) • [Core Philosophy](#-core-philosophy) • [Command Runbook](#-complete-cli-command-runbook) • [Project Layout](#-generated-project-layout) • [Architecture](#-repository-architecture)
+[What It Does](#-what-is-auto-context) • [Quick Install](#-quick-install) • [Core Philosophy](#-core-philosophy) • [Command Runbook](#-complete-cli-command-runbook) • [Project Layout](#-generated-project-layout) • [Architecture](#-repository-architecture)
 
 </div>
+
+---
+
+## 📖 What is Auto-Context?
+
+**Auto-Context** is an autonomous context orchestration and instruction management protocol for AI coding assistants (Antigravity, Cursor, Claude Code, Copilot, Windsurf).
+
+### The Problem It Solves:
+* **Context Bloat:** Dumping entire codebases, database schemas, and 500 lines of error logs into a giant context file burns 10,000+ tokens on *every single prompt*.
+* **AI Amnesia:** When you switch sessions or start a new chat, the AI forgets architectural invariants, port setups, and coding guidelines unless repeatedly reminded.
+
+### How Auto-Context Works (The 3 Context Tiers):
+1. **Executive Hub (.agents/context.md):** A lightweight macro routing index loaded at session boot so the AI immediately knows your active stack, ports, and operations runbook without burning tokens.
+2. **Continuous Rules (.agents/rules/ & AGENTS.md):** Standing guardrails injected into the prompt context on **every chat turn** to enforce security boundaries, clean code standards, and doc sync.
+3. **Adaptive Satellites & Skills (.agents/context/ & .agents/skills/):** Loaded **on-demand** only when a task requires them (e.g. database schema migrations, route implementations, or Docker deployments).
 
 ---
 
