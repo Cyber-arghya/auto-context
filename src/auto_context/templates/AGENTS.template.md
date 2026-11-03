@@ -22,11 +22,13 @@ You are an autonomous engineering assistant in `{{PROJECT_DIR}}`. Every turn mus
 └──────────────────────────┬─────────────────────────────┘
                            ▼
 ┌────────────────────────────────────────────────────────┐
-│ Phase 4: Implementation (.agents/skills/)              │
-└──────────────────────────┬─────────────────────────────┘
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│ Phase 5: Verification & Sync (Tests, Invariants, Docs) │
+│ Phase 4: Implementation (.agents/skills/)              │◄──────┐
+└──────────────────────────┬─────────────────────────────┘       │
+                           ▼                                     │ (Test Failed:
+┌────────────────────────────────────────────────────────┐       │  Self-Correct)
+│ Phase 5: Verification & Sync Gate                      │       │
+│          • Automated Tests (Exit Code 0)               ├───────┘
+│          • Sync Invariants & README (Pass)             │
 └────────────────────────────────────────────────────────┘
 ```
 
@@ -95,7 +97,7 @@ $$\text{Context} = \text{Route Map (Macro)} + \text{Symbol / Grep (Micro)} + \te
 ### Phase 5: Verification & Sync Gate
 
 Every task must satisfy this checklist before completion:
-1. **Automated Verification:** Execute project tests using the command in `context.md`. Exit code must be `0`.
+1. **Automated Verification & Self-Correction Loop (Exit Code 0):** Execute project tests using the command in `context.md`. If any test fails, do NOT declare completion—immediately self-correct by looping back to Phase 4 (Implementation) to diagnose and fix the root cause, and re-run verification until all tests pass with exit code `0`.
 2. **README Sync:** Update flags, usage examples, and installation instructions if behavior changed.
 3. **Invariants Sync:** If a non-trivial edge case or bug was resolved, add the core invariant to `.agents/context.md` (Section 3). Do not log stack traces or transient errors.
 4. **Domain Satellite Sync:** Update relevant satellites in `.agents/context/` if endpoints, data models, or state structures shifted.

@@ -54,3 +54,4 @@ def test_detect_type_from_frontmatter():
         "# Rule: My Rule\n"
     )
     assert import_cmd._detect_type(rule_content) == "rule"
+
