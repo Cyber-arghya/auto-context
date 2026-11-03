@@ -41,7 +41,9 @@ venv.bak/
 .DS_Store
 Thumbs.db
 
-# auto-context: protected files
+# auto-context: runtime agent artifacts
+.agents/
+.gemini/
 context.local.md
 *.local.md
 AGENTS.md.bak
