@@ -413,7 +413,7 @@ auto-context/
 │           ├── rules/               # Canonical domain rules (code-standards, security, etc.)
 │           ├── skills/              # Canonical skills (docker-ops, git-workflow, etc.)
 │           └── *.template.md        # Core scaffolds (AGENTS, context, project-goal)
-├── tests/                           # Complete automated test suite (22 unit & SSOT tests)
+├── tests/                           # Complete automated test suite (27 unit, sharing & SSOT tests)
 ├── install.sh                       # 1-Click universal installer (Linux / WSL2 / macOS)
 ├── install.ps1                      # 1-Click universal installer (Windows PowerShell)
 ├── setup.bat                        # Double-clickable Windows setup
