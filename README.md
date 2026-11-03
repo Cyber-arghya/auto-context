@@ -129,21 +129,42 @@ curl -sSL https://raw.githubusercontent.com/Cyber-arghya/auto-context/main/insta
 ## 💡 Core Philosophy
 
 ### 1. Hub & Satellite Context Architecture
-Dumping routes, schemas, credentials, and runbooks into a single monolithic context file burns thousands of tokens every single turn. Auto-Context enforces a clean, modular structure:
+Dumping routes, schemas, credentials, and runbooks into a single monolithic context file burns thousands of tokens every single turn. Auto-Context enforces a clean, modular **Hub & Satellite** architecture powered by progressive disclosure:
 
 ```text
 your-project/
 ├── .agents/
-│   ├── context.md                <─── Executive Context Hub (Compact system routing & invariants)
-│   ├── project-goal.md           <─── North Star, goals, active milestones & ADRs
-│   ├── context/                  <─── Adaptive Satellites (Loaded on-demand)
+│   ├── context.md                <─── Executive Context Hub (Compact macro routing & invariants)
+│   ├── project-goal.md           <─── North Star, active milestones, anti-goals & ADRs
+│   ├── context/                  <─── Stack-Adaptive Satellites (Loaded on-demand)
 │   │   ├── routes.md             (API Endpoints & UI Page Map — loaded for route tasks)
 │   │   └── schema.md             (Database Schemas & Models — loaded for DB tasks)
 │   ├── rules/                    <─── Domain Rules (Continuous constitutional guardrails)
+│   │   ├── code-standards.md     (Clean code, defensive patterns, mandatory feature tests)
+│   │   ├── security-boundaries.md(Zero secret leakage, sandbox boundaries)
+│   │   └── readme-docs-sync.md   (Mandatory documentation & CLI sync)
 │   └── skills/                   <─── Operational Skills (On-demand procedural runbooks)
+│       ├── auto-context/         (Context maintenance, memory sync & promotion SOPs)
+│       ├── docker-ops/           (Multi-stage containerization & compose management)
+│       ├── git-workflow/         (Conventional commits, branch safety & releases)
+│       └── feature-verification/ (Structured test execution & verification reporting)
 ├── AGENTS.md                     <─── Universal standing instructions (Core Execution Loop)
 └── GEMINI.md                     <─── Antigravity / Gemini standing instructions
 ```
+
+#### How the Hub & Satellite Pattern Works:
+1. **The Executive Hub (`.agents/context.md`):**
+   - **Strict Token Budget (< 80 lines / ~400 tokens):** Never allows unbounded bloat. Contains only high-level macro metadata: Project Archetype, runtime toolchains, standardized operations commands (build, lint, test, run), and active failure invariants.
+   - **Archetype-Adaptive:** Automatically marks network tables as `N/A` for CLI and library projects, keeping the base token footprint minimal.
+2. **The North Star & Scope Gatekeeper (`.agents/project-goal.md`):**
+   - Outlines the core mission, immediate priorities, out-of-scope boundaries (anti-goals), and architectural decision records (ADRs).
+   - Serves as the first gate (Phase 0) before any code is written.
+3. **Adaptive Satellites (`.agents/context/*.md`):**
+   - Deep-domain maps (e.g. `routes.md` for web endpoints, `schema.md` for ORMs and databases).
+   - **Progressive Disclosure:** Kept completely out of the default prompt context. The AI reads them *only* when the active prompt specifically targets that domain, saving 80%+ tokens per turn.
+4. **Strict Idempotency Proof ($f(f(x)) = f(x)$):**
+   - Running context sync or generation commands 1 time or 100 times produces the exact same deterministic state.
+   - User-written custom rules, manual edits outside anchored blocks, and `.env` secrets remain 100% untouched.
 
 ### 2. Zero Dead Logs & The Brutal Truth Filter
 - **Zero Bug Diaries:** Chronological diaries of trivial solved bugs waste context tokens. Git history already records past commits!
