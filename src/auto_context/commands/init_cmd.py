@@ -116,6 +116,59 @@ def detect_stack(project_dir: Path) -> tuple[str, str]:
     return "General / Multi-stack", "Not detected"
 
 
+def detect_archetype(project_dir: Path, stack: str, framework: str) -> str:
+    """Detect project archetype (CLI / Automation, Web / Fullstack, Backend API, Library / SDK)."""
+    combined = ""
+    for manifest in ("pyproject.toml", "package.json", "Cargo.toml", "go.mod", "requirements.txt"):
+        p = project_dir / manifest
+        if p.exists():
+            combined += p.read_text(encoding="utf-8", errors="ignore").lower()
+
+    if any(k in combined for k in ("project.scripts", "console_scripts", '"bin":', "typer", "click", "argparse", "commander", "yargs", "oclif", "clap")):
+        return "CLI / Automation"
+
+    if any(k in combined for k in ("next", "nuxt", "remix", "sveltekit", "astro", "react", "vue", "vite")):
+        return "Web / Fullstack"
+
+    if any(k in combined for k in ("fastapi", "flask", "django", "express", "nest", "koa", "hono", "gin", "fiber", "actix")) or framework in ("FastAPI", "Django", "Flask", "Express", "NestJS"):
+        return "Backend API"
+
+    if (project_dir / "docker-compose.yml").exists() or (project_dir / "compose.yaml").exists() or (project_dir / "Dockerfile").exists():
+        if not (project_dir / "src").exists():
+            return "Infra / DevOps"
+
+    if (project_dir / "src").exists():
+        return "Library / SDK"
+
+    return "General / Standalone"
+
+
+def render_adaptive_section_1(archetype: str, project_name: str) -> str:
+    """Render Section 1 tailored strictly to the project archetype (no ghost tables)."""
+    if archetype in ("CLI / Automation", "Library / SDK", "General / Standalone"):
+        return (
+            "## Section 1: Runtime Configuration & Interface\n\n"
+            f"- **Execution Mode:** {archetype} (Zero background network listeners)\n"
+            f"- **Config Storage:** `.env` or `~/.config/{project_name}/config.json`\n"
+            "- **Key Flags / Envs:**\n"
+            "  - `DEBUG` / `LOG_LEVEL`: Controls verbosity (`info`, `debug`, `trace`).\n"
+            "  - `CACHE_DIR`: Local disk cache or temporary build directory."
+        )
+    return (
+        "## Section 1: Network & Config Vault\n\n"
+        "### Service Endpoints\n"
+        "| Service / Dependency | Host / Base URL | Default Port | Config Key | Health Check / Protocol |\n"
+        "| :--- | :--- | :--- | :--- | :--- |\n"
+        "| **Primary App** | `localhost` | `3000` | `PORT=3000` | `http://localhost:3000/api/health` |\n"
+        "| **Database** | `127.0.0.1` | `5432` | `DATABASE_URL` | PostgreSQL 16 (via Docker) |\n\n"
+        "### Runtime Configuration & Local Paths\n"
+        "- **Config Storage:** `.env` (derived from `.env.example`)\n"
+        "- **Key Flags / Envs:**\n"
+        "  - `PORT`: Service listen port (default: 3000).\n"
+        "  - `DATABASE_URL`: Database connection string."
+    )
+
+
 # ── .gitignore helper ─────────────────────────────────────────────────────────
 
 def _ensure_global_gitignore(entries: list[str]) -> None:
@@ -202,10 +255,13 @@ def init(
     date_now = date.today().isoformat()
     templates = get_templates_dir()   # importlib.resources-safe path
 
+    archetype = detect_archetype(project_dir, stack, framework)
+    section_1 = render_adaptive_section_1(archetype, project_name)
+
     console.print(Panel(
         f"[bold cyan]🚀 Auto-Context: Initializing Autonomous Context Manager[/]\n"
         f"[yellow]   Target:[/] {project_name} ({project_dir})\n"
-        f"[cyan]   Stack: [/] {stack} ([dim]{framework}[/])",
+        f"[cyan]   Stack: [/] {stack} ([dim]{framework}[/]) — [bold green]{archetype}[/]",
         border_style="cyan",
     ))
 
@@ -217,6 +273,8 @@ def init(
         "PROJECT_DIR":  str(project_dir),
         "STACK":        stack,
         "FRAMEWORK":    framework,
+        "ARCHETYPE":    archetype,
+        "SECTION_1_CONTENT": section_1,
         "DATE_NOW":     date_now,
     }
 

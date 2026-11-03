@@ -9,7 +9,7 @@
 
 ## Section 0: Project Archetype & Metadata
 
-- **Project Archetype:** `[ Web / Fullstack | Backend API | CLI / Automation | Library / SDK | Desktop / Mobile | Infra / DevOps ]`
+- **Project Archetype:** {{ARCHETYPE}}
 - **Primary Runtime / Toolchain:** {{STACK}} ({{FRAMEWORK}})
 - **Entry Points:**
   - Main Runtime: `src/` (e.g. `cli.py`, `main.py`, `index.ts`, `lib.rs`, `main.go`)
@@ -17,26 +17,7 @@
 
 ---
 
-## Section 1: Network & Config Vault (Conditional)
-
-<!-- 
-RULE: 
-- For Web / API / Microservices: Record host, ports, and healthcheck endpoints.
-- For CLI / Library / Standalone Scripts: Mark table as "N/A" and list configuration flags/paths only.
--->
-
-### Service Endpoints (Web / API / Service Archetype Only)
-| Service / Dependency | Host / Base URL | Default Port | Config Key | Health Check / Protocol |
-| :--- | :--- | :--- | :--- | :--- |
-| **Primary App** | `localhost` | `3000` | `PORT=3000` | `http://localhost:3000/api/health` |
-| **Database** | `127.0.0.1` | `5432` | `DATABASE_URL` | PostgreSQL 16 (via Docker) |
-<!-- If CLI or Library, replace table above with: "N/A - Standalone execution, no network listeners." -->
-
-### Runtime Configuration & Local Paths
-- **Config Storage:** `.env` (derived from `.env.example`) or `~/.config/{{PROJECT_NAME}}/config.json`
-- **Key Flags / Envs:**
-  - `DEBUG` / `LOG_LEVEL`: Controls verbosity (`info`, `debug`, `trace`).
-  - `CACHE_DIR`: Local disk cache or temporary build directory.
+{{SECTION_1_CONTENT}}
 
 ---
 

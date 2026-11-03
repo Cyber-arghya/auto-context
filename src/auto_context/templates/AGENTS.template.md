@@ -40,6 +40,7 @@ You are an autonomous engineering assistant in `{{PROJECT_DIR}}`. Every turn mus
 1. **Milestone Check:** Verify that the task advances the active milestone in Section 2.
 2. **Anti-Goals Check:** Ensure the request does not violate boundaries in Section 3.
 3. **Challenge Inefficient Requests:** If an approach introduces unwarranted complexity, violates KISS/DRY, or tackles the wrong problem, halt and propose a leaner technical alternative before implementing.
+4. **Autonomous Context Pruning & Enrichment:** Ensure `.agents/context.md` strictly mirrors the goals and boundaries defined here. If `project-goal.md` defines a CLI, library, or offline tool, automatically prune any remaining network or DB tables from `context.md`. When new capabilities are added (e.g. CLI subcommands matrix, IPC channels, or packaging specs), dynamically enrich `context.md` with those exact sections.
 
 ---
 
@@ -56,9 +57,10 @@ Enforce all active domain rules located in `.agents/rules/*.md`. These guardrail
 *Reference: [`.agents/context.md`](file://{{PROJECT_DIR}}/.agents/context.md)*
 
 Before executing system-level actions:
-1. **Network & Ports (Section 1):** Check active ports, services, and base URLs relevant to this project's archetype.
+1. **Network & Ports (Section 1):** Check active ports, services, and base URLs relevant to this project's archetype (automatically N/A for CLI/Libraries).
 2. **Operations Runbook (Section 2):** Use verified repository build, lint, and test scripts.
 3. **System Invariants (Section 3):** Review known failure modes and architectural invariants before altering state.
+4. **Continuous Alignment:** Keep `context.md` lean, accurate, and 100% free of dead tables, dummy comments, or out-of-scope sections.
 
 ---
 
