@@ -80,8 +80,8 @@ Auto-Context establishes a deterministic, multi-phase execution loop that every 
    - **Strict Token Budget (< 80 lines / ~400 tokens):** Serves as an executive routing index containing the project archetype, active runtime toolchain, verified runbook commands (build, lint, test), and failure invariants.
 
 4. **Phase 3: Targeted Discovery & Precision Reads**
-   - **Zero Bulk Reading:** Prohibits dumping 50+ files into context. Follows the precision formula:
-     $$\text{Precision Context} = \text{Macro Route Map} + \text{Grep / Symbol Search} + \text{Targeted Range Read (\#L30-L70)}$$
+   - **Zero Bulk Reading:** Prohibits dumping 50+ files into context. Follows the precision formula (reading targeted line ranges like `#L30-L70`):
+     $$\text{Precision Context} = \text{Macro Route Map} + \text{Grep / Symbol Search} + \text{Targeted Range Read}$$
    - Specialised satellites (`routes.md`, `schema.md`) are loaded strictly on-demand when relevant.
 
 5. **Phase 4: Dynamic Skills Execution (`.agents/skills/*/SKILL.md`)**
