@@ -9,12 +9,18 @@ from auto_context.commands import init_cmd
 def test_init_scaffolds_complete_workspace(tmp_path: Path):
     init_cmd.init(target=tmp_path)
 
+    # Core required artifacts
     assert (tmp_path / ".agents" / "context.md").exists()
+    assert (tmp_path / ".agents" / "project-goal.md").exists(), "project-goal.md must be scaffolded"
     assert (tmp_path / "AGENTS.md").exists()
     assert (tmp_path / "GEMINI.md").exists()
     assert (tmp_path / ".agents" / "rules" / "code-standards.md").exists()
     assert (tmp_path / ".agents" / "skills" / "docker-ops" / "SKILL.md").exists()
     assert (tmp_path / ".gitignore").exists()
+
+    # Zero Ghost Files Guarantee
+    assert not (tmp_path / ".agents" / "context" / "gotchas.md").exists(), "gotchas.md must not be created as separate satellite"
+    assert not (tmp_path / "context.local.md").exists(), "context.local.md must not exist"
 
 
 def test_rule_creation_and_collision_guard(tmp_path: Path):

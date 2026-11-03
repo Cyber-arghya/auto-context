@@ -52,3 +52,17 @@ def test_no_legacy_local_in_rules():
     assert sec_rule.exists()
     content = sec_rule.read_text(encoding="utf-8")
     assert "context.local.md" not in content, "context.local.md must not be referenced in security-boundaries.md"
+
+
+def test_no_dead_satellites_or_ghost_links_in_templates():
+    """Ensure canonical templates do not contain dead satellite references or ghost files."""
+    agents_tmpl = TEMPLATES_DIR / "AGENTS.template.md"
+    assert agents_tmpl.exists()
+    agents_content = agents_tmpl.read_text(encoding="utf-8")
+    assert "gotchas.md" not in agents_content, "gotchas.md reference must not exist in AGENTS.template.md"
+
+    context_tmpl = TEMPLATES_DIR / "context.template.md"
+    assert context_tmpl.exists()
+    context_content = context_tmpl.read_text(encoding="utf-8")
+    assert "gotchas.md" not in context_content, "gotchas.md reference must not exist in context.template.md"
+    assert "context.local.md" not in context_content, "context.local.md must not exist in context.template.md"
