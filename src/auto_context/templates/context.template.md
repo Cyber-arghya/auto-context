@@ -15,13 +15,19 @@
 | **Network Ports** | `None detected` | Runtime / Discovered |
 | **Runtime Secrets** | `.env` | Protected by .gitignore |
 
-## 2. Stack & Adaptive Satellites
+## 2. Satellites & On-Demand Dispatch Directory
 
 * **Primary Stack:** {{STACK}} ({{FRAMEWORK}})
-* **Project Goals & ADR:** [`.agents/project-goal.md`](file://{{PROJECT_DIR}}/.agents/project-goal.md) — North Star, roadmap & architecture decisions
-* **Satellites Directory:** [`.agents/context/`](file://{{PROJECT_DIR}}/.agents/context/)
-  - **Critical Gotchas:** [`gotchas.md`](file://{{PROJECT_DIR}}/.agents/context/gotchas.md) — Architecture invariants & traps
-  - **Adaptive Satellites:** Maintained on-demand as project scales (`routes.md` for APIs/pages, `schema.md` for database models)
+* **Satellites Root:** [`.agents/`](file://{{PROJECT_DIR}}/.agents/)
+
+> 🧭 **Progressive Disclosure Rule:** Do NOT bulk-read satellite files. Inspect the specific satellite file ONLY when your active task matches its trigger condition:
+
+| Domain / Intent | When to Read (Task Triggers) | Target Satellite File |
+| :--- | :--- | :--- |
+| **Architecture Traps & Invariants** | Before modifying architecture, ports, state, or build pipelines | [`gotchas.md`](file://{{PROJECT_DIR}}/.agents/context/gotchas.md) |
+| **API Endpoints & UI Pages** | When creating, modifying, or querying routes, endpoints, or UI views | [`routes.md`](file://{{PROJECT_DIR}}/.agents/context/routes.md) |
+| **Database Schemas & Models** | When modifying database tables, ORM models, or migrations | [`schema.md`](file://{{PROJECT_DIR}}/.agents/context/schema.md) |
+| **Project Roadmap & ADR** | When aligning features with long-term goals or architectural decisions | [`project-goal.md`](file://{{PROJECT_DIR}}/.agents/project-goal.md) |
 
 ## 3. Operations Runbook
 
