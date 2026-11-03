@@ -390,38 +390,76 @@ Running `init-context` inside any project establishes a clean 5-tier architectur
 
 ## 📦 Repository Architecture
 
-Auto-Context uses a **Single Source of Truth (SSOT)** design with zero duplicate directories:
+Auto-Context uses a strict **Single Source of Truth (SSOT)** design. There are zero duplicate directories between the CLI package and Antigravity plugins—all templates, rules, and skills originate from `src/auto_context/templates/`:
 
 ```text
 auto-context/
-├── pyproject.toml                   # Modern PEP 517/621 package configuration
+├── .github/
+│   └── workflows/
+│       ├── release.yml              # Automated PyPI OIDC & GitHub Release on v* tags
+│       └── test.yml                 # Multi-platform CI testing matrix (Linux, Windows, macOS)
 ├── src/
 │   └── auto_context/
-│       ├── __init__.py
-│       ├── main.py                  # Root CLI entrypoint & flag router
-│       ├── config.py                # Centralized paths (~/.auto-context, ~/.gemini)
-│       ├── security.py              # Zero-Bypass secret scanner & credential auditor
+│       ├── __init__.py              # Package version & UTF-8 stream initialization
+│       ├── main.py                  # Root CLI entrypoint & subcommand dispatcher
+│       ├── config.py                # Global paths (~/.auto-context, ~/.gemini) & indicators
+│       ├── security.py              # Zero-Bypass secret scanner (<10MB guard & key auditor)
 │       ├── commands/
-│       │   ├── init_cmd.py          # Project scaffolding & rule/skill creation
-│       │   ├── memory.py            # Central private git repo brain management
-│       │   ├── mcp.py               # Native JSON MCP registry & runner selector
-│       │   ├── share.py             # Granular Gist publishing via gh / httpx
-│       │   ├── import_cmd.py        # Remote URL / Gist import & collision guard
+│       │   ├── init_cmd.py          # Scaffolding, stack detector, rule, skill & promote
+│       │   ├── memory.py            # Central private git repo brain management & harvester
+│       │   ├── mcp.py               # Native JSON MCP registry with .bak corruption recovery
+│       │   ├── share.py             # Granular Gist publishing via gh CLI / REST API fallback
+│       │   ├── import_cmd.py        # Remote Gist/URL importer with collision guard
 │       │   └── update_cmd.py        # Modular updater & plugin asset synchronizer
-│       └── templates/               # 🌟 CANONICAL SINGLE SOURCE OF TRUTH
-│           ├── plugin.json          # Antigravity plugin manifest
-│           ├── rules/               # Canonical domain rules (code-standards, security, etc.)
-│           ├── skills/              # Canonical skills (docker-ops, git-workflow, etc.)
-│           └── *.template.md        # Core scaffolds (AGENTS, context, project-goal)
-├── tests/                           # Complete automated test suite (27 unit, sharing & SSOT tests)
-├── install.sh                       # 1-Click universal installer (Linux / WSL2 / macOS)
+│       └── templates/               # 🌟 CANONICAL SINGLE SOURCE OF TRUTH (SSOT)
+│           ├── plugin.json          # Antigravity plugin manifest (v1.5.0)
+│           ├── AGENTS.template.md   # Universal standing instructions & Core Execution Loop
+│           ├── context.template.md  # Executive Context Hub (<80 lines) & failure invariants
+│           ├── project-goal.template.md # North Star, active milestones, anti-goals & ADR
+│           ├── rule.template.md     # Domain rule scaffold template
+│           ├── skill.template.md    # Operational skill scaffold template
+│           ├── profile.template.md  # Central memory developer profile scaffold
+│           ├── mcp_config.template.json # Stdio/remote MCP server registry stub
+│           ├── rules/               # Canonical domain rules
+│           │   ├── code-standards.md      (Clean code, defensive patterns & test mandate)
+│           │   ├── security-boundaries.md (Zero secret leakage & sandbox boundaries)
+│           │   ├── readme-docs-sync.md    (Mandatory documentation & CLI sync)
+│           │   └── registry.json          (Instant collision detection & domain index)
+│           └── skills/              # Canonical operational skills
+│               ├── auto-context/          (Context maintenance, memory sync & promotion)
+│               ├── browser-testing/       (Automated web UI & endpoint verification)
+│               ├── docker-ops/            (Multi-stage containerization & compose SOPs)
+│               ├── feature-verification/  (Structured test execution & verification report)
+│               ├── git-workflow/          (Conventional commits, branch safety & releases)
+│               └── server-diagnostics/    (System health, RAM/CPU & open port diagnostics)
+├── tests/                           # Complete test suite (27 tests across 8 suites)
+│   ├── run_tests.py                 # Zero-dependency test runner with rich terminal reporting
+│   ├── test_idempotency.py          # Deterministic re-run & zero-drift verification
+│   ├── test_init.py                 # Scaffolding, rule append & promotion verification
+│   ├── test_mcp.py                  # Presets, JSON persistence & .env placeholder tests
+│   ├── test_memory.py               # Central memory git lifecycle & reset tests
+│   ├── test_security.py             # Secret patterns, prohibited extensions & ignore checks
+│   ├── test_sharing.py              # Frontmatter detection, Gist URL resolution & item finding
+│   ├── test_ssot.py                 # Single source of truth & zero unrendered {{...}} placeholders
+│   └── test_update.py               # Semantic version parsing & non-breaking update safety
 ├── install.ps1                      # 1-Click universal installer (Windows PowerShell)
-├── setup.bat                        # Double-clickable Windows setup
-├── uninstall.sh                     # Clean uninstaller for POSIX
+├── install.sh                       # 1-Click universal installer (Linux / WSL2 / macOS)
+├── setup.bat                        # Double-clickable Windows setup helper
 ├── uninstall.ps1                    # Clean uninstaller for Windows
+├── uninstall.sh                     # Clean uninstaller for POSIX
+├── pyproject.toml                   # Modern PEP 517/621 package build configuration
 ├── LICENSE                          # MIT License
-└── README.md                        # Documentation & Runbook
+└── README.md                        # Documentation & Complete Runbook
 ```
+
+### Architectural Principles
+
+1. **Single Source of Truth (SSOT):**
+   - The CLI package and global Antigravity plugins share the exact same template files inside `src/auto_context/templates/`. Assets are never duplicated across directories.
+2. **Zero-Bypass Security Gate:**
+   - [`security.py`](file://src/auto_context/security.py) acts as a strict firewall: private keys, API tokens (`sk-...`, `AIza...`, `ghp_...`), and prohibited sensitive files (`.env`, `.pem`) are audited and blocked *before* any git commit, push, or Gist sharing operation.
+3. **Idempotent Scaffolding ($f(f(x)) = f(x)$):**
+   - Running `init-context` once or 100 times produces the exact same deterministic output. Custom user notes and rules outside anchored blocks remain completely intact.
 
 ---
 
