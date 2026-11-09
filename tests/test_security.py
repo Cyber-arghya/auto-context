@@ -104,3 +104,30 @@ def test_node_modules_and_venv_ignored(tmp_path: Path):
     violations = security.audit_path(tmp_path)
     # Both node_modules and .venv must be completely ignored
     assert len(violations) == 0
+
+
+def test_audit_cli_json(tmp_path: Path):
+    """Test machine-readable JSON output for security audit command."""
+    import json
+    from typer.testing import CliRunner
+    from auto_context.main import app
+
+    runner = CliRunner()
+    # 1. Clean workspace
+    clean_file = tmp_path / "hello.py"
+    clean_file.write_text("print('hello')", encoding="utf-8")
+    res_clean = runner.invoke(app, ["audit", "--target", str(tmp_path), "--json"])
+    assert res_clean.exit_code == 0
+    clean_data = json.loads(res_clean.output)
+    assert clean_data["clean"] is True
+    assert clean_data["violations_count"] == 0
+
+    # 2. Workspace with secret violation
+    bad_file = tmp_path / ".env"
+    bad_file.write_text("API_KEY=123", encoding="utf-8")
+    res_bad = runner.invoke(app, ["audit", "--target", str(tmp_path), "--json"])
+    assert res_bad.exit_code == 1
+    bad_data = json.loads(res_bad.output)
+    assert bad_data["clean"] is False
+    assert bad_data["violations_count"] == 1
+

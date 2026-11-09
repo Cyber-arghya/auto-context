@@ -286,9 +286,30 @@ def remove_mcp(
 def list_mcp(
     target: Annotated[Path | None, typer.Option("--target", "-t")] = None,
     global_: Annotated[bool, typer.Option("--global", "-g")] = False,
+    json_output: Annotated[bool, typer.Option("--json", help="Output server list as JSON.")] = False,
 ) -> None:
     """List all registered MCP servers across active configs."""
     project_dir = (target or Path.cwd()).resolve()
+
+    if json_output:
+        all_servers: dict[str, dict] = {}
+        for cfg_path in _mcp_paths(project_dir, global_):
+            if not cfg_path.exists():
+                continue
+            data = _load_mcp_config(cfg_path)
+            servers = data.get("mcpServers") if isinstance(data.get("mcpServers"), dict) else {}
+            for sname, cfg in servers.items():
+                if isinstance(cfg, dict):
+                    server_info = dict(cfg)
+                    server_info["source"] = str(cfg_path)
+                    all_servers[sname] = server_info
+        import json
+        payload = {
+            "count": len(all_servers),
+            "servers": all_servers,
+        }
+        print(json.dumps(payload, indent=2))
+        return
 
     found_any = False
     for cfg_path in _mcp_paths(project_dir, global_):

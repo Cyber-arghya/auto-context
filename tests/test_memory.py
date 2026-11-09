@@ -80,5 +80,38 @@ def test_memory_harvest_recursive_skill_tree(tmp_path: Path):
         assert (fake_mem / "skills" / "custom-deploy" / "scripts" / "deploy.sh").read_text(encoding="utf-8") == "#!/bin/bash\necho deploy"
 
 
+def test_memory_status_json_output(tmp_path: Path):
+    """Test machine-readable JSON output for memory status."""
+    import json
+    from typer.testing import CliRunner
+    from auto_context.main import app
+
+    runner = CliRunner()
+    # 1. Uninitialized memory status as JSON
+    with patch.object(memory, "MEMORY_DIR", tmp_path / "non_existent"):
+        result = runner.invoke(app, ["memory", "status", "--json"])
+        assert result.exit_code == 0
+        parsed = json.loads(result.output)
+        assert parsed["initialized"] is False
+        assert parsed["rules_count"] == 0
+
+    # 2. Initialized memory status as JSON
+    fake_mem = tmp_path / "active_memory"
+    (fake_mem / "rules").mkdir(parents=True)
+    (fake_mem / "skills" / "my-skill").mkdir(parents=True)
+    (fake_mem / "rules" / "rule1.md").write_text("# Rule 1", encoding="utf-8")
+
+    with patch.object(memory, "MEMORY_DIR", fake_mem):
+        result = runner.invoke(app, ["memory", "status", "--json"])
+        assert result.exit_code == 0
+        parsed = json.loads(result.output)
+        assert parsed["initialized"] is True
+        assert parsed["rules_count"] == 1
+        assert parsed["skills_count"] == 1
+        assert "rule1.md" in parsed["rules"]
+        assert "my-skill" in parsed["skills"]
+
+
+
 
 

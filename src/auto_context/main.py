@@ -42,6 +42,46 @@ app.command("import")(import_cmd.import_item)
 app.command("update")(update_cmd.update)
 
 
+def audit(
+    target: Annotated[Path | None, typer.Option("--target", "-t", help="Directory or file to audit.")] = None,
+    json_output: Annotated[bool, typer.Option("--json", help="Output audit findings as JSON.")] = False,
+) -> None:
+    """Scan workspace or files for leaked credentials, secrets, and sensitive tokens."""
+    from auto_context import security
+    target_path = (target or Path.cwd()).resolve()
+    violations = security.audit_path(target_path, single_file=target_path.is_file())
+    if json_output:
+        import json
+        payload = {
+            "target": str(target_path),
+            "clean": len(violations) == 0,
+            "violations_count": len(violations),
+            "violations": [
+                {
+                    "file": str(v.file),
+                    "line": v.line,
+                    "pattern": v.pattern,
+                    "preview": v.preview,
+                }
+                for v in violations
+            ],
+        }
+        print(json.dumps(payload, indent=2))
+        if violations:
+            raise typer.Exit(1)
+        return
+
+    if not violations:
+        console.print(f"[bold green]✨ Security audit passed:[/] No secrets detected in {target_path}")
+        return
+
+    security.print_report(violations)
+    raise typer.Exit(1)
+
+
+app.command("audit")(audit)
+
+
 @app.callback(invoke_without_command=True)
 def root(
     ctx: typer.Context,
@@ -64,6 +104,7 @@ def root(
     append: Annotated[bool, typer.Option("--append", "-a", help="Append to existing domain rule.")] = False,
     guideline: Annotated[str | None, typer.Option("--guideline", help="Guideline text to append to rule.")] = None,
     dry_run: Annotated[bool, typer.Option("--dry-run", "-d", help="Preview without writing.")] = False,
+    json_output: Annotated[bool, typer.Option("--json", help="Output machine-readable JSON format.")] = False,
     version: bool = typer.Option(False, "--version", "-v", help="Show version and exit."),
 ) -> None:
     """
@@ -98,7 +139,7 @@ def root(
         return
 
     if list_mcp:
-        mcp.list_mcp(target=target, global_=global_)
+        mcp.list_mcp(target=target, global_=global_, json_output=json_output)
         return
 
     if remove_mcp:

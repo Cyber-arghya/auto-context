@@ -105,3 +105,36 @@ def test_posix_path_normalization_in_scaffolding(tmp_path: Path):
     assert "\\" not in content.split("file://")[1].split()[0]
 
 
+def test_list_mcp_json_output(tmp_path: Path):
+    """Test machine-readable JSON output for mcp list."""
+    from typer.testing import CliRunner
+    from auto_context.main import app
+
+    gemini_cfg = tmp_path / ".gemini" / "mcp_config.json"
+    gemini_cfg.parent.mkdir(parents=True)
+    gemini_cfg.write_text(json.dumps({
+        "mcpServers": {
+            "sqlite": {
+                "command": "uvx",
+                "args": ["mcp-server-sqlite", "--db", "test.db"]
+            }
+        }
+    }), encoding="utf-8")
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["mcp", "list", "--target", str(tmp_path), "--json"])
+    assert result.exit_code == 0
+    parsed = json.loads(result.output)
+    assert parsed["count"] == 1
+    assert "sqlite" in parsed["servers"]
+    assert parsed["servers"]["sqlite"]["command"] == "uvx"
+
+    # Also test root callback --list-mcp --json
+    result_flag = runner.invoke(app, ["--list-mcp", "--json", "--target", str(tmp_path)])
+    assert result_flag.exit_code == 0
+    parsed_flag = json.loads(result_flag.output)
+    assert parsed_flag["count"] == 1
+    assert "sqlite" in parsed_flag["servers"]
+
+
+

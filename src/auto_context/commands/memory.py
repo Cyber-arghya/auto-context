@@ -541,33 +541,70 @@ def memory_reset(
 # ── status ────────────────────────────────────────────────────────────────────
 
 @app.command("status")
-def memory_status() -> None:
+def memory_status(
+    json_output: Annotated[bool, typer.Option("--json", help="Output status as JSON.")] = False,
+) -> None:
     """Show status of the central memory brain."""
-    console.print(Panel(
-        "[bold green]🧠 Central Memory Status[/]",
-        border_style="cyan",
-    ))
+    if not MEMORY_DIR.exists():
+        if json_output:
+            import json
+            print(json.dumps({
+                "initialized": False,
+                "location": str(MEMORY_DIR),
+                "remote": None,
+                "rules_count": 0,
+                "skills_count": 0,
+                "rules": [],
+                "skills": [],
+            }, indent=2))
+            return
+        console.print(Panel(
+            "[bold green]🧠 Central Memory Status[/]",
+            border_style="cyan",
+        ))
+        console.print("  [yellow][!] Central memory not initialized.[/]")
+        console.print("      Run: [cyan]init-context memory init[/]")
+        return
 
     try:
-        if not MEMORY_DIR.exists():
-            console.print("  [yellow][!] Central memory not initialized.[/]")
-            console.print("      Run: [cyan]init-context memory init[/]")
-            return
-
         remote = _git(MEMORY_DIR, "remote", "get-url", "origin", check=False).stdout.strip()
         rules_path = MEMORY_DIR / "rules"
         skills_path = MEMORY_DIR / "skills"
 
-        rules_count = len(list(rules_path.glob("*.md"))) if rules_path.exists() else 0
-        skills_count = len([d for d in skills_path.iterdir() if d.is_dir()]) if skills_path.exists() else 0
+        rules = [f.name for f in rules_path.glob("*.md")] if rules_path.exists() else []
+        skills = [d.name for d in skills_path.iterdir() if d.is_dir()] if skills_path.exists() else []
 
+        if json_output:
+            import json
+            print(json.dumps({
+                "initialized": True,
+                "location": str(MEMORY_DIR),
+                "remote": remote or None,
+                "rules_count": len(rules),
+                "skills_count": len(skills),
+                "rules": sorted(rules),
+                "skills": sorted(skills),
+            }, indent=2))
+            return
+
+        console.print(Panel(
+            "[bold green]🧠 Central Memory Status[/]",
+            border_style="cyan",
+        ))
         console.print(f"  [yellow]Location:[/] {MEMORY_DIR}")
         console.print(f"  [cyan]Remote:  [/] {remote or '(none)'}")
-        console.print(f"  [green]Rules:   [/] {rules_count} registered")
-        console.print(f"  [green]Skills:  [/] {skills_count} registered")
+        console.print(f"  [green]Rules:   [/] {len(rules)} registered")
+        console.print(f"  [green]Skills:  [/] {len(skills)} registered")
         console.print()
 
     except PermissionError:
+        if json_output:
+            import json
+            print(json.dumps({
+                "error": "Permission denied accessing central memory",
+                "location": str(MEMORY_DIR),
+            }, indent=2))
+            raise typer.Exit(1)
         console.print(Panel(
             f"[bold red][✗] Permission Denied Accessing Central Memory[/]\n"
             f"[yellow]   Path:[/] {MEMORY_DIR}\n\n"
@@ -576,5 +613,12 @@ def memory_status() -> None:
             border_style="red",
         ))
     except OSError as err:
+        if json_output:
+            import json
+            print(json.dumps({
+                "error": str(err),
+                "location": str(MEMORY_DIR),
+            }, indent=2))
+            raise typer.Exit(1)
         console.print(f"  [yellow][!] Central memory status warning:[/] {err}")
 
