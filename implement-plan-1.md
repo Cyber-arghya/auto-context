@@ -319,8 +319,8 @@ Execute validation hooks before concluding tasks:
 * **Primary Goal:** Eliminate the Fat Controller anti-pattern, establish a formal Domain/Service architecture, remove raw `sys.exit` calls, and eliminate silent exception swallowing.
 
 #### Action Items (Checklist)
-- [ ] **Create Domain Exception Hierarchy:** Define [`src/auto_context/core/exceptions.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/core/exceptions.py).
-- [ ] **Create Domain Entities & Protocols:** Define [`src/auto_context/core/models.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/core/models.py).
+- [x] **Create Domain Exception Hierarchy:** Define [`src/auto_context/core/exceptions.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/core/exceptions.py).
+- [x] **Create Domain Entities & Protocols:** Define [`src/auto_context/core/models.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/core/models.py).
 - [ ] **Extract Application Services:**
   - `src/auto_context/services/scaffold_service.py` (Scaffolding, `docs/` layout, git exclusion).
   - `src/auto_context/services/registry_service.py` (Rule indexing, duplicate matching).
