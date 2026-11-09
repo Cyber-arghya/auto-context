@@ -5,8 +5,9 @@ Ensures users stay synchronized with public rules, skills, and tools added to
 https://github.com/Cyber-arghya/auto-context without breaking local project context,
 custom user rules, or private memory.
 """
-from importlib.metadata import version as get_pkg_version
+from importlib.metadata import PackageNotFoundError, version as get_pkg_version
 import json
+import logging
 from pathlib import Path
 import shutil
 import subprocess
@@ -22,6 +23,7 @@ import typer
 
 from auto_context import config
 
+logger = logging.getLogger(__name__)
 console = Console()
 
 
@@ -42,12 +44,15 @@ def get_installed_version() -> str:
     for pkg in (config.PYPI_PACKAGE, "auto-context"):
         try:
             return get_pkg_version(pkg)
-        except Exception:
+        except PackageNotFoundError:
             pass
+        except Exception as exc:
+            logger.debug("Error checking package version for %s: %s", pkg, exc)
     try:
         import auto_context
         return getattr(auto_context, "__version__", "1.5.1")
-    except Exception:
+    except Exception as exc:
+        logger.debug("Error checking auto_context.__version__: %s", exc)
         return "1.5.1"
 
 
@@ -73,8 +78,8 @@ def check_upstream_version(timeout: float = 1.2) -> Optional[dict]:
                     "source": "pypi",
                     "package": config.PYPI_PACKAGE,
                 }
-    except Exception:
-        pass
+    except (urllib.error.URLError, OSError, json.JSONDecodeError, TimeoutError) as exc:
+        logger.debug("PyPI check failed: %s", exc)
 
     # 2. Fallback to GitHub Latest Release API
     try:
@@ -91,8 +96,8 @@ def check_upstream_version(timeout: float = 1.2) -> Optional[dict]:
                     "source": "github",
                     "url": data.get("html_url"),
                 }
-    except Exception:
-        pass
+    except (urllib.error.URLError, OSError, json.JSONDecodeError, TimeoutError) as exc:
+        logger.debug("GitHub check failed: %s", exc)
 
     return None
 
@@ -112,8 +117,8 @@ def get_cached_update_status(force_check: bool = False) -> Optional[dict]:
             timestamp = cached.get("timestamp", 0)
             if now - timestamp < config.UPDATE_CHECK_INTERVAL:
                 return cached
-    except Exception:
-        pass
+    except (OSError, json.JSONDecodeError) as exc:
+        logger.debug("Cache read failed: %s", exc)
 
     # Cache expired or missing — refresh
     upstream = check_upstream_version(timeout=1.2)
@@ -133,8 +138,8 @@ def get_cached_update_status(force_check: bool = False) -> Optional[dict]:
     try:
         cache_file.parent.mkdir(parents=True, exist_ok=True)
         cache_file.write_text(json.dumps(cache_data, indent=2), encoding="utf-8")
-    except Exception:
-        pass
+    except OSError as exc:
+        logger.debug("Cache write failed: %s", exc)
 
     return cache_data
 
@@ -159,9 +164,9 @@ def maybe_notify_update() -> None:
             border_style="cyan",
             title="[bold yellow]✨ Upstream Sync[/]",
         ))
-    except Exception:
+    except Exception as exc:
         # Never fail user command due to notification error
-        pass
+        logger.debug("Failed to render update notification: %s", exc)
 
 
 # ── Modular Update Implementations ───────────────────────────────────────────
@@ -177,8 +182,8 @@ def update_cli_package() -> bool:
             if res.returncode == 0:
                 console.print(f"  [green][✓] Upgraded via uv tool:[/] {config.PYPI_PACKAGE}")
                 return True
-        except Exception:
-            pass
+        except (subprocess.SubprocessError, OSError) as exc:
+            logger.debug("uv tool upgrade failed: %s", exc)
 
     # 2. pipx upgrade
     if shutil.which("pipx"):
@@ -187,8 +192,8 @@ def update_cli_package() -> bool:
             if res.returncode == 0:
                 console.print(f"  [green][✓] Upgraded via pipx:[/] {config.PYPI_PACKAGE}")
                 return True
-        except Exception:
-            pass
+        except (subprocess.SubprocessError, OSError) as exc:
+            logger.debug("pipx upgrade failed: %s", exc)
 
     # 3. pip fallback
     try:
@@ -213,7 +218,8 @@ def _download_text(url: str, timeout: float = 4.0) -> Optional[str]:
         req = urllib.request.Request(url, headers={"User-Agent": "auto-context-cli"})
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return resp.read().decode("utf-8")
-    except Exception:
+    except (urllib.error.URLError, OSError, TimeoutError) as exc:
+        logger.debug("Download text failed for %s: %s", url, exc)
         return None
 
 
@@ -404,8 +410,8 @@ def update(
     if config.UPDATE_CACHE_FILE.exists():
         try:
             config.UPDATE_CACHE_FILE.unlink()
-        except Exception:
-            pass
+        except OSError as exc:
+            logger.debug("Failed to remove cache file: %s", exc)
 
     console.print(Panel(
         "[bold green]✨ Modular update completed successfully![/]\n"

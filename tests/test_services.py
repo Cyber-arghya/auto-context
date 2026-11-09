@@ -105,3 +105,4 @@ def test_memory_service_guard(tmp_path: Path):
     except MemorySyncError:
         raised = True
     assert raised is True
+

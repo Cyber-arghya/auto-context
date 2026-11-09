@@ -59,3 +59,4 @@ class SecurityService:
         if violations:
             security.print_report(violations)
             raise SecurityViolationError(violations)
+

@@ -189,3 +189,4 @@ class ScaffoldService:
             self._write_file(mem_dest, content, force=force, dry_run=dry_run)
 
         return SkillDefinition(name=clean_name, path=dest_dir, triggers=[clean_name], content=content)
+

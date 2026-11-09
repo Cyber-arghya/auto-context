@@ -326,8 +326,8 @@ Execute validation hooks before concluding tasks:
   - `src/auto_context/services/registry_service.py` (Rule indexing, duplicate matching).
   - `src/auto_context/services/memory_service.py` (Memory harvesting, commit, push, pull).
   - `src/auto_context/services/security_service.py` (Secret scanning, audit violations).
-- [ ] **Refactor Typer Commands to Thin Controllers:** Route CLI actions through services and handle domain exceptions at the top level.
-- [ ] **Eliminate Bare `except Exception: pass`:** Introduce structured debug logging (`logger.debug`) across all non-fatal handlers.
+- [x] **Refactor Typer Commands to Thin Controllers:** Route CLI actions through services and handle domain exceptions at the top level.
+- [x] **Eliminate Bare `except Exception: pass`:** Introduce structured debug logging (`logger.debug`) across all non-fatal handlers.
 
 #### Technical Implementation Guide
 

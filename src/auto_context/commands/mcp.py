@@ -9,6 +9,7 @@ Presets: sqlite, duckdb, git, fetch, time, postgres, github, filesystem, brave
 from __future__ import annotations
 
 import json
+import logging
 import os
 from pathlib import Path
 import shlex
@@ -23,6 +24,7 @@ from rich.table import Table
 from auto_context import config
 from auto_context.config import AGENTS_SUBDIR, GEMINI_SUBDIR
 
+logger = logging.getLogger(__name__)
 app = typer.Typer(help="MCP tool registry management.")
 console = Console()
 
@@ -207,7 +209,8 @@ def add_mcp(
         if args:
             try:
                 server_cfg["args"] = shlex.split(args, posix=(sys.platform != "win32"))
-            except Exception:
+            except ValueError as exc:
+                logger.debug("shlex.split failed for args %r: %s", args, exc)
                 server_cfg["args"] = args.split()
         if env_var:
             server_cfg.setdefault("env", {})[env_var] = f"${{{env_var}}}"

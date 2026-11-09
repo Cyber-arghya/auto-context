@@ -4,6 +4,7 @@ services/registry_service.py — Service layer for rule domain registry and coll
 from __future__ import annotations
 
 import json
+import logging
 import re
 from datetime import date
 from pathlib import Path
@@ -13,6 +14,8 @@ from auto_context import config
 from auto_context.config import AGENTS_SUBDIR, get_templates_dir
 from auto_context.core.exceptions import DuplicateRuleError, ResourceConflictError
 from auto_context.core.models import RuleDefinition
+
+logger = logging.getLogger(__name__)
 
 STOP_WORDS: set[str] = {
     "about", "above", "after", "again", "against", "all", "also", "and", "any",
@@ -46,14 +49,14 @@ class RegistryService:
         if self.registry_file.exists():
             try:
                 return json.loads(self.registry_file.read_text(encoding="utf-8"))
-            except Exception:
-                pass
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.debug("Failed to read registry from %s: %s", self.registry_file, exc)
         tmpl = get_templates_dir() / "rules" / "registry.json"
         if tmpl.exists():
             try:
                 return json.loads(tmpl.read_text(encoding="utf-8"))
-            except Exception:
-                pass
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.debug("Failed to read template registry from %s: %s", tmpl, exc)
         return {"version": "1.0.0", "domains": {}}
 
     def find_duplicate(self, text_or_title: str) -> Optional[tuple[str, str, str]]:
@@ -139,3 +142,4 @@ class RegistryService:
             content += "\n"
         content += entry
         dest_file.write_text(content, encoding="utf-8")
+

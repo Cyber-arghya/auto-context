@@ -9,6 +9,7 @@ commands/import_cmd.py — Fetch and install a skill or rule from a Gist or URL.
 """
 from __future__ import annotations
 
+import logging
 import re
 import tempfile
 import time
@@ -24,6 +25,7 @@ from rich.console import Console
 from auto_context import config, security
 from auto_context.config import AGENTS_SUBDIR
 
+logger = logging.getLogger(__name__)
 console = Console()
 
 # Regex: https://gist.github.com/<user>/<id>
@@ -44,8 +46,8 @@ def _resolve_url(url: str) -> str:
             if len(parts) >= 2 and _GIST_ID_RE.match(parts[1]):
                 if len(parts) == 2 or (len(parts) >= 3 and parts[2].lower() == "raw"):
                     return f"https://gist.githubusercontent.com/{parts[0]}/{parts[1]}/raw"
-    except Exception:
-        pass
+    except (ValueError, TypeError) as exc:
+        logger.debug("Failed to parse URL %s: %s", url, exc)
     return stripped
 
 
@@ -56,8 +58,8 @@ def _fetch(url: str) -> str:
         resp = httpx.get(url, follow_redirects=True, timeout=30)
         resp.raise_for_status()
         return resp.text
-    except (ImportError, Exception):
-        pass
+    except Exception as exc:
+        logger.debug("httpx fetch failed for %s, falling back to urllib: %s", url, exc)
 
     try:
         with urllib.request.urlopen(url, timeout=30) as resp:  # noqa: S310

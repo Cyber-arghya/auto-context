@@ -5,7 +5,11 @@ All path logic is centralised here so every other module can import
 a single named constant rather than re-computing home directories.
 """
 import importlib.resources as _pkg_resources
+import logging
+import tempfile
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 def get_templates_dir() -> Path:
@@ -21,8 +25,8 @@ def get_templates_dir() -> Path:
         ref = _pkg_resources.files("auto_context").joinpath("templates")
         if isinstance(ref, Path) and ref.is_dir():
             return ref
-    except Exception:
-        pass
+    except (TypeError, FileNotFoundError, ModuleNotFoundError, AttributeError) as exc:
+        logger.debug("Package templates directory lookup failed: %s", exc)
 
     return pkg_tmpl
 
@@ -79,12 +83,13 @@ def get_cache_dir() -> Path:
         p = HOME / ".auto-context" / "cache"
         p.mkdir(parents=True, exist_ok=True)
         return p
-    except Exception:
+    except OSError as exc:
+        logger.debug("Cannot create user cache dir at %s: %s", HOME / ".auto-context" / "cache", exc)
         p = Path(tempfile.gettempdir()) / "auto-context-cache"
         try:
             p.mkdir(parents=True, exist_ok=True)
-        except Exception:
-            pass
+        except OSError as exc2:
+            logger.debug("Cannot create temp cache dir at %s: %s", p, exc2)
         return p
 
 CACHE_DIR: Path = get_cache_dir()

@@ -99,3 +99,4 @@ class MemoryService:
             raise MemorySyncError("Central memory not initialized.")
         res = self._git("pull", "--rebase", check=False)
         return res.stdout
+

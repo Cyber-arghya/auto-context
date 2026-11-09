@@ -4,7 +4,8 @@ main.py — Root Typer app and CLI entrypoint.
 Supports both modern subcommands (rule, skill, mcp, memory, share, import)
 and legacy flag compatibility (-r, -s, --add-mcp, --list-mcp, --remove-mcp).
 """
-from importlib.metadata import version as pkg_version
+from importlib.metadata import PackageNotFoundError, version as pkg_version
+import logging
 from pathlib import Path
 from typing import Annotated, Optional
 
@@ -12,6 +13,9 @@ import typer
 from rich.console import Console
 
 from auto_context.commands import init_cmd, memory, mcp, share, import_cmd, update_cmd
+from auto_context.core.exceptions import AutoContextError
+
+logger = logging.getLogger(__name__)
 
 app = typer.Typer(
     name="init-context",
@@ -67,10 +71,10 @@ def root(
     if version:
         try:
             v = pkg_version("auto-context-cli")
-        except Exception:
+        except PackageNotFoundError:
             try:
                 v = pkg_version("auto-context")
-            except Exception:
+            except PackageNotFoundError:
                 v = "1.5.1"
         console.print(f"init-context v{v}")
         raise typer.Exit()
@@ -131,6 +135,9 @@ def main() -> None:  # pragma: no cover
 
     try:
         app()
+    except AutoContextError as err:
+        console.print(f"[bold red][✗] Error:[/] {err}")
+        sys.exit(1)
     except SystemExit as e:
         if e.code == 0 and not any(arg in sys.argv for arg in ("--version", "-v", "update", "--help", "-h")):
             update_cmd.maybe_notify_update()

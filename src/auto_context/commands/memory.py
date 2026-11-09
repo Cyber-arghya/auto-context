@@ -8,6 +8,7 @@ Subcommands: init, push, pull, status
 """
 from __future__ import annotations
 
+import logging
 import re
 import shutil
 import subprocess
@@ -21,6 +22,7 @@ from rich.panel import Panel
 
 from auto_context import config, security
 
+logger = logging.getLogger(__name__)
 app = typer.Typer(help="Central memory brain management.")
 console = Console()
 
@@ -82,8 +84,8 @@ def _ensure_global_gitignore(entries: list[str]) -> None:
                     fh.write("\n# auto-context: global protected files\n")
                 fh.write("\n".join(missing) + "\n")
             console.print(f"  [green][✓] Registered Global Git Ignore:[/] {global_path.name} ({', '.join(missing)})")
-    except Exception:
-        pass
+    except (subprocess.SubprocessError, OSError) as exc:
+        logger.debug("Failed to configure global gitignore: %s", exc)
 
 
 def _has_gh() -> bool:
@@ -289,7 +291,8 @@ def memory_push(
                                 "  [?] Enter private GitHub repository name",
                                 default="auto-context-memory",
                             ).strip()
-                        except Exception:
+                        except (typer.Abort, EOFError, OSError) as exc:
+                            logger.debug("Prompt aborted: %s", exc)
                             chosen_name = repo or "auto-context-memory"
 
                         console.print(f"  [cyan][*] Creating private GitHub repository '{chosen_name}' via gh...[/]")
@@ -309,7 +312,8 @@ def memory_push(
                         console.print("  [yellow][!] GitHub CLI ('gh') not found. Reconnect a new private repository manually:[/]")
                         try:
                             chosen_url = typer.prompt("  [?] Enter new remote Git repository URL (e.g. git@github.com:user/new-repo.git)").strip()
-                        except Exception:
+                        except (typer.Abort, EOFError, OSError) as exc:
+                            logger.debug("Prompt aborted: %s", exc)
                             chosen_url = ""
                         if chosen_url:
                             _git(MEMORY_DIR, "remote", "set-url", "origin", chosen_url, check=False)

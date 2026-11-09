@@ -13,6 +13,7 @@ import json
 import os
 import shutil
 from datetime import date
+import logging
 from pathlib import Path
 from typing import Annotated, Optional
 
@@ -25,6 +26,7 @@ from auto_context.config import AGENTS_SUBDIR, GEMINI_SUBDIR, get_templates_dir
 
 import sys
 
+logger = logging.getLogger(__name__)
 console = Console()
 
 # ── Template variable substitution ────────────────────────────────────────────
@@ -111,8 +113,8 @@ def detect_stack(project_dir: Path) -> tuple[str, str]:
                     if (child / filename).exists():
                         sub_stack, sub_fw = detect_stack(child)
                         return f"{sub_stack} (in {child.name}/)", sub_fw
-    except Exception:
-        pass
+    except OSError as exc:
+        logger.debug("Child directory stack detection error in %s: %s", project_dir, exc)
 
     return "General / Multi-stack", "Not detected"
 
@@ -145,8 +147,8 @@ def _ensure_global_gitignore(entries: list[str]) -> None:
                     fh.write("\n# auto-context: global protected files\n")
                 fh.write("\n".join(missing) + "\n")
             console.print(f"  [green][✓] Registered Global Git Ignore:[/] {global_path.name} ({', '.join(missing)})")
-    except Exception:
-        pass
+    except (subprocess.SubprocessError, OSError) as exc:
+        logger.debug("Global gitignore registration failed: %s", exc)
 
 
 def _ensure_gitignore_entries(project_dir: Path, entries: list[str]) -> None:
@@ -185,8 +187,8 @@ def _untrack_zero_footprint_files(project_dir: Path, patterns: list[str]) -> Non
                     untracked.append(clean_pat)
         if untracked:
             console.print(f"  [green][✓] Untracked From Git Index:[/] {', '.join(untracked)}")
-    except Exception:
-        pass
+    except (subprocess.SubprocessError, OSError) as exc:
+        logger.debug("Git untracking failed in %s: %s", project_dir, exc)
 
 
 # ── docs/ knowledge layout ────────────────────────────────────────────────────
@@ -353,8 +355,8 @@ def init(
                 if not dry_run and hasattr(os, "chmod") and hook_file.suffix == ".sh":
                     try:
                         os.chmod(dest_hook, 0o755)
-                    except Exception:
-                        pass
+                    except OSError as exc:
+                        logger.debug("Failed to set executable bit on %s: %s", dest_hook, exc)
 
     # ── Legacy Cleanup ─────────────────────────────────────────────────────────
     legacy_local = project_dir / "context.local.md"
@@ -405,15 +407,15 @@ def _load_registry(registry_file: Path) -> dict:
         try:
             import json
             return json.loads(registry_file.read_text(encoding="utf-8"))
-        except Exception:
-            pass
+        except (json.JSONDecodeError, OSError) as exc:
+            logger.debug("Failed to read registry from %s: %s", registry_file, exc)
     tmpl = get_templates_dir() / "rules" / "registry.json"
     if tmpl.exists():
         try:
             import json
             return json.loads(tmpl.read_text(encoding="utf-8"))
-        except Exception:
-            pass
+        except (json.JSONDecodeError, OSError) as exc:
+            logger.debug("Failed to read template registry from %s: %s", tmpl, exc)
     return {"version": "1.0.0", "domains": {}}
 
 
