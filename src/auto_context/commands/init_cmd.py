@@ -299,14 +299,23 @@ def init(
     # ── Skills ───────────────────────────────────────────────────────────────
     skills_dest = project_dir / AGENTS_SUBDIR / "skills"
     for skill_dir in (templates / "skills").iterdir():
-        if skill_dir.is_dir():
-            skill_md = skill_dir / "SKILL.md"
-            if skill_md.exists():
-                _copy_if_missing(
-                    skill_md,
-                    skills_dest / skill_dir.name / "SKILL.md",
-                    force=force, dry_run=dry_run,
-                )
+        if skill_dir.is_dir() and (skill_dir / "SKILL.md").exists():
+            target_skill_dir = skills_dest / skill_dir.name
+            if not target_skill_dir.exists():
+                if dry_run:
+                    console.print(f"  [yellow][!] Dry-run:[/] Would copy skill tree {skill_dir.name} → {target_skill_dir}")
+                else:
+                    target_skill_dir.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copytree(skill_dir, target_skill_dir, dirs_exist_ok=True)
+                    console.print(f"  [green][✓] Copied Skill Tree:[/] {target_skill_dir}")
+            elif force:
+                if dry_run:
+                    console.print(f"  [yellow][!] Dry-run:[/] Would overwrite skill tree {skill_dir.name} → {target_skill_dir}")
+                else:
+                    shutil.copytree(skill_dir, target_skill_dir, dirs_exist_ok=True)
+                    console.print(f"  [green][✓] Updated Skill Tree:[/] {target_skill_dir}")
+            else:
+                console.print(f"  [yellow][*] Preserved:[/] {target_skill_dir}")
 
     # ── Executive Architecture Hub (.agents/context.md) ───────────────────────
     hub_tmpl = templates / "context.template.md"
@@ -711,14 +720,16 @@ def promote(
         console.print(f"[bold green][✓] Promoted local rule '{clean_name}' to Global Plugin and Central Memory![/]")
         promoted = True
 
-    if local_skill.exists():
-        content = local_skill.read_text(encoding="utf-8")
-        (config.GLOBAL_PLUGIN_DIR / "skills" / clean_name).mkdir(parents=True, exist_ok=True)
-        (config.GLOBAL_PLUGIN_DIR / "skills" / clean_name / "SKILL.md").write_text(content, encoding="utf-8")
+    local_skill_dir = project_dir / AGENTS_SUBDIR / "skills" / clean_name
+    if local_skill_dir.is_dir() and (local_skill_dir / "SKILL.md").exists():
+        global_skill_dir = config.GLOBAL_PLUGIN_DIR / "skills" / clean_name
+        global_skill_dir.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(local_skill_dir, global_skill_dir, dirs_exist_ok=True)
         if config.MEMORY_DIR.exists():
-            (config.MEMORY_DIR / "skills" / clean_name).mkdir(parents=True, exist_ok=True)
-            (config.MEMORY_DIR / "skills" / clean_name / "SKILL.md").write_text(content, encoding="utf-8")
-        console.print(f"[bold green][✓] Promoted local skill '{clean_name}' to Global Plugin and Central Memory![/]")
+            mem_skill_dir = config.MEMORY_DIR / "skills" / clean_name
+            mem_skill_dir.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(local_skill_dir, mem_skill_dir, dirs_exist_ok=True)
+        console.print(f"[bold green][✓] Promoted local skill tree '{clean_name}' to Global Plugin and Central Memory![/]")
         promoted = True
 
     if local_agent.exists():

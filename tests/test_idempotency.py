@@ -81,3 +81,27 @@ def test_triple_instruction_harmonization(tmp_path: Path):
     assert ".agents/hooks/validate" in gemini_content
 
 
+def test_promote_recursive_skill_tree(tmp_path: Path):
+    from unittest.mock import patch
+    from auto_context import config
+
+    fake_global = tmp_path / "fake_global"
+    fake_memory = tmp_path / "fake_memory"
+    fake_global.mkdir(parents=True)
+    fake_memory.mkdir(parents=True)
+
+    local_skill_dir = tmp_path / config.AGENTS_SUBDIR / "skills" / "k8s-ops"
+    res_dir = local_skill_dir / "resources"
+    res_dir.mkdir(parents=True)
+    (local_skill_dir / "SKILL.md").write_text("# K8s Ops", encoding="utf-8")
+    (res_dir / "pod.yaml").write_text("apiVersion: v1\nkind: Pod", encoding="utf-8")
+
+    with patch.object(config, "GLOBAL_PLUGIN_DIR", fake_global), patch.object(config, "MEMORY_DIR", fake_memory):
+        init_cmd.promote("k8s-ops", target=tmp_path)
+
+        assert (fake_global / "skills" / "k8s-ops" / "SKILL.md").is_file()
+        assert (fake_global / "skills" / "k8s-ops" / "resources" / "pod.yaml").is_file()
+        assert (fake_memory / "skills" / "k8s-ops" / "resources" / "pod.yaml").is_file()
+
+
+

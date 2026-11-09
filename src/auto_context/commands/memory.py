@@ -220,10 +220,10 @@ def _sync_local_to_memory(project_dir: Path) -> int:
                     dest_file = dest_dir / "SKILL.md"
                     src_file = sdir / "SKILL.md"
                     if not dest_file.exists() or src_file.stat().st_mtime > dest_file.stat().st_mtime:
-                        dest_dir.mkdir(parents=True, exist_ok=True)
-                        shutil.copy2(src_file, dest_file)
+                        dest_dir.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copytree(sdir, dest_dir, dirs_exist_ok=True)
                         harvested += 1
-                        console.print(f"  [green][✓] Harvested local skill to Central Memory:[/] {sdir.name}")
+                        console.print(f"  [green][✓] Harvested local skill tree to Central Memory:[/] {sdir.name}")
     except OSError:
         pass
     return harvested

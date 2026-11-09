@@ -60,4 +60,25 @@ def test_memory_pull_git_error_graceful(tmp_path: Path):
                 assert e.exit_code == 1
 
 
+def test_memory_harvest_recursive_skill_tree(tmp_path: Path):
+    fake_mem = tmp_path / "fake_mem_tree"
+    fake_mem.mkdir(parents=True)
+    fake_proj = tmp_path / "fake_project"
+    fake_proj.mkdir(parents=True)
+
+    local_skill_dir = fake_proj / config.AGENTS_SUBDIR / "skills" / "custom-deploy"
+    scripts_dir = local_skill_dir / "scripts"
+    scripts_dir.mkdir(parents=True)
+    (local_skill_dir / "SKILL.md").write_text("# Deploy Skill", encoding="utf-8")
+    (scripts_dir / "deploy.sh").write_text("#!/bin/bash\necho deploy", encoding="utf-8")
+
+    with patch.object(memory, "MEMORY_DIR", fake_mem):
+        harvested = memory._sync_local_to_memory(fake_proj)
+        assert harvested >= 1
+        assert (fake_mem / "skills" / "custom-deploy" / "SKILL.md").is_file()
+        assert (fake_mem / "skills" / "custom-deploy" / "scripts" / "deploy.sh").is_file()
+        assert (fake_mem / "skills" / "custom-deploy" / "scripts" / "deploy.sh").read_text(encoding="utf-8") == "#!/bin/bash\necho deploy"
+
+
+
 
