@@ -23,7 +23,7 @@ class SecurityService:
         """
         target = path or self.default_target
         violations = security.audit_path(target, single_file=single_file)
-        
+
         violation_dicts = [
             {
                 "file": str(v.file),
@@ -33,10 +33,10 @@ class SecurityService:
             }
             for v in violations
         ]
-        
+
         success = len(violations) == 0
         summary = (
-            f"Audit passed: 0 sensitive credentials detected."
+            "Audit passed: 0 sensitive credentials detected."
             if success
             else f"Audit failed: {len(violations)} security violation(s) found."
         )

@@ -115,8 +115,8 @@ def share(
         )
         raise typer.Exit(1)
 
-    console.print(f"\n[bold green]✨ Published successfully![/]")
+    console.print("\n[bold green]✨ Published successfully![/]")
     console.print(f"   [cyan]Gist URL:[/] {gist_url}")
-    console.print(f"\n[yellow]💡 Anyone can import this with:[/]")
+    console.print("\n[yellow]💡 Anyone can import this with:[/]")
     console.print(f"   [green]init-context import {gist_url}[/]\n")
 

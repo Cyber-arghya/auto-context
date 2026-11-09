@@ -97,7 +97,7 @@ def import_item(
     project_dir = (target or Path.cwd()).resolve()
     raw_url = _resolve_url(url)
 
-    console.print(f"\n[bold cyan]📥 Importing External Instruction[/]")
+    console.print("\n[bold cyan]📥 Importing External Instruction[/]")
     console.print(f"   [cyan][*] Fetching:[/] {raw_url}")
     content = _fetch(raw_url)
 
@@ -147,7 +147,7 @@ def import_item(
     finally:
         tmp_path.unlink(missing_ok=True)
 
-    console.print(f"\n[bold green]✨ Imported Successfully![/]")
+    console.print("\n[bold green]✨ Imported Successfully![/]")
     console.print(f"   [yellow]Type: [/] {item_type.upper()}")
     console.print(f"   [yellow]Name: [/] {final_name}")
     console.print(f"   [cyan]Scope:[/] {scope}")

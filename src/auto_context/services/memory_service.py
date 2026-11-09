@@ -3,12 +3,9 @@ services/memory_service.py — Service layer for Central Memory brain synchroniz
 """
 from __future__ import annotations
 
-import re
 import shutil
 import subprocess
-from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 from auto_context import config, security
 from auto_context.core.exceptions import MemorySyncError, SecurityViolationError
@@ -85,7 +82,7 @@ class MemoryService:
         """Stage, commit, and push memory assets to remote repository."""
         self.audit_memory()
         self._git("add", "-A")
-        
+
         status = self._git("status", "--porcelain", check=False)
         if not status.stdout.strip():
             return  # Nothing to commit

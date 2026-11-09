@@ -4,7 +4,6 @@ Tests for auto_context.services package: ScaffoldService, RegistryService, Secur
 from pathlib import Path
 
 from auto_context.core.exceptions import (
-    DuplicateRuleError,
     MemorySyncError,
     ResourceConflictError,
     SecurityViolationError,
@@ -45,6 +44,7 @@ def test_scaffold_service_components(tmp_path: Path):
 
     # Scaffold docs layout
     docs = service.scaffold_docs_layout(vars)
+    assert len(docs) > 0
     assert (tmp_path / "docs" / "architecture").exists()
     assert (tmp_path / "docs" / "development").exists()
     assert (tmp_path / "docs" / "decisions").exists()
@@ -71,7 +71,7 @@ def test_scaffold_service_components(tmp_path: Path):
 def test_security_service_audit(tmp_path: Path):
     """Test SecurityService audit and validation report output."""
     sec_service = SecurityService(default_target=tmp_path)
-    
+
     # Clean workspace
     report = sec_service.audit()
     assert report.success is True

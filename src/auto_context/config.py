@@ -75,7 +75,6 @@ RAW_GITHUB_BASE = "https://raw.githubusercontent.com/Cyber-arghya/auto-context/m
 PYPI_JSON_URL = f"https://pypi.org/pypi/{PYPI_PACKAGE}/json"
 GITHUB_LATEST_RELEASE_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 
-import tempfile
 
 def get_cache_dir() -> Path:
     """Return user cache directory, falling back to tempdir if permission restricted."""

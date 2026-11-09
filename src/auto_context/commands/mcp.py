@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from pathlib import Path
 import shlex
 import stat
@@ -241,9 +240,9 @@ def add_mcp(
         data["mcpServers"][server_name] = server_cfg
         _save_mcp_config(cfg_path, data)
 
-    scope = f"GLOBAL (~/.gemini/config/mcp_config.json)" if global_ else f"LOCAL ({project_dir}/.gemini/mcp_config.json)"
+    scope = "GLOBAL (~/.gemini/config/mcp_config.json)" if global_ else f"LOCAL ({project_dir}/.gemini/mcp_config.json)"
     transport = f"HTTP ({url})" if url else f"stdio ({server_cfg.get('command', '?')})"
-    console.print(f"\n[bold cyan]🔌 MCP Server Configured![/]")
+    console.print("\n[bold cyan]🔌 MCP Server Configured![/]")
     console.print(f"   [yellow]Server:[/]    {server_name}")
     console.print(f"   [cyan]Scope:[/]     {scope}")
     console.print(f"   [green]Transport:[/] {transport}")
@@ -297,7 +296,8 @@ def list_mcp(
             if not cfg_path.exists():
                 continue
             data = _load_mcp_config(cfg_path)
-            servers = data.get("mcpServers") if isinstance(data.get("mcpServers"), dict) else {}
+            raw_servers = data.get("mcpServers")
+            servers = dict(raw_servers) if isinstance(raw_servers, dict) else {}
             for sname, cfg in servers.items():
                 if isinstance(cfg, dict):
                     server_info = dict(cfg)
@@ -316,7 +316,8 @@ def list_mcp(
         if not cfg_path.exists():
             continue
         data = _load_mcp_config(cfg_path)
-        servers = data.get("mcpServers") if isinstance(data.get("mcpServers"), dict) else {}
+        raw_servers = data.get("mcpServers")
+        servers = dict(raw_servers) if isinstance(raw_servers, dict) else {}
         if not servers:
             continue
 

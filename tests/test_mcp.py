@@ -3,7 +3,6 @@ Tests for mcp.py: preset resolution, shlex quoted arguments handling, configurat
 """
 from pathlib import Path
 import json
-import typer
 from auto_context.commands import mcp
 
 

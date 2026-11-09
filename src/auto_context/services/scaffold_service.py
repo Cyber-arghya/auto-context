@@ -4,12 +4,10 @@ services/scaffold_service.py — Service layer for workspace scaffolding and kno
 from __future__ import annotations
 
 import shutil
-from datetime import date
 from pathlib import Path
-from typing import Any
 
 from auto_context import config
-from auto_context.config import AGENTS_SUBDIR, GEMINI_SUBDIR, get_templates_dir
+from auto_context.config import AGENTS_SUBDIR, get_templates_dir
 from auto_context.core.exceptions import ResourceConflictError
 from auto_context.core.models import SkillDefinition, SubagentDefinition
 

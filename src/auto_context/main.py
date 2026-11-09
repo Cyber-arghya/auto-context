@@ -166,7 +166,8 @@ def root(
 
 
 def main() -> None:  # pragma: no cover
-    import os, sys
+    import os
+    import sys
     # Ensure UTF-8 output on all platforms (Windows CP1252 fix)
     if sys.platform == "win32":
         os.environ.setdefault("PYTHONIOENCODING", "utf-8")

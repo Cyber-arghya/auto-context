@@ -290,7 +290,7 @@ def update_global_plugin() -> int:
 def update_workspace(target_dir: Path, force: bool = False) -> int:
     """
     Safely update system-managed standing rules in the current project workspace.
-    
+
     NON-BREAKING SAFETY GUARANTEES:
     - NEVER touches context.md (preserves project architecture, credentials & problem log).
     - NEVER touches context.local.md or .env (zero test credential or secret loss).

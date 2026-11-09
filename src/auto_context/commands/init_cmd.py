@@ -24,7 +24,6 @@ from rich.panel import Panel
 from auto_context import config
 from auto_context.config import AGENTS_SUBDIR, GEMINI_SUBDIR, get_templates_dir
 
-import sys
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -294,7 +293,7 @@ def init(
         if legacy_goal.exists() and not goal_dest.exists() and not dry_run:
             goal_dest.write_text(legacy_goal.read_text(encoding="utf-8"), encoding="utf-8")
             legacy_goal.unlink(missing_ok=True)
-            console.print(f"  [green][✓] Migrated:[/] project-goal.md -> .agents/project-goal.md")
+            console.print("  [green][✓] Migrated:[/] project-goal.md -> .agents/project-goal.md")
         else:
             _write_if_missing(goal_dest, goal_content, force=force, dry_run=dry_run)
 
@@ -328,7 +327,7 @@ def init(
         if legacy_hub.exists() and not hub_dest.exists() and not dry_run:
             hub_dest.write_text(legacy_hub.read_text(encoding="utf-8"), encoding="utf-8")
             legacy_hub.unlink(missing_ok=True)
-            console.print(f"  [green][✓] Migrated:[/] context.md -> .agents/context.md")
+            console.print("  [green][✓] Migrated:[/] context.md -> .agents/context.md")
         else:
             _write_if_missing(hub_dest, hub_content, force=force, dry_run=dry_run)
 
@@ -464,7 +463,6 @@ def _find_duplicate_rule(registry: dict, text_or_title: str) -> tuple[str, str, 
 
 
 def _register_rule_in_registry(registry_file: Path, domain_key: str, rule_title: str, file_name: str) -> None:
-    import json
     import re
     from datetime import date
 
@@ -739,7 +737,6 @@ def promote(
     clean_name = name.lower().replace(" ", "-").replace("_", "-").removesuffix(".md")
 
     local_rule = project_dir / AGENTS_SUBDIR / "rules" / f"{clean_name}.md"
-    local_skill = project_dir / AGENTS_SUBDIR / "skills" / clean_name / "SKILL.md"
     local_agent = project_dir / AGENTS_SUBDIR / "agents" / f"{clean_name}.md"
 
     promoted = False

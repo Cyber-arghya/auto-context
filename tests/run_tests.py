@@ -35,7 +35,7 @@ def run_all_tests() -> int:
     total_failed = 0
     failures = []
 
-    print(f"\n==================== Running auto-context test suite ====================")
+    print("\n==================== Running auto-context test suite ====================")
     print(f"Target: {REPO_ROOT}")
     print(f"Discovered test files: {len(test_files)}\n")
 
@@ -81,7 +81,7 @@ def run_all_tests() -> int:
                         pass
 
     elapsed = time.time() - start_time
-    print(f"\n==================== Test Summary ====================")
+    print("\n==================== Test Summary ====================")
     print(f"Passed: {total_passed}")
     print(f"Failed: {total_failed}")
     print(f"Time:   {elapsed:.2f}s")

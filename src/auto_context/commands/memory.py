@@ -9,7 +9,6 @@ Subcommands: init, push, pull, status
 from __future__ import annotations
 
 import logging
-import re
 import shutil
 import subprocess
 from datetime import datetime
@@ -149,9 +148,9 @@ def memory_init(
         console.print("  [yellow][!] GitHub CLI ('gh') not found. Install it or connect manually:[/]")
         _print_manual_push(repo_name)
 
-    console.print(f"\n[bold green]🎉 Central Memory Initialized![/]")
+    console.print("\n[bold green]🎉 Central Memory Initialized![/]")
     console.print(f"   [yellow]Local Brain:[/]  {MEMORY_DIR}")
-    console.print(f"   [green]Sync Command:[/] init-context memory push\n")
+    console.print("   [green]Sync Command:[/] init-context memory push\n")
 
 
 def _print_manual_push(repo_name: str) -> None:
@@ -328,7 +327,7 @@ def memory_push(
 
         console.print("\n[bold green]✨ Memory synchronization complete![/]\n")
 
-    except PermissionError as pe:
+    except PermissionError:
         console.print(Panel(
             f"[bold red][✗] Permission Denied Accessing Central Memory[/]\n"
             f"[yellow]   Path:[/] {MEMORY_DIR}\n\n"
@@ -380,7 +379,7 @@ def memory_pull(
             border_style="red",
         ))
         raise typer.Exit(1)
-    except PermissionError as pe:
+    except PermissionError:
         console.print(Panel(
             f"[bold red][✗] Permission Denied Accessing Central Memory[/]\n"
             f"[yellow]   Path:[/] {MEMORY_DIR}\n\n"
@@ -444,7 +443,7 @@ def memory_remote(
                 _print_manual_push(repo_name)
         else:
             _git(MEMORY_DIR, "remote", "remove", "origin", check=False)
-            console.print(f"  [yellow][!] Set remote URL manually or install gh CLI:[/]")
+            console.print("  [yellow][!] Set remote URL manually or install gh CLI:[/]")
             _print_manual_push(repo_name)
 
     except PermissionError:

@@ -12,8 +12,6 @@ from typing import Any
 
 from auto_context import config
 from auto_context.config import AGENTS_SUBDIR, get_templates_dir
-from auto_context.core.exceptions import DuplicateRuleError, ResourceConflictError
-from auto_context.core.models import RuleDefinition
 
 logger = logging.getLogger(__name__)
 
