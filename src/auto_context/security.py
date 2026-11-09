@@ -82,10 +82,11 @@ def _scan_file(path: Path) -> list[Violation]:
     """Return violations found in a single file."""
     violations: list[Violation] = []
     name = path.name
+    name_lower = name.lower()
     suffix = path.suffix.lower()
 
     # Filename-level checks
-    if name in PROHIBITED_FILES or name.startswith(".env."):
+    if name_lower in PROHIBITED_FILES or name_lower.startswith(".env."):
         return [Violation(path, 0, "Prohibited Sensitive File", name)]
     if suffix in PROHIBITED_EXTENSIONS:
         return [Violation(path, 0, "Prohibited Key/Certificate Extension", name)]
@@ -166,4 +167,3 @@ def abort_if_violations(violations: list[Violation]) -> None:
             "\n[bold red][✗] ABORT:[/] Remove credentials before committing or sharing.\n"
         )
         sys.exit(1)
-

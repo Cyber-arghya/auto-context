@@ -1,4 +1,4 @@
-# 🚀 Comprehensive Implementation Plan: Auto-Context Hardening & Modernization
+ # 🚀 Comprehensive Implementation Plan: Auto-Context Hardening & Modernization
 
 > **Document:** `implement-plan-1.md`  
 > **Repository:** `auto-context` (`auto-context-cli`)  
@@ -96,7 +96,7 @@ gantt
 - [x] **Repair Broken GitHub Actions CI Workflow:** Update test path assertions in [`.github/workflows/test.yml`](file:///c:/Users/worka/Desktop/test/auto-context/.github/workflows/test.yml#L45-L51).
 - [x] **Resolve CLI Short Flag Collision:** Change `--args` short flag from `-a` to `-A` in [`src/auto_context/main.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/main.py#L50).
 - [x] **Handle Git Pull Subprocess Crashes Gracefully:** Catch `subprocess.CalledProcessError` in [`src/auto_context/commands/memory.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/commands/memory.py#L360-L375).
-- [ ] **Fix Case-Insensitive Secret Scanner Bypass:** Normalize filenames with `.lower()` in [`src/auto_context/security.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/security.py#L88).
+- [x] **Fix Case-Insensitive Secret Scanner Bypass:** Normalize filenames with `.lower()` in [`src/auto_context/security.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/security.py#L88).
 - [ ] **Prevent Secret Redaction Leakage in Reports:** Mask assigned secret values rather than the entire assignment statement in [`src/auto_context/security.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/security.py#L74-L78).
 
 #### Technical Implementation Guide

@@ -20,6 +20,18 @@ def test_prohibited_filename_caught(tmp_path: Path):
     assert violations[0].pattern == "Prohibited Sensitive File"
 
 
+def test_prohibited_filename_case_insensitive(tmp_path: Path):
+    test_files = [".ENV", ".Env.local", ".env.PRODUCTION", "ID_RSA", "ID_ED25519.PUB", "Authorized_Keys"]
+    for fname in test_files:
+        f = tmp_path / fname
+        f.write_text("secret_stuff", encoding="utf-8")
+        violations = security.audit_path(f, single_file=True)
+        assert len(violations) == 1, f"Failed to detect prohibited file: {fname}"
+        assert violations[0].pattern == "Prohibited Sensitive File"
+        assert violations[0].preview == fname
+        f.unlink()
+
+
 def test_prohibited_extension_caught(tmp_path: Path):
     key_file = tmp_path / "server.key"
     key_file.write_text("dummy key content", encoding="utf-8")
