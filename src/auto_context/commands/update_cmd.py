@@ -53,7 +53,7 @@ def get_installed_version() -> str:
 
 # ── Update Checking & Cache Engine ────────────────────────────────────────────
 
-def check_upstream_version(timeout: float = 2.0) -> Optional[dict]:
+def check_upstream_version(timeout: float = 1.2) -> Optional[dict]:
     """
     Query PyPI and GitHub to determine the latest upstream version.
     Returns dict with metadata or None if offline/error.
@@ -101,6 +101,7 @@ def get_cached_update_status(force_check: bool = False) -> Optional[dict]:
     """
     Retrieve update status from local cache or refresh if cache expired.
     Cached for 24 hours to ensure 0ms latency for daily CLI usage.
+    Writes a negative/fallback cache entry on network failure to prevent repeated offline delays.
     """
     now = time.time()
     cache_file = config.UPDATE_CACHE_FILE
@@ -114,21 +115,19 @@ def get_cached_update_status(force_check: bool = False) -> Optional[dict]:
     except Exception:
         pass
 
-    # Cache expired or missing — refresh in background
-    upstream = check_upstream_version()
-    if not upstream:
-        return None
+    # Cache expired or missing — refresh
+    upstream = check_upstream_version(timeout=1.2)
 
     current_v = get_installed_version()
-    latest_v = upstream["latest_version"]
-    update_available = _parse_version(latest_v) > _parse_version(current_v)
+    latest_v = upstream["latest_version"] if upstream else current_v
+    update_available = (_parse_version(latest_v) > _parse_version(current_v)) if upstream else False
 
     cache_data = {
         "timestamp": now,
         "current_version": current_v,
         "latest_version": latest_v,
         "update_available": update_available,
-        "source": upstream.get("source"),
+        "source": upstream.get("source") if upstream else "offline_cached",
     }
 
     try:
