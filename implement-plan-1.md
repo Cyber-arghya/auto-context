@@ -94,8 +94,8 @@ gantt
 - [x] **Fix Rule File Truncation on Append:** Modify `new_rule()` in [`src/auto_context/commands/init_cmd.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/commands/init_cmd.py#L440-L476).
 - [x] **Implement Negative Upstream Caching:** Update `get_cached_update_status()` in [`src/auto_context/commands/update_cmd.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/commands/update_cmd.py#L100-L141).
 - [x] **Repair Broken GitHub Actions CI Workflow:** Update test path assertions in [`.github/workflows/test.yml`](file:///c:/Users/worka/Desktop/test/auto-context/.github/workflows/test.yml#L45-L51).
-- [ ] **Resolve CLI Short Flag Collision:** Change `--args` short flag from `-a` to `-A` in [`src/auto_context/main.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/main.py#L50).
-- [ ] **Handle Git Pull Subprocess Crashes Gracefully:** Catch `subprocess.CalledProcessError` in [`src/auto_context/commands/memory.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/commands/memory.py#L360-L375).
+- [x] **Resolve CLI Short Flag Collision:** Change `--args` short flag from `-a` to `-A` in [`src/auto_context/main.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/main.py#L50).
+- [x] **Handle Git Pull Subprocess Crashes Gracefully:** Catch `subprocess.CalledProcessError` in [`src/auto_context/commands/memory.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/commands/memory.py#L360-L375).
 - [ ] **Fix Case-Insensitive Secret Scanner Bypass:** Normalize filenames with `.lower()` in [`src/auto_context/security.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/security.py#L88).
 - [ ] **Prevent Secret Redaction Leakage in Reports:** Mask assigned secret values rather than the entire assignment statement in [`src/auto_context/security.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/security.py#L74-L78).
 

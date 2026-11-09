@@ -48,3 +48,16 @@ def test_memory_remote_url(tmp_path: Path):
         assert rem == "git@github.com:myuser/test-remote.git"
 
 
+def test_memory_pull_git_error_graceful(tmp_path: Path):
+    fake_mem = tmp_path / "fake_mem"
+    fake_mem.mkdir(parents=True)
+    with patch.object(memory, "MEMORY_DIR", fake_mem):
+        with patch.object(memory, "_git", side_effect=memory.subprocess.CalledProcessError(1, ["git", "pull"], stderr="fatal: remote error")):
+            try:
+                memory.memory_pull()
+                assert False, "Should have raised typer.Exit"
+            except typer.Exit as e:
+                assert e.exit_code == 1
+
+
+

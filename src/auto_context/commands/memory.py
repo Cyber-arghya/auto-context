@@ -356,7 +356,7 @@ def memory_pull(
                 console.print("[red][✗] Memory directory not found. Provide a repo URL:[/]")
                 console.print("    [cyan]init-context memory pull <url>[/]")
                 raise typer.Exit(1)
-            subprocess.run(["git", "clone", repo_url, str(MEMORY_DIR)], check=True)
+            subprocess.run(["git", "clone", repo_url, str(MEMORY_DIR)], check=True, capture_output=True, text=True)
         else:
             _git(MEMORY_DIR, "pull", "origin", "main")
 
@@ -365,6 +365,17 @@ def memory_pull(
         security.abort_if_violations(violations)
         console.print("\n[bold green]✨ Central memory updated successfully![/]\n")
 
+    except subprocess.CalledProcessError as cpe:
+        stderr = (cpe.stderr or "").strip() if getattr(cpe, "stderr", None) else str(cpe)
+        cmd_str = " ".join(cpe.cmd) if isinstance(cpe.cmd, (list, tuple)) else str(cpe.cmd)
+        console.print(Panel(
+            f"[bold red][✗] Git Pull Failed[/]\n"
+            f"[yellow]   Command:[/] {cmd_str}\n"
+            f"[white]   Error:[/] {stderr}\n\n"
+            f"[cyan]   Fix:[/] Check network connectivity, git credentials, or resolve conflicts in {MEMORY_DIR}.",
+            border_style="red",
+        ))
+        raise typer.Exit(1)
     except PermissionError as pe:
         console.print(Panel(
             f"[bold red][✗] Permission Denied Accessing Central Memory[/]\n"
@@ -372,6 +383,9 @@ def memory_pull(
             f"[white]   Fix:[/] Run in external terminal or enable unsandboxed execution mode.",
             border_style="red",
         ))
+        raise typer.Exit(1)
+    except OSError as err:
+        console.print(f"[red][✗] Central memory error:[/] {err}")
         raise typer.Exit(1)
 
 
