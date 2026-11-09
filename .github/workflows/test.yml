@@ -41,28 +41,30 @@ jobs:
       - name: Test Project Scaffolding
         shell: bash
         run: |
-          mkdir -p /tmp/ci-test-project
-          init-context init /tmp/ci-test-project
-          test -f /tmp/ci-test-project/context.md
-          test -f /tmp/ci-test-project/context.local.md
-          test -f /tmp/ci-test-project/GEMINI.md
-          test -f /tmp/ci-test-project/AGENTS.md
-          test -f /tmp/ci-test-project/.agents/rules/maintain_context.md
+          mkdir -p ci-test-project
+          init-context init ci-test-project
+          test -f ci-test-project/.agents/context.md
+          test -f ci-test-project/.agents/project-goal.md
+          test -f ci-test-project/GEMINI.md
+          test -f ci-test-project/AGENTS.md
+          test -f ci-test-project/.agents/rules/code-standards.md
+          test -f ci-test-project/.agents/skills/docker-ops/SKILL.md
           echo "Scaffolding verification passed!"
 
       - name: Test Custom Rule & Skill Scaffolding
         shell: bash
         run: |
-          init-context -r test-rule --target /tmp/ci-test-project
-          test -f /tmp/ci-test-project/.agents/rules/test-rule.md
-          init-context -s test-skill --target /tmp/ci-test-project
-          test -f /tmp/ci-test-project/.agents/skills/test-skill/SKILL.md
+          init-context -r test-rule --target ci-test-project
+          test -f ci-test-project/.agents/rules/test-rule.md
+          init-context -s test-skill --target ci-test-project
+          test -f ci-test-project/.agents/skills/test-skill/SKILL.md
           echo "Rule and Skill scaffolding passed!"
 
       - name: Test MCP Tool Registry
         shell: bash
         run: |
-          init-context mcp add sqlite --target /tmp/ci-test-project
-          init-context mcp list --target /tmp/ci-test-project
-          init-context mcp remove sqlite --target /tmp/ci-test-project
+          init-context mcp add sqlite --target ci-test-project
+          init-context mcp list --target ci-test-project
+          init-context mcp remove sqlite --target ci-test-project
+          rm -rf ci-test-project
           echo "MCP configuration engine passed!"
