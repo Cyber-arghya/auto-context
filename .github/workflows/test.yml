@@ -35,6 +35,12 @@ jobs:
       - name: Verify CLI availability & version
         run: init-context --version
 
+      - name: Lint and Format with Ruff
+        run: uv run ruff check src/ tests/
+
+      - name: Static Type Check with Mypy
+        run: uv run mypy src/ --ignore-missing-imports
+
       - name: Run Python Unit & Integration Test Suite
         run: uv run python tests/run_tests.py
 
@@ -65,6 +71,7 @@ jobs:
         run: |
           init-context mcp add sqlite --target ci-test-project
           init-context mcp list --target ci-test-project
+          init-context mcp list --target ci-test-project --json
           init-context mcp remove sqlite --target ci-test-project
           rm -rf ci-test-project
           echo "MCP configuration engine passed!"
