@@ -73,3 +73,4 @@ class UpdateStatus:
     upstream_version: str
     checked_at: str
     is_cached: bool = False
+
