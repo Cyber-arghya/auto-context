@@ -417,10 +417,25 @@ def _load_registry(registry_file: Path) -> dict:
     return {"version": "1.0.0", "domains": {}}
 
 
+STOP_WORDS: set[str] = {
+    "about", "above", "after", "again", "against", "all", "also", "and", "any",
+    "are", "because", "been", "before", "being", "below", "between", "both",
+    "but", "cannot", "could", "did", "does", "doing", "down", "during", "each",
+    "few", "for", "from", "further", "had", "has", "have", "having", "here",
+    "how", "into", "itself", "just", "make", "more", "most", "must", "myself",
+    "no", "nor", "not", "off", "once", "only", "other", "ought", "our", "ours",
+    "out", "over", "own", "same", "should", "some", "such", "than", "that",
+    "the", "their", "theirs", "them", "then", "there", "these", "they", "this",
+    "those", "through", "too", "under", "until", "very", "was", "were", "what",
+    "when", "where", "which", "while", "who", "whom", "why", "will", "with",
+    "would", "your", "yours", "rule", "rules", "guideline", "guidelines",
+}
+
+
 def _find_duplicate_rule(registry: dict, text_or_title: str) -> Optional[tuple[str, str, str]]:
     import re
     clean_query = re.sub(r"[^a-zA-Z0-9\s]", "", text_or_title).lower().strip()
-    query_words = set(w for w in clean_query.split() if len(w) > 3)
+    query_words = set(w for w in clean_query.split() if len(w) > 3 and w not in STOP_WORDS)
 
     for d_key, domain in registry.get("domains", {}).items():
         d_file = domain.get("file", f"{d_key}.md")
@@ -434,8 +449,13 @@ def _find_duplicate_rule(registry: dict, text_or_title: str) -> Optional[tuple[s
             if r_id and r_id in clean_query.replace(" ", "-"):
                 return d_key, r_title, d_file
 
-            r_keywords = set(k.lower() for k in r.get("keywords", []))
-            if query_words and len(query_words.intersection(r_keywords)) >= 2:
+            r_keywords = set()
+            for k in r.get("keywords", []):
+                for word in re.sub(r"[^a-zA-Z0-9\s]", "", k).lower().split():
+                    if len(word) > 3 and word not in STOP_WORDS:
+                        r_keywords.add(word)
+
+            if query_words and len(query_words.intersection(r_keywords)) >= 3:
                 return d_key, r_title, d_file
 
     return None
@@ -460,7 +480,7 @@ def _register_rule_in_registry(registry_file: Path, domain_key: str, rule_title:
 
     clean_first_line = rule_title.strip().splitlines()[0].strip("* ").strip()
     slug = re.sub(r"[^a-zA-Z0-9\s-]", "", clean_first_line).strip().lower().replace(" ", "-")
-    clean_words = [w for w in re.sub(r"[^a-zA-Z0-9\s]", "", clean_first_line).lower().split() if len(w) > 3]
+    clean_words = [w for w in re.sub(r"[^a-zA-Z0-9\s]", "", clean_first_line).lower().split() if len(w) > 3 and w not in STOP_WORDS]
 
     existing_ids = [r.get("id") for r in registry["domains"][domain_key].get("rules", [])]
     if slug not in existing_ids:

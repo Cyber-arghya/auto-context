@@ -134,3 +134,45 @@ def test_promote_local_rule_and_skill(tmp_path: Path):
     finally:
         config.GLOBAL_PLUGIN_DIR = orig_global
         config.MEMORY_DIR = orig_memory
+
+
+def test_find_duplicate_rule_with_stop_words_and_threshold():
+    """Verify that stop words are ignored and threshold >= 3 is enforced."""
+    mock_registry = {
+        "domains": {
+            "code-standards": {
+                "file": "code-standards.md",
+                "rules": [
+                    {
+                        "id": "defensive-coding-early-return",
+                        "title": "Defensive Coding & Early Return",
+                        "keywords": ["guard clauses", "early return", "nested indentation", "defensive coding"],
+                    }
+                ],
+            }
+        }
+    }
+
+    # Query with stop-words and unrelated words should NOT match
+    no_match = init_cmd._find_duplicate_rule(
+        mock_registry,
+        "You must make sure that this should have some proper functions",
+    )
+    assert no_match is None, "Stop words must not trigger false positive duplicate detection"
+
+    # Query with only 2 overlapping words should NOT match (threshold >= 3 required)
+    two_words = init_cmd._find_duplicate_rule(
+        mock_registry,
+        "Please use early return here",
+    )
+    assert two_words is None, "Intersection of only 2 words must not trigger duplicate match"
+
+    # Query with >= 3 overlapping non-stop keywords MUST match
+    three_words = init_cmd._find_duplicate_rule(
+        mock_registry,
+        "Always use guard clauses to prevent nested indentation in code",
+    )
+    assert three_words is not None, "Intersection of >= 3 words must match duplicate rule"
+    assert three_words[0] == "code-standards"
+    assert three_words[1] == "Defensive Coding & Early Return"
+
