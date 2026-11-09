@@ -5,6 +5,8 @@ Ensures users stay synchronized with public rules, skills, and tools added to
 https://github.com/Cyber-arghya/auto-context without breaking local project context,
 custom user rules, or private memory.
 """
+from __future__ import annotations
+
 from importlib.metadata import PackageNotFoundError, version as get_pkg_version
 import json
 import logging
@@ -13,7 +15,7 @@ import shutil
 import subprocess
 import sys
 import time
-from typing import Annotated, Optional
+from typing import Annotated
 import urllib.error
 import urllib.request
 
@@ -58,7 +60,7 @@ def get_installed_version() -> str:
 
 # ── Update Checking & Cache Engine ────────────────────────────────────────────
 
-def check_upstream_version(timeout: float = 1.2) -> Optional[dict]:
+def check_upstream_version(timeout: float = 1.2) -> dict | None:
     """
     Query PyPI and GitHub to determine the latest upstream version.
     Returns dict with metadata or None if offline/error.
@@ -102,7 +104,7 @@ def check_upstream_version(timeout: float = 1.2) -> Optional[dict]:
     return None
 
 
-def get_cached_update_status(force_check: bool = False) -> Optional[dict]:
+def get_cached_update_status(force_check: bool = False) -> dict | None:
     """
     Retrieve update status from local cache or refresh if cache expired.
     Cached for 24 hours to ensure 0ms latency for daily CLI usage.
@@ -212,7 +214,7 @@ def update_cli_package() -> bool:
     return False
 
 
-def _download_text(url: str, timeout: float = 4.0) -> Optional[str]:
+def _download_text(url: str, timeout: float = 4.0) -> str | None:
     """Download raw text file from remote repository."""
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "auto-context-cli"})
@@ -353,7 +355,7 @@ def update(
     cli: Annotated[bool, typer.Option("--cli", "-c", help="Upgrade auto-context-cli package only.")] = False,
     check: Annotated[bool, typer.Option("--check", help="Check for available updates without modifying files.")] = False,
     force: Annotated[bool, typer.Option("--force", "-f", help="Force overwrite without creating backups.")] = False,
-    target: Annotated[Optional[Path], typer.Option("--target", "-t", help="Target project directory.")] = None,
+    target: Annotated[Path | None, typer.Option("--target", "-t", help="Target project directory.")] = None,
 ) -> None:
     """
     Safely update auto-context CLI, public rulebooks, and global agent plugins.

@@ -6,7 +6,7 @@ unhandled crashes, and unstructured error strings.
 """
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 
 class AutoContextError(Exception):
@@ -20,7 +20,7 @@ class AutoContextError(Exception):
 class SecurityViolationError(AutoContextError):
     """Raised when security audit detects secret patterns, prohibited files, or permissions issues."""
 
-    def __init__(self, violations: list[Any], message: Optional[str] = None):
+    def __init__(self, violations: list[Any], message: str | None = None):
         self.violations = violations
         count = len(violations)
         msg = message or f"Security audit blocked execution: {count} violation(s) found."

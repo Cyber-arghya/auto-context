@@ -8,7 +8,7 @@ import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from auto_context import config, security
 from auto_context.core.exceptions import MemorySyncError, SecurityViolationError
@@ -17,7 +17,7 @@ from auto_context.core.exceptions import MemorySyncError, SecurityViolationError
 class MemoryService:
     """Service orchestrating Central Memory git synchronization and asset harvesting."""
 
-    def __init__(self, memory_dir: Optional[Path] = None):
+    def __init__(self, memory_dir: Path | None = None):
         self.memory_dir = memory_dir or config.MEMORY_DIR
 
     def _git(self, *args: str, check: bool = True) -> subprocess.CompletedProcess:

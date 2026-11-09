@@ -15,7 +15,7 @@ import shutil
 from datetime import date
 import logging
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.console import Console
@@ -242,7 +242,7 @@ def _scaffold_docs_layout(
 # ── init command ──────────────────────────────────────────────────────────────
 
 def init(
-    target: Annotated[Optional[Path], typer.Argument(help="Target project directory.")] = None,
+    target: Annotated[Path | None, typer.Argument(help="Target project directory.")] = None,
     force: Annotated[bool, typer.Option("--force", "-f", help="Overwrite existing files.")] = False,
     dry_run: Annotated[bool, typer.Option("--dry-run", "-d", help="Preview without writing.")] = False,
 ) -> None:
@@ -434,7 +434,7 @@ STOP_WORDS: set[str] = {
 }
 
 
-def _find_duplicate_rule(registry: dict, text_or_title: str) -> Optional[tuple[str, str, str]]:
+def _find_duplicate_rule(registry: dict, text_or_title: str) -> tuple[str, str, str] | None:
     import re
     clean_query = re.sub(r"[^a-zA-Z0-9\s]", "", text_or_title).lower().strip()
     query_words = set(w for w in clean_query.split() if len(w) > 3 and w not in STOP_WORDS)
@@ -524,11 +524,11 @@ def _append_guideline_to_file(dest_file: Path, text_to_append: str) -> None:
 
 def new_rule(
     name: Annotated[str, typer.Argument(help="Rule name (e.g. code-standards).")],
-    target: Annotated[Optional[Path], typer.Option("--target", "-t")] = None,
+    target: Annotated[Path | None, typer.Option("--target", "-t")] = None,
     global_: Annotated[bool, typer.Option("--global", "-g", help="Install into global plugin.")] = False,
     force: Annotated[bool, typer.Option("--force", "-f")] = False,
     append: Annotated[bool, typer.Option("--append", "-a", help="Append guideline to existing rule domain.")] = False,
-    guideline: Annotated[Optional[str], typer.Option("--guideline", help="Guideline text to append to rule.")] = None,
+    guideline: Annotated[str | None, typer.Option("--guideline", help="Guideline text to append to rule.")] = None,
     dry_run: Annotated[bool, typer.Option("--dry-run", "-d")] = False,
 ) -> None:
     """Scaffold a new agent rule file or append to an existing domain rule with duplicate guard."""
@@ -621,7 +621,7 @@ def new_rule(
 
 def new_skill(
     name: Annotated[str, typer.Argument(help="Skill name (e.g. deploy-docker).")],
-    target: Annotated[Optional[Path], typer.Option("--target", "-t")] = None,
+    target: Annotated[Path | None, typer.Option("--target", "-t")] = None,
     global_: Annotated[bool, typer.Option("--global", "-g")] = False,
     force: Annotated[bool, typer.Option("--force", "-f")] = False,
     dry_run: Annotated[bool, typer.Option("--dry-run", "-d")] = False,
@@ -669,8 +669,8 @@ def new_skill(
 
 def new_agent(
     name: Annotated[str, typer.Argument(help="Subagent persona role name (e.g. architect, code-reviewer).")],
-    description: Annotated[Optional[str], typer.Option("--desc", help="Short subagent description.")] = None,
-    target: Annotated[Optional[Path], typer.Option("--target", "-t")] = None,
+    description: Annotated[str | None, typer.Option("--desc", help="Short subagent description.")] = None,
+    target: Annotated[Path | None, typer.Option("--target", "-t")] = None,
     global_: Annotated[bool, typer.Option("--global", "-g")] = False,
     force: Annotated[bool, typer.Option("--force", "-f")] = False,
     dry_run: Annotated[bool, typer.Option("--dry-run", "-d")] = False,
@@ -732,7 +732,7 @@ def new_agent(
 
 def promote(
     name: Annotated[str, typer.Argument(help="Rule, skill, or agent name to promote to Central Memory.")],
-    target: Annotated[Optional[Path], typer.Option("--target", "-t")] = None,
+    target: Annotated[Path | None, typer.Option("--target", "-t")] = None,
 ) -> None:
     """Promote a local workspace rule, skill, or subagent to Central Memory and global scope."""
     project_dir = (target or Path.cwd()).resolve()

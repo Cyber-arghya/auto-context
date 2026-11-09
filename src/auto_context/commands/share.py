@@ -10,7 +10,7 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.console import Console
@@ -20,7 +20,7 @@ from auto_context import config, security
 console = Console()
 
 
-def _find_item(name: str, project_dir: Path) -> Optional[Path]:
+def _find_item(name: str, project_dir: Path) -> Path | None:
     """Search local, memory, and global scopes for a named skill or rule."""
     clean = name.lower().replace(" ", "-").replace("_", "-").removesuffix(".md")
     candidates = [
@@ -34,7 +34,7 @@ def _find_item(name: str, project_dir: Path) -> Optional[Path]:
     return next((p for p in candidates if p.exists()), None)
 
 
-def _gh_gist_create(file_path: Path, public: bool, description: str) -> Optional[str]:
+def _gh_gist_create(file_path: Path, public: bool, description: str) -> str | None:
     """Create a Gist via gh CLI. Returns the Gist URL or None on failure."""
     if not shutil.which("gh"):
         return None
@@ -55,7 +55,7 @@ def _gh_gist_create(file_path: Path, public: bool, description: str) -> Optional
     return None
 
 
-def _httpx_gist_create(file_path: Path, public: bool, description: str) -> Optional[str]:
+def _httpx_gist_create(file_path: Path, public: bool, description: str) -> str | None:
     """Fallback: create a Gist via GitHub REST API using GITHUB_TOKEN."""
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
@@ -84,7 +84,7 @@ def _httpx_gist_create(file_path: Path, public: bool, description: str) -> Optio
 
 def share(
     name: Annotated[str, typer.Argument(help="Skill or rule name to share.")],
-    target: Annotated[Optional[Path], typer.Option("--target", "-t")] = None,
+    target: Annotated[Path | None, typer.Option("--target", "-t")] = None,
     public: Annotated[bool, typer.Option("--public", help="Publish as public Gist (default: secret).")] = False,
 ) -> None:
     """Audit and publish a skill or rule via GitHub Gist."""

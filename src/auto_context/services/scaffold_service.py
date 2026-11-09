@@ -6,7 +6,7 @@ from __future__ import annotations
 import shutil
 from datetime import date
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from auto_context import config
 from auto_context.config import AGENTS_SUBDIR, GEMINI_SUBDIR, get_templates_dir
@@ -23,7 +23,7 @@ DOCS_SUBDIRS = [
 class ScaffoldService:
     """Service orchestrating workspace scaffolding, documentation layouts, and agent personas."""
 
-    def __init__(self, project_dir: Optional[Path] = None):
+    def __init__(self, project_dir: Path | None = None):
         self.project_dir = (project_dir or Path.cwd()).resolve()
 
     def _render(self, template_path: Path, variables: dict[str, str]) -> str:

@@ -14,7 +14,7 @@ import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.console import Console
@@ -236,7 +236,7 @@ def _sync_local_to_memory(project_dir: Path) -> int:
 @app.command("push")
 def memory_push(
     harvest: Annotated[bool, typer.Option("--harvest/--no-harvest", "-h/-n", help="Auto-harvest local workspace rules/skills into central memory.")] = True,
-    repo: Annotated[Optional[str], typer.Option("--repo", "-r", help="Specify private GitHub repo name if remote needs creation.")] = None,
+    repo: Annotated[str | None, typer.Option("--repo", "-r", help="Specify private GitHub repo name if remote needs creation.")] = None,
 ) -> None:
     """Audit secrets and push memory brain to private GitHub repo."""
     console.print(Panel(
@@ -346,7 +346,7 @@ def memory_push(
 
 @app.command("pull")
 def memory_pull(
-    repo_url: Annotated[Optional[str], typer.Argument(help="Remote repo URL (required for first pull).")] = None,
+    repo_url: Annotated[str | None, typer.Argument(help="Remote repo URL (required for first pull).")] = None,
 ) -> None:
     """Pull and sync the central memory brain from remote."""
     console.print(Panel(
@@ -397,7 +397,7 @@ def memory_pull(
 
 @app.command("remote")
 def memory_remote(
-    repo_name_or_url: Annotated[Optional[str], typer.Argument(help="New private repository name or git URL.")] = None,
+    repo_name_or_url: Annotated[str | None, typer.Argument(help="New private repository name or git URL.")] = None,
     create: Annotated[bool, typer.Option("--create/--no-create", "-c/-n", help="Create the repository on GitHub via gh if it does not exist.")] = True,
 ) -> None:
     """View or switch the remote private GitHub repository for central memory."""

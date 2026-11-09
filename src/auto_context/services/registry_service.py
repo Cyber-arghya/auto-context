@@ -8,7 +8,7 @@ import logging
 import re
 from datetime import date
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from auto_context import config
 from auto_context.config import AGENTS_SUBDIR, get_templates_dir
@@ -35,7 +35,7 @@ STOP_WORDS: set[str] = {
 class RegistryService:
     """Service handling rule domain indexing, duplicate detection, and file registration."""
 
-    def __init__(self, target_dir: Optional[Path] = None, global_: bool = False):
+    def __init__(self, target_dir: Path | None = None, global_: bool = False):
         self.global_ = global_
         self.target_dir = (target_dir or Path.cwd()).resolve()
         if self.global_:
@@ -59,7 +59,7 @@ class RegistryService:
                 logger.debug("Failed to read template registry from %s: %s", tmpl, exc)
         return {"version": "1.0.0", "domains": {}}
 
-    def find_duplicate(self, text_or_title: str) -> Optional[tuple[str, str, str]]:
+    def find_duplicate(self, text_or_title: str) -> tuple[str, str, str] | None:
         """Check if guideline or title collides with existing rules in registry."""
         registry = self.load_registry()
         clean_query = re.sub(r"[^a-zA-Z0-9\s]", "", text_or_title).lower().strip()
@@ -88,7 +88,7 @@ class RegistryService:
 
         return None
 
-    def register_rule(self, domain_key: str, rule_title: str, file_name: str, target_file: Optional[Path] = None) -> None:
+    def register_rule(self, domain_key: str, rule_title: str, file_name: str, target_file: Path | None = None) -> None:
         """Register a new or updated rule entry into registry.json."""
         dest_reg = target_file or self.registry_file
         registry = self.load_registry()

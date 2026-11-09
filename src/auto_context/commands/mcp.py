@@ -15,7 +15,7 @@ from pathlib import Path
 import shlex
 import stat
 import sys
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.console import Console
@@ -166,15 +166,15 @@ def _mcp_paths(project_dir: Path, global_: bool) -> list[Path]:
 @app.command("add")
 def add_mcp(
     name: Annotated[str, typer.Argument(help="Server name or preset (sqlite, github, …).")],
-    target: Annotated[Optional[Path], typer.Option("--target", "-t")] = None,
+    target: Annotated[Path | None, typer.Option("--target", "-t")] = None,
     global_: Annotated[bool, typer.Option("--global", "-g")] = False,
-    preset: Annotated[Optional[str], typer.Option("--preset", "-p", help="Preset name.")] = None,
-    runtime: Annotated[Optional[str], typer.Option("--runtime", "--runner")] = None,
-    command: Annotated[Optional[str], typer.Option("--command", "-c")] = None,
-    args: Annotated[Optional[str], typer.Option("--args", "-a")] = None,
-    url: Annotated[Optional[str], typer.Option("--url")] = None,
-    env_var: Annotated[Optional[str], typer.Option("--env-var")] = None,
-    env: Annotated[Optional[str], typer.Option("--env", help="KEY=val,KEY2=val2")] = None,
+    preset: Annotated[str | None, typer.Option("--preset", "-p", help="Preset name.")] = None,
+    runtime: Annotated[str | None, typer.Option("--runtime", "--runner")] = None,
+    command: Annotated[str | None, typer.Option("--command", "-c")] = None,
+    args: Annotated[str | None, typer.Option("--args", "-a")] = None,
+    url: Annotated[str | None, typer.Option("--url")] = None,
+    env_var: Annotated[str | None, typer.Option("--env-var")] = None,
+    env: Annotated[str | None, typer.Option("--env", help="KEY=val,KEY2=val2")] = None,
 ) -> None:
     """Add or update an MCP server configuration."""
     project_dir = (target or Path.cwd()).resolve()
@@ -255,7 +255,7 @@ def add_mcp(
 @app.command("remove")
 def remove_mcp(
     name: Annotated[str, typer.Argument(help="Server name to remove.")],
-    target: Annotated[Optional[Path], typer.Option("--target", "-t")] = None,
+    target: Annotated[Path | None, typer.Option("--target", "-t")] = None,
     global_: Annotated[bool, typer.Option("--global", "-g")] = False,
 ) -> None:
     """Remove an MCP server from configuration."""
@@ -284,7 +284,7 @@ def remove_mcp(
 
 @app.command("list")
 def list_mcp(
-    target: Annotated[Optional[Path], typer.Option("--target", "-t")] = None,
+    target: Annotated[Path | None, typer.Option("--target", "-t")] = None,
     global_: Annotated[bool, typer.Option("--global", "-g")] = False,
 ) -> None:
     """List all registered MCP servers across active configs."""

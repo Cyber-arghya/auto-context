@@ -385,7 +385,7 @@ def new_rule_controller(name: str, target: Optional[Path] = None, force: bool = 
 * **Primary Goal:** Enforce strict type annotations (PEP 604), bound dependencies, automate static analysis, and support machine-readable CLI outputs.
 
 #### Action Items (Checklist)
-- [ ] **Modernize Type Annotations:** Replace `Optional[T]` with `T | None` (PEP 604).
+- [x] **Modernize Type Annotations:** Replace `Optional[T]` with `T | None` (PEP 604).
 - [x] **Set Semantic Upper Bounds in Dependencies:** Update [`pyproject.toml`](file:///c:/Users/worka/Desktop/test/auto-context/pyproject.toml#L9-L14).
 - [ ] **Integrate Machine-Readable Output:** Implement `--json` support for `mcp list` and `memory status`.
 - [ ] **Add Static Analysis & Type Checking to CI:** Integrate `ruff` and `mypy` into [`.github/workflows/test.yml`](file:///c:/Users/worka/Desktop/test/auto-context/.github/workflows/test.yml).

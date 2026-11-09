@@ -15,7 +15,7 @@ import tempfile
 import time
 import urllib.request
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 from urllib.error import URLError
 from urllib.parse import urlparse
 
@@ -88,8 +88,8 @@ def _dest_path(clean_name: str, item_type: str, project_dir: Path, global_: bool
 
 def import_item(
     url: Annotated[str, typer.Argument(help="Gist URL or raw content URL to import.")],
-    target: Annotated[Optional[Path], typer.Option("--target", "-t")] = None,
-    as_name: Annotated[Optional[str], typer.Option("--as", help="Override imported item name.")] = None,
+    target: Annotated[Path | None, typer.Option("--target", "-t")] = None,
+    as_name: Annotated[str | None, typer.Option("--as", help="Override imported item name.")] = None,
     global_: Annotated[bool, typer.Option("--global", "-g")] = False,
     force: Annotated[bool, typer.Option("--force", "-f")] = False,
 ) -> None:

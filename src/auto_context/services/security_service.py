@@ -4,7 +4,6 @@ services/security_service.py — Service layer for secret scanning and security 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from auto_context import security
 from auto_context.core.exceptions import SecurityViolationError
@@ -14,10 +13,10 @@ from auto_context.core.models import ValidationReport
 class SecurityService:
     """Service providing secret scanning, prohibited file detection, and audit reporting."""
 
-    def __init__(self, default_target: Optional[Path] = None):
+    def __init__(self, default_target: Path | None = None):
         self.default_target = (default_target or Path.cwd()).resolve()
 
-    def audit(self, path: Optional[Path] = None, *, single_file: bool = False) -> ValidationReport:
+    def audit(self, path: Path | None = None, *, single_file: bool = False) -> ValidationReport:
         """
         Audit *path* (or default_target) for security violations.
         Returns a structured ValidationReport.
@@ -49,7 +48,7 @@ class SecurityService:
             summary=summary,
         )
 
-    def audit_and_abort(self, path: Optional[Path] = None, *, single_file: bool = False) -> None:
+    def audit_and_abort(self, path: Path | None = None, *, single_file: bool = False) -> None:
         """
         Audit *path*. If violations are found, print rich report to stderr
         and raise SecurityViolationError.

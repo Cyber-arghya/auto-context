@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass
@@ -48,7 +48,7 @@ class SubagentDefinition:
     name: str
     role: str
     file_name: str
-    path: Optional[Path] = None
+    path: Path | None = None
     content: str = ""
 
 
