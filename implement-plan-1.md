@@ -389,7 +389,7 @@ def new_rule_controller(name: str, target: Optional[Path] = None, force: bool = 
 - [x] **Set Semantic Upper Bounds in Dependencies:** Update [`pyproject.toml`](file:///c:/Users/worka/Desktop/test/auto-context/pyproject.toml#L9-L14).
 - [x] **Integrate Machine-Readable Output:** Implement `--json` support for `mcp list` and `memory status`.
 - [x] **Add Static Analysis & Type Checking to CI:** Integrate `ruff` and `mypy` into [`.github/workflows/test.yml`](file:///c:/Users/worka/Desktop/test/auto-context/.github/workflows/test.yml).
-- [ ] **Synchronize Documentation & Satellites:** Update `README.md` and `.agents/context/` with modern syntax (`-A` flag, `docs/` layout, `--json`).
+- [x] **Synchronize Documentation & Satellites:** Update `README.md` and `.agents/context/` with modern syntax (`-A` flag, `docs/` layout, `--json`).
 
 #### Technical Implementation Guide
 

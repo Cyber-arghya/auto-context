@@ -133,23 +133,40 @@ Dumping routes, schemas, credentials, and runbooks into a single monolithic cont
 
 ```text
 your-project/
+├── docs/                         <─── Standardized Architectural Knowledge Base
+│   ├── architecture/
+│   │   ├── system-design.md      (High-level architecture, tech stack & data flows)
+│   │   ├── api-design.md         (API endpoints, payload schemas & contracts)
+│   │   └── database-schema.md    (Entities, tables, relationships & migrations)
+│   ├── decisions/
+│   │   └── ADR-001.md            (Architecture Decision Records & technical rationale)
+│   └── development/
+│       └── development-guide.md  (Local dev setup, debugging & verified workflows)
 ├── .agents/
 │   ├── context.md                <─── Executive Context Hub (Compact macro routing & invariants)
 │   ├── project-goal.md           <─── North Star, active milestones, anti-goals & ADRs
-│   ├── context/                  <─── Stack-Adaptive Satellites (Loaded on-demand)
-│   │   ├── routes.md             (API Endpoints & UI Page Map — loaded for route tasks)
-│   │   └── schema.md             (Database Schemas & Models — loaded for DB tasks)
+│   ├── agents/                   <─── Subagent Personas (Antigravity 2.0 specialized roles)
+│   │   ├── architect.md          (System design & architectural boundaries)
+│   │   ├── code-reviewer.md      (Code quality, PR review & quality gates)
+│   │   └── security-auditor.md   (Secret scan, auth boundaries & vulnerability check)
+│   ├── hooks/                    <─── Lifecycle Hooks (Cross-platform deterministic automation)
+│   │   ├── format.sh / .ps1      (Deterministic code formatter)
+│   │   └── validate.sh / .ps1    (Pre-commit / Pre-verification test gate)
 │   ├── rules/                    <─── Domain Rules (Continuous constitutional guardrails)
 │   │   ├── code-standards.md     (Clean code, defensive patterns, mandatory feature tests)
 │   │   ├── security-boundaries.md(Zero secret leakage, sandbox boundaries)
-│   │   └── readme-docs-sync.md   (Mandatory documentation & CLI sync)
+│   │   ├── readme-docs-sync.md   (Mandatory documentation & CLI sync)
+│   │   └── registry.json         (Instant collision detection & domain index)
 │   └── skills/                   <─── Operational Skills (On-demand procedural runbooks)
 │       ├── auto-context/         (Context maintenance, memory sync & promotion SOPs)
+│       ├── browser-testing/      (Automated UI & endpoint testing runbook)
 │       ├── docker-ops/           (Multi-stage containerization & compose management)
+│       ├── feature-verification/ (Structured test execution & verification reporting)
 │       ├── git-workflow/         (Conventional commits, branch safety & releases)
-│       └── feature-verification/ (Structured test execution & verification reporting)
-├── AGENTS.md                     <─── Universal standing instructions (Core Execution Loop)
-└── GEMINI.md                     <─── Antigravity / Gemini standing instructions
+│       └── server-diagnostics/   (System health, RAM/CPU & open port diagnostics)
+├── GEMINI.md                     <─── Antigravity 2.0 & Gemini CLI primary directive
+├── AGENTS.md                     <─── Universal Open Agent standard
+└── CLAUDE.md                     <─── Claude Code cross-agent interoperable mirror
 ```
 
 #### How the Hub & Satellite Pattern Works:
@@ -159,10 +176,15 @@ your-project/
 2. **The North Star & Scope Gatekeeper (`.agents/project-goal.md`):**
    - Outlines the core mission, immediate priorities, out-of-scope boundaries (anti-goals), and architectural decision records (ADRs).
    - Serves as the first gate (Phase 0) before any code is written.
-3. **Adaptive Satellites (`.agents/context/*.md`):**
-   - Deep-domain maps (e.g. `routes.md` for web endpoints, `schema.md` for ORMs and databases).
-   - **Progressive Disclosure:** Kept completely out of the default prompt context. The AI reads them *only* when the active prompt specifically targets that domain, saving 80%+ tokens per turn.
-4. **Strict Idempotency Proof ($f(f(x)) = f(x)$):**
+3. **Standardized Knowledge Base (`docs/`):**
+   - Standardized architectural and development documentation (`docs/architecture/`, `docs/decisions/`, `docs/development/`).
+   - Legacy `.agents/context/` maps are cleanly migrated to `docs/` during initialization.
+4. **Subagent Personas & Hooks (`.agents/agents/`, `.agents/hooks/`):**
+   - Specialized AI subagents for Antigravity 2.0 (`architect`, `code-reviewer`, `security-auditor`).
+   - Platform-agnostic pre-verification and formatting hooks (`.sh` and `.ps1`).
+5. **Triple Instruction Harmonization:**
+   - Synchronized directives across `GEMINI.md`, `AGENTS.md`, and `CLAUDE.md` ensuring full interoperability across Google Antigravity, Gemini CLI, Claude Code, Cursor, and Copilot.
+6. **Strict Idempotency Proof ($f(f(x)) = f(x)$):**
    - Running context sync or generation commands 1 time or 100 times produces the exact same deterministic state.
    - User-written custom rules, manual edits outside anchored blocks, and `.env` secrets remain 100% untouched.
 
@@ -238,8 +260,26 @@ init-context skill deploy-k8s --force
 
 ---
 
-### 4. Rule & Skill Promotion (`promote`)
-Promotes a local workspace rule or skill to machine-wide Global Plugin scope and pushes it to Central Memory in one step.
+### 4. Subagent Persona Management (`agent`)
+Scaffolds a specialized AI subagent persona for Google Antigravity 2.0 with frontmatter, role description, and execution directives.
+
+```bash
+# Create local project subagent (.agents/agents/tester.md)
+init-context agent tester
+init-context agent tester --desc "Autonomous QA & feature verification specialist"
+init-context --new-agent tester
+
+# Create global subagent persona across all projects
+init-context agent performance-tuner --global
+
+# Overwrite existing agent persona
+init-context agent tester --force
+```
+
+---
+
+### 5. Rule, Skill & Subagent Promotion (`promote`)
+Promotes a local workspace rule, skill, or subagent persona to machine-wide Global Plugin scope and pushes it to Central Memory in one step.
 
 ```bash
 # Promote local rule to global scope
@@ -247,11 +287,14 @@ init-context promote api-standards
 
 # Promote local skill to global scope
 init-context promote deploy-k8s
+
+# Promote local subagent persona to global scope
+init-context promote architect
 ```
 
 ---
 
-### 5. Central Memory Brain (`memory`)
+### 6. Central Memory Brain (`memory`)
 Manage your private central memory repository (dotfiles for AI agents) across multiple machines.
 
 ```bash
@@ -267,8 +310,9 @@ init-context memory push --message "feat: add payment gateway rules"
 init-context memory pull
 init-context memory pull --url git@github.com:username/my-agent-brain.git
 
-# 4. Inspect memory status & sync health
+# 4. Inspect memory status & sync health (rich UI or machine-readable JSON)
 init-context memory status
+init-context memory status --json
 
 # 5. Switch or configure remote repository
 init-context memory remote
@@ -281,12 +325,13 @@ init-context memory reset --force
 
 ---
 
-### 6. MCP (Model Context Protocol) Registry (`mcp`)
+### 7. MCP (Model Context Protocol) Registry (`mcp`)
 Manage native MCP server configurations for Antigravity and Gemini CLI without committing plaintext secrets.
 
 ```bash
 # 1. Add pre-configured presets (references ${ENV_VARS} safely)
 init-context mcp add sqlite --args "data.db"
+init-context mcp add sqlite -A "data.db"
 init-context mcp add postgres
 init-context mcp add github
 init-context mcp add brave
@@ -298,30 +343,32 @@ init-context mcp add git
 init-context mcp add github --env-var MY_GITHUB_PAT
 
 # 2. Add custom command or remote HTTP MCP tool
-init-context mcp add my-tool --command "python" --args "server.py"
+init-context mcp add my-tool --command "python" -A "server.py"
 init-context mcp add remote-tool --url "https://mcp.example.com/sse"
 
 # 3. Choose runner explicitly (uvx vs npx)
 init-context mcp add fetch --runtime uvx
 init-context mcp add puppeteer --runtime npx
 
-# 4. List registered MCP servers
+# 4. List registered MCP servers (table format or machine-readable JSON)
 init-context mcp list
-init-context mcp list --global
+init-context mcp list --json
+init-context mcp list --global --json
 
 # 5. Remove an MCP tool
 init-context mcp remove sqlite
 init-context mcp remove github --global
 
 # Legacy flag aliases:
-init-context --add-mcp sqlite
+init-context --add-mcp sqlite -A "data.db"
 init-context --list-mcp
+init-context --list-mcp --json
 init-context --remove-mcp sqlite
 ```
 
 ---
 
-### 7. Granular Sharing & Import (`share` / `import`)
+### 8. Granular Sharing & Import (`share` / `import`)
 Share isolated rules or skills with teammates via GitHub Gist and import them safely with Collision Guard.
 
 ```bash
@@ -344,7 +391,23 @@ init-context import <gist-url> --as custom-docker-skill
 
 ---
 
-### 8. Modular Updates (`update`)
+### 9. Security & Secret Scanner (`audit`)
+Audits repository or target directory against sensitive files, private keys, API tokens, and secret patterns.
+
+```bash
+# Run security audit on active workspace
+init-context audit
+
+# Run audit on a specific file or folder
+init-context audit --target /path/to/project
+
+# Machine-readable JSON output for automated CI pipelines and pre-commit checks
+init-context audit --json
+```
+
+---
+
+### 10. Modular Updates (`update`)
 Safely update the CLI package and sync global plugin assets without overwriting custom user rules or project context.
 
 ```bash
@@ -360,13 +423,15 @@ init-context update --force
 
 ---
 
-### 9. Global Command Flags
+### 11. Global Command Flags
 | Flag | Shorthand | Description |
 | :--- | :--- | :--- |
 | `--global` | `-g` | Targets machine-wide scope (`~/.gemini/config/plugins/auto-context/`). |
 | `--force` | `-f` | Bypasses collision guard and overwrites existing files. |
 | `--append` | `-a` | Appends new guideline to an existing domain rule. |
 | `--guideline` | — | Text to append when used with `--append`. |
+| `--args` | `-A` | Arguments to pass to MCP command (disambiguated from `-a`). |
+| `--json` | — | Outputs machine-readable JSON for scripting, CI pipelines and AI agents. |
 | `--dry-run` | `-d` | Simulates actions without creating or modifying files on disk. |
 | `--version` | `-v` | Prints current package version. |
 
@@ -374,16 +439,22 @@ init-context update --force
 
 ## 📁 Generated Project Layout
 
-Running `init-context` inside any project establishes a clean 5-tier architecture:
+Running `init-context` inside any project establishes a clean Antigravity 2.0 multi-tier architecture:
 
 | Artifact | Location | Purpose | Tracked in Git |
 | :--- | :--- | :--- | :--- |
-| **Executive Context Hub** | [`.agents/context.md`](file://.agents/context.md) | Compact macro navigation hub, stack info, runbooks & architecture invariants. | Yes |
-| **Endpoint Map** | [`.agents/context/routes.md`](file://.agents/context/routes.md) | Discovered API routes and page views for precision targeting. | Yes |
-| **Project Goals & ADR** | [`.agents/project-goal.md`](file://.agents/project-goal.md) | Project objectives, architectural milestones, and ADR decisions. | Yes |
+| **System Architecture** | [`docs/architecture/system-design.md`](file://docs/architecture/system-design.md) | High-level system design, components, and data flow. | Yes |
+| **API Specifications** | [`docs/architecture/api-design.md`](file://docs/architecture/api-design.md) | Endpoint contracts, request/response formats, and status codes. | Yes |
+| **Database Schema** | [`docs/architecture/database-schema.md`](file://docs/architecture/database-schema.md) | Database entities, schemas, models, and migrations. | Yes |
+| **Architecture Decisions** | [`docs/decisions/ADR-001.md`](file://docs/decisions/ADR-001.md) | Architectural Decision Records and rationale. | Yes |
+| **Development Guide** | [`docs/development/development-guide.md`](file://docs/development/development-guide.md) | Setup, local testing workflows, and debugging steps. | Yes |
+| **Executive Context Hub** | [`.agents/context.md`](file://.agents/context.md) | Compact macro navigation hub, stack info & architecture invariants. | Yes |
+| **Project Goals & ADR** | [`.agents/project-goal.md`](file://.agents/project-goal.md) | Project objectives, active milestones, and anti-goals. | Yes |
+| **Subagent Personas** | [`.agents/agents/*.md`](file://.agents/agents/) | Antigravity 2.0 specialized agents (`architect`, `code-reviewer`, `security-auditor`). | Yes |
+| **Lifecycle Hooks** | [`.agents/hooks/`](file://.agents/hooks/) | Cross-platform deterministic hooks (`format`, `validate`). | Yes |
 | **Domain Rules** | [`.agents/rules/*.md`](file://.agents/rules/) | Continuous coding standards, security rules, and doc sync. | Yes |
 | **Operational Skills** | [`.agents/skills/*/SKILL.md`](file://.agents/skills/) | On-demand task runbooks (Docker, Git rebase, Verification). | Yes |
-| **Standing Instructions** | [`AGENTS.md`](file://AGENTS.md), [`GEMINI.md`](file://GEMINI.md) | Universal agent standing instructions and behavioral mandates. | Yes |
+| **Standing Directives** | [`GEMINI.md`](file://GEMINI.md), [`AGENTS.md`](file://AGENTS.md), [`CLAUDE.md`](file://CLAUDE.md) | Harmonized triple instructions for Antigravity, Open Agent & Claude Code. | Yes |
 | **MCP Tool Config** | `.gemini/mcp_config.json`, `.agents/mcp_config.json` | Stdio and remote MCP server registry for AI assistants. | Yes |
 
 ---
@@ -404,8 +475,16 @@ auto-context/
 │       ├── main.py                  # Root CLI entrypoint & subcommand dispatcher
 │       ├── config.py                # Global paths (~/.auto-context, ~/.gemini) & indicators
 │       ├── security.py              # Zero-Bypass secret scanner (<10MB guard & key auditor)
+│       ├── core/                    # Core domain models & exception standards
+│       │   ├── exceptions.py        # Structured AutoContextError hierarchy
+│       │   └── models.py            # Typed domain data models & validation reports
+│       ├── services/                # Decoupled application service layer
+│       │   ├── scaffold_service.py  # Workspace scaffolding, docs & migration orchestration
+│       │   ├── registry_service.py  # Domain rules registry & duplicate detection engine
+│       │   ├── security_service.py  # Secret scanning, path auditing & violation enforcement
+│       │   └── memory_service.py    # Central memory brain sync, status & git operations
 │       ├── commands/
-│       │   ├── init_cmd.py          # Scaffolding, stack detector, rule, skill & promote
+│       │   ├── init_cmd.py          # Scaffolding, stack detector, rule, skill, agent & promote
 │       │   ├── memory.py            # Central private git repo brain management & harvester
 │       │   ├── mcp.py               # Native JSON MCP registry with .bak corruption recovery
 │       │   ├── share.py             # Granular Gist publishing via gh CLI / REST API fallback
@@ -414,12 +493,25 @@ auto-context/
 │       └── templates/               # 🌟 CANONICAL SINGLE SOURCE OF TRUTH (SSOT)
 │           ├── plugin.json          # Antigravity plugin manifest (v1.5.1)
 │           ├── AGENTS.template.md   # Universal standing instructions & Core Execution Loop
+│           ├── GEMINI.template.md   # Google Antigravity & Gemini CLI directives
+│           ├── CLAUDE.template.md   # Claude Code cross-agent interoperability mirror
 │           ├── context.template.md  # Executive Context Hub (<80 lines) & failure invariants
 │           ├── project-goal.template.md # North Star, active milestones, anti-goals & ADR
 │           ├── rule.template.md     # Domain rule scaffold template
 │           ├── skill.template.md    # Operational skill scaffold template
 │           ├── profile.template.md  # Central memory developer profile scaffold
 │           ├── mcp_config.template.json # Stdio/remote MCP server registry stub
+│           ├── agents/              # Canonical Antigravity 2.0 subagent personas
+│           │   ├── architect.md           (System design & architectural boundaries)
+│           │   ├── code-reviewer.md       (Code quality, PR review & quality gates)
+│           │   └── security-auditor.md    (Secret scan, auth boundaries & vulnerability check)
+│           ├── hooks/               # Deterministic lifecycle hooks
+│           │   ├── format.sh / .ps1       (Deterministic code formatting)
+│           │   └── validate.sh / .ps1     (Pre-commit / pre-verification test gate)
+│           ├── docs/                # Canonical architectural knowledge templates
+│           │   ├── architecture/          (system-design, api-design, database-schema)
+│           │   ├── decisions/             (ADR-001)
+│           │   └── development/           (development-guide)
 │           ├── rules/               # Canonical domain rules
 │           │   ├── code-standards.md      (Clean code, defensive patterns & test mandate)
 │           │   ├── security-boundaries.md (Zero secret leakage & sandbox boundaries)
@@ -432,13 +524,18 @@ auto-context/
 │               ├── feature-verification/  (Structured test execution & verification report)
 │               ├── git-workflow/          (Conventional commits, branch safety & releases)
 │               └── server-diagnostics/    (System health, RAM/CPU & open port diagnostics)
-├── tests/                           # Complete test suite (27 tests across 8 suites)
+├── tests/                           # Complete test suite (60 tests across 12 suites)
 │   ├── run_tests.py                 # Zero-dependency test runner with rich terminal reporting
+│   ├── test_agents.py               # Subagent persona scaffolding & agent command tests
+│   ├── test_core.py                 # Domain models & exception hierarchy tests
+│   ├── test_harmonization.py        # Triple instruction parity (GEMINI, AGENTS, CLAUDE)
+│   ├── test_hooks.py                # Cross-platform lifecycle hooks tests
 │   ├── test_idempotency.py          # Deterministic re-run & zero-drift verification
-│   ├── test_init.py                 # Scaffolding, rule append & promotion verification
-│   ├── test_mcp.py                  # Presets, JSON persistence & .env placeholder tests
-│   ├── test_memory.py               # Central memory git lifecycle & reset tests
-│   ├── test_security.py             # Secret patterns, prohibited extensions & ignore checks
+│   ├── test_init.py                 # Scaffolding, docs/ migration, rule append & promotion
+│   ├── test_mcp.py                  # Presets, JSON persistence, -A flag & JSON output tests
+│   ├── test_memory.py               # Central memory git lifecycle, status & JSON output tests
+│   ├── test_security.py             # Secret patterns, prohibited extensions & audit CLI tests
+│   ├── test_services.py             # Decoupled service layer unit tests
 │   ├── test_sharing.py              # Frontmatter detection, Gist URL resolution & item finding
 │   ├── test_ssot.py                 # Single source of truth & zero unrendered {{...}} placeholders
 │   └── test_update.py               # Semantic version parsing & non-breaking update safety
