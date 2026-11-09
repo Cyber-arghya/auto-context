@@ -47,7 +47,7 @@ def root(
     preset: Annotated[Optional[str], typer.Option("--preset", "-p", help="MCP preset name.")] = None,
     runtime: Annotated[Optional[str], typer.Option("--runtime", "--runner", help="Package runner (uvx vs npx).")] = None,
     command: Annotated[Optional[str], typer.Option("--command", "-c", help="Executable command for MCP server.")] = None,
-    args: Annotated[Optional[str], typer.Option("--args", "-a", help="Arguments to pass to MCP command.")] = None,
+    args: Annotated[Optional[str], typer.Option("--args", "-A", help="Arguments to pass to MCP command.")] = None,
     url: Annotated[Optional[str], typer.Option("--url", help="HTTP endpoint URL for remote MCP server.")] = None,
     env_var: Annotated[Optional[str], typer.Option("--env-var", help="Secret environment variable name.")] = None,
     env: Annotated[Optional[str], typer.Option("--env", help="Environment variables (KEY=val,KEY2=val2).")] = None,

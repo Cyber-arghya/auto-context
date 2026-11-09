@@ -43,3 +43,19 @@ def test_add_mcp_quoted_arguments_with_spaces(tmp_path: Path):
     server = data["mcpServers"]["custom-server"]
     # Argument with spaces inside quotes must not be broken into multiple tokens
     assert any("C:/Program Files/My App/db.sqlite" in arg for arg in server["args"])
+
+
+def test_cli_flag_args_capital_a(tmp_path: Path):
+    """Test that -A sets args without conflicting with -a (append)."""
+    from typer.testing import CliRunner
+    from auto_context.main import app
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["--add-mcp", "custom-flag", "--command", "runner", "-A", "--port 8080", "--target", str(tmp_path)])
+    assert result.exit_code == 0
+    cfg_file = tmp_path / ".gemini" / "mcp_config.json"
+    assert cfg_file.exists()
+    data = json.loads(cfg_file.read_text(encoding="utf-8"))
+    assert "custom-flag" in data["mcpServers"]
+    assert "--port" in data["mcpServers"]["custom-flag"]["args"]
+
