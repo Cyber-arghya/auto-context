@@ -1,14 +1,14 @@
 ---
 name: git-workflow
-version: 1.0.0
-description: Conventional commit standards, branch management, safe rebasing, and merge conflict resolution.
-triggers: ["git", "commit", "branch", "pr", "pull-request", "merge", "conflict", "rebase"]
+version: 1.1.0
+description: Conventional commit standards, branch management, safe rebasing, pre-commit quality gates, and merge conflict resolution.
+triggers: ["git", "commit", "branch", "pr", "pull-request", "merge", "conflict", "rebase", "hook", "pre-commit"]
 ---
 
 # Skill: Git Workflow & Release Management
 
 ## Overview
-Standard procedures for feature branching, atomic conventional commits, interactive rebasing, merge conflict resolution, and safe remote synchronization.
+Standard procedures for feature branching, atomic conventional commits, pre-commit quality gates, interactive rebasing, merge conflict resolution, and safe remote synchronization.
 
 ## When to Activate
 - When staging, committing, or pushing code changes to remote repositories.
@@ -92,3 +92,61 @@ Upon completion of a major architectural update, new feature, or breaking change
      - Follow Domain Consolidation (all guidelines for the same domain reside in that domain's single consolidated file, validated against `registry.json`).
      - The AI assistant **MUST autonomously run `init-context memory push`** immediately upon concluding the task.
      - The user must **NEVER** be required to manually run push commands.
+
+### 6. Pre-Commit Quality Gate & Git Hook Protocol
+
+To prevent broken code, unformatted files, or failing CI/CD pipelines from reaching remote branches, all repositories must enforce a deterministic pre-commit verification chain.
+
+#### 1. Mandatory Local Quality Gate Chain
+Before committing or creating a pull request, run the complete verification chain:
+```bash
+# 1. Static analysis & linting (fast failure)
+uv run ruff check src/ tests/
+
+# 2. Static type checking
+uv run mypy src/ --ignore-missing-imports
+
+# 3. Unit & integration test suite
+uv run python tests/run_tests.py
+```
+To automatically fix formatting or safe linter issues:
+```bash
+uv run ruff check --fix src/ tests/
+```
+
+#### 2. Git Hooks Architecture & Remote Isolation Invariant
+* **Why `.git/hooks/` is NEVER pushed to GitHub:**
+  By core Git architecture and security design, Git strictly excludes the `.git/` metadata directory from commits and remote tracking. This is a fundamental security barrier preventing cloned repositories from automatically executing untrusted scripts on a developer's host machine.
+* **Local Hook Installation:**
+  To automate verification on every `git commit`, configure `.git/hooks/pre-commit`:
+  ```bash
+  #!/bin/sh
+  set -e
+
+  echo "🔍 Running Ruff linter..."
+  uv run ruff check src/ tests/
+
+  echo "🔎 Running Mypy type checker..."
+  uv run mypy src/ --ignore-missing-imports
+
+  echo "🧪 Running Test Suite..."
+  uv run python tests/run_tests.py
+
+  echo "✅ All pre-commit quality checks passed!"
+  ```
+  Ensure the hook has executable permissions (`chmod +x .git/hooks/pre-commit` on Unix/macOS or created directly on Windows).
+* **Cross-Team Hook Versioning (`core.hooksPath`):**
+  When hooks must be version-controlled in GitHub across team members:
+  1. Store repository hooks in a versioned folder (e.g., `.agents/hooks/` or `.githooks/`).
+  2. Configure git to read hooks from that folder:
+     ```bash
+     git config core.hooksPath .agents/hooks
+     # or
+     git config core.hooksPath .githooks
+     ```
+* **Emergency Bypass:**
+  In verified emergency rollbacks or documentation-only quick commits where verification is inapplicable, bypass the hook using:
+  ```bash
+  git commit -m "docs: emergency hotfix" --no-verify
+  ```
+
