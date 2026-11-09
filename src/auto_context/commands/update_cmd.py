@@ -295,8 +295,9 @@ def update_workspace(target_dir: Path, force: bool = False) -> int:
 
     # System-managed files to refresh
     system_rules = [
-                (templates / "AGENTS.template.md", target_dir / "AGENTS.md"),
+        (templates / "AGENTS.template.md", target_dir / "AGENTS.md"),
         (templates / "AGENTS.template.md", target_dir / "GEMINI.md"),
+        (templates / "AGENTS.template.md", target_dir / "CLAUDE.md"),
     ]
 
     variables = {

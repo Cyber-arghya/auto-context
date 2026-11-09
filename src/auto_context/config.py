@@ -104,6 +104,8 @@ ZERO_FOOTPRINT_PATTERNS: list[str] = [
     "AGENTS.md.bak",
     "GEMINI.md",
     "GEMINI.md.bak",
+    "CLAUDE.md",
+    "CLAUDE.md.bak",
     ".auto-context/",
     "auto-context/",
 ]

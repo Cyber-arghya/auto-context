@@ -28,6 +28,9 @@ def test_update_workspace_preserves_custom_rules_and_context(tmp_path: Path):
     # Custom rule and context.md must remain 100% untouched
     assert custom_rule.read_text(encoding="utf-8") == "# Custom Rule Content"
     assert context_file.read_text(encoding="utf-8") == "# Custom Project Hub"
+    assert (tmp_path / "AGENTS.md").is_file()
+    assert (tmp_path / "GEMINI.md").is_file()
+    assert (tmp_path / "CLAUDE.md").is_file()
 
 
 def test_offline_negative_caching(tmp_path: Path):

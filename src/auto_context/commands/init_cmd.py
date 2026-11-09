@@ -352,11 +352,11 @@ def init(
     if legacy_local.exists() and not dry_run:
         legacy_local.unlink(missing_ok=True)
 
-    # ── Standing AI Assistant Instructions (Root AGENTS.md & GEMINI.md) ───────
+    # ── Standing AI Assistant Instructions (Root AGENTS.md, GEMINI.md & CLAUDE.md) ───────
     agents_tmpl = templates / "AGENTS.template.md"
     if agents_tmpl.exists():
         content = _render(agents_tmpl, variables)
-        for dest_name in ("GEMINI.md", "AGENTS.md"):
+        for dest_name in ("GEMINI.md", "AGENTS.md", "CLAUDE.md"):
             _write_if_missing(project_dir / dest_name, content, force=force, dry_run=dry_run)
     # ── MCP config stub ───────────────────────────────────────────────────────
     mcp_tmpl = templates / "mcp_config.template.json"

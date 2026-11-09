@@ -201,7 +201,7 @@ Ensure network failures save a timestamped cache entry:
   - Scaffold cross-platform executable hooks:
     - `format.sh` / `format.ps1` (Deterministic code formatter).
     - `validate.sh` / `validate.ps1` (Pre-commit / Pre-verification test gate).
-- [ ] **Triple Instruction Harmonization:**
+- [x] **Triple Instruction Harmonization:**
   - Generate synchronized entrypoints pointing cleanly to `docs/` and `.agents/`:
     - `GEMINI.md` (Google Antigravity & Gemini CLI primary directive).
     - `AGENTS.md` (Universal Open Agent standard).

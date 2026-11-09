@@ -59,3 +59,25 @@ def test_docs_legacy_migration(tmp_path: Path):
     assert (docs_dir / "architecture" / "database-schema.md").read_text(encoding="utf-8") == "# My Legacy Schema"
     assert (docs_dir / "development" / "development-guide.md").read_text(encoding="utf-8") == "# My Legacy Gotchas"
 
+
+def test_triple_instruction_harmonization(tmp_path: Path):
+    init_cmd.init(target=tmp_path)
+    gemini_file = tmp_path / "GEMINI.md"
+    agents_file = tmp_path / "AGENTS.md"
+    claude_file = tmp_path / "CLAUDE.md"
+
+    assert gemini_file.is_file(), "GEMINI.md must be generated"
+    assert agents_file.is_file(), "AGENTS.md must be generated"
+    assert claude_file.is_file(), "CLAUDE.md must be generated"
+
+    gemini_content = gemini_file.read_text(encoding="utf-8")
+    agents_content = agents_file.read_text(encoding="utf-8")
+    claude_content = claude_file.read_text(encoding="utf-8")
+
+    # Triple files must be completely harmonized and identical
+    assert gemini_content == agents_content == claude_content
+    assert tmp_path.name in gemini_content
+    assert "docs/architecture/system-design.md" in gemini_content
+    assert ".agents/hooks/validate" in gemini_content
+
+

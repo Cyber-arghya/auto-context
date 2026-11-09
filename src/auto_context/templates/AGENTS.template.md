@@ -1,8 +1,8 @@
-# Standing Agent Rules: {{PROJECT_NAME}}
+# Standing Instructions for AI Assistants: {{PROJECT_NAME}} (Antigravity / Gemini / Claude)
 
 ## Core Execution Loop
 
-You are an autonomous engineering assistant in `{{PROJECT_DIR}}`. Every turn must execute through this pipeline:
+You are an autonomous engineering assistant operating in `{{PROJECT_DIR}}`. Every turn must execute through this pipeline:
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -18,17 +18,17 @@ You are an autonomous engineering assistant in `{{PROJECT_DIR}}`. Every turn mus
 └──────────────────────────┬─────────────────────────────┘
                            ▼
 ┌────────────────────────────────────────────────────────┐
-│ Phase 3: Targeted Discovery (.agents/context/*.md)     │
+│ Phase 3: Targeted Discovery (docs/ & Entry Points)      │
 └──────────────────────────┬─────────────────────────────┘
                            ▼
 ┌────────────────────────────────────────────────────────┐
-│ Phase 4: Implementation (.agents/skills/)              │◄──────┐
+│ Phase 4: Implementation (.agents/skills/ & agents/)    │◄──────┐
 └──────────────────────────┬─────────────────────────────┘       │
-                           ▼                                     │ (Test Failed:
+                           ▼                                     │ (Validation Failed:
 ┌────────────────────────────────────────────────────────┐       │  Self-Correct)
-│ Phase 5: Verification & Sync Gate                      │       │
-│          • Automated Tests (Exit Code 0)               ├───────┘
-│          • Sync Invariants & README (Pass)             │
+│ Phase 5: Verification & Hooks (.agents/hooks/)         │       │
+│          • Automated Tests & Hooks (Exit Code 0)       ├───────┘
+│          • Sync Invariants, docs/ & README (Pass)      │
 └────────────────────────────────────────────────────────┘
 ```
 
@@ -75,31 +75,43 @@ Before executing system-level actions:
 
 ---
 
-### Phase 3: Targeted Discovery & Navigation
+### Phase 3: Targeted Discovery & System Knowledge
+*Reference: [`docs/`](file://{{PROJECT_DIR}}/docs/)*
 
 Targeted Context Formula:
-$$\text{Context} = \text{Route Map (Macro)} + \text{Symbol / Grep (Micro)} + \text{Targeted Range Read}$$
+$$\text{Context} = \text{Documentation (Macro)} + \text{Symbol / Grep (Micro)} + \text{Targeted Range Read}$$
 
 - **Zero Unnecessary Reads:** Read only line ranges (`#L20-L80`) rather than dumping whole files.
-- **Context Routing:** Consult specialized domain satellites in `.agents/context/*.md` ONLY when the active task requires deep domain context (e.g. `routes.md` for Web APIs, `schema.md` for DB schemas). For CLI tools, libraries, or standalone scripts without satellite files, navigate directly to entry points or manifests.
+- **Project Knowledge Base Index (`docs/`):** When researching architecture or implementing features, inspect designated documents in `docs/`:
+  - **System Design & Components:** `docs/architecture/system-design.md`
+  - **Database Schemas & Models:** `docs/architecture/database-schema.md`
+  - **API Contracts & Routes:** `docs/architecture/api-design.md`
+  - **Development Workflows & Traps:** `docs/development/development-guide.md`
+  - **Architecture Decision Records:** `docs/decisions/ADR-*.md`
 
 ---
 
-### Phase 4: Implementation & Skills Execution
-*Reference: [`.agents/skills/`](file://{{PROJECT_DIR}}/.agents/skills/)*
+### Phase 4: Implementation, Skills & Subagents
+*Reference: [`.agents/skills/`](file://{{PROJECT_DIR}}/.agents/skills/) & [`.agents/agents/`](file://{{PROJECT_DIR}}/.agents/agents/)*
 
-- **Dynamic Skill Dispatch:** Match task requirements against active operational skills in `.agents/skills/*/SKILL.md`.
-- **On-Demand Execution:** Consult the corresponding skill runbook only when performing procedural tasks (e.g. container operations, verification SOPs, git releases, or context CLI management).
-- **Extensible:** Any new skill created via `init-context -s` or pulled from Central Memory is immediately available for execution based on its declared triggers.
+- **Dynamic Skill Dispatch:** Match task requirements against active operational skills in `.agents/skills/*/SKILL.md` (`docker-ops`, `git-workflow`, `feature-verification`, `server-diagnostics`, `browser-testing`, `auto-context`).
+- **Specialized Subagent Personas:** When operating in multi-agent mode or executing specialized roles, consult personas in `.agents/agents/*.md`:
+  - `architect.md`: High-level system design and trade-offs.
+  - `code-reviewer.md`: Static analysis, edge case checks, and code quality.
+  - `security-auditor.md`: Secret audits, auth boundaries, and vulnerability scans.
+- **Extensible:** Any new skill or agent created via `init-context -s` or `init-context agent` is immediately available.
 
 ---
 
-### Phase 5: Verification & Sync Gate
+### Phase 5: Verification & Lifecycle Hooks Gate
+*Reference: [`.agents/hooks/`](file://{{PROJECT_DIR}}/.agents/hooks/)*
 
 Every task must satisfy this checklist before completion:
-1. **Automated Verification & Self-Correction Loop (Exit Code 0):** Execute project tests using the command in `context.md`. If any test fails, do NOT declare completion—immediately self-correct by looping back to Phase 4 (Implementation) to diagnose and fix the root cause, and re-run verification until all tests pass with exit code `0`.
-2. **README Sync:** Update flags, usage examples, and installation instructions if behavior changed.
-3. **Invariants Sync:** If a non-trivial edge case or bug was resolved, add the core invariant to `.agents/context.md` (Section 3). Do not log stack traces or transient errors.
-4. **Domain Satellite Sync:** Update relevant satellites in `.agents/context/` if endpoints, data models, or state structures shifted.
-5. **Architectural Decisions (ADR):** If architectural scope or conventions shifted, document the decision in `.agents/project-goal.md` (Section 4).
+1. **Automated Verification & Self-Correction Loop (Exit Code 0):** Execute project tests using verified commands in `context.md`. If any test fails, do NOT declare completion—immediately self-correct by looping back to Phase 4 (Implementation) to fix the root cause until all tests pass with exit code `0`.
+2. **Deterministic Lifecycle Hooks Execution:** Run project validation hooks before turn completion:
+   - Windows: `powershell -File .agents/hooks/validate.ps1`
+   - POSIX: `bash .agents/hooks/validate.sh`
+3. **README & Documentation Sync:** Update `README.md` and `docs/` (`api-design.md`, `database-schema.md`) if CLI flags, endpoints, or data models were modified.
+4. **Invariants Sync:** If a non-trivial edge case or bug was resolved, record the enduring invariant in `docs/development/development-guide.md` and `.agents/context.md` (Section 3).
+5. **Architectural Decisions (ADR):** If architectural conventions shifted, document an ADR in `docs/decisions/`.
 6. **Rule & Skill Crystallization:** When user instructions define an enduring convention ("always", "from now on"), codify them using `init-context -r <name> -g` or `init-context -s <name> -g` followed by `init-context memory push`.
