@@ -10,3 +10,4 @@
 
 1. **Deterministic State:** Verify that build and test commands run cleanly with exit code 0.
 2. **Secret Safety:** Never commit active tokens, private keys, or credentials into git.
+

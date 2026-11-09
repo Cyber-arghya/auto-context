@@ -61,6 +61,14 @@ def test_canonical_templates_integrity():
         doc_path = docs_dir / doc_rel
         assert doc_path.exists(), f"Missing required docs template: {doc_rel}"
 
+    # 5. Antigravity Subagent Personas
+    agents_dir = TEMPLATES_DIR / "agents"
+    assert agents_dir.is_dir(), "templates/agents/ directory must exist"
+    assert (TEMPLATES_DIR / "agent.template.md").exists(), "templates/agent.template.md must exist"
+    for expected in ("architect.md", "code-reviewer.md", "security-auditor.md"):
+        agent_file = agents_dir / expected
+        assert agent_file.exists(), f"Missing required subagent persona: {expected}"
+
 
 def test_template_variable_rendering():
     """Ensure all core markdown templates render cleanly without unpopulated placeholders."""
@@ -70,6 +78,9 @@ def test_template_variable_rendering():
         "STACK": "Python 3.12",
         "FRAMEWORK": "FastAPI",
         "DATE_NOW": "2026-11-03",
+        "AGENT_NAME": "custom-agent",
+        "AGENT_ROLE": "Custom Agent",
+        "AGENT_DESCRIPTION": "A custom test agent persona",
     }
     placeholder_pattern = re.compile(r"\{\{[A-Z0-9_]+\}\}")
 
@@ -77,10 +88,14 @@ def test_template_variable_rendering():
         TEMPLATES_DIR / "context.template.md",
         TEMPLATES_DIR / "AGENTS.template.md",
         TEMPLATES_DIR / "project-goal.template.md",
+        TEMPLATES_DIR / "agent.template.md",
     ]
     docs_dir = TEMPLATES_DIR / "docs"
     if docs_dir.exists():
         template_files.extend(docs_dir.rglob("*.md"))
+    agents_dir = TEMPLATES_DIR / "agents"
+    if agents_dir.exists():
+        template_files.extend(agents_dir.rglob("*.md"))
 
     for tmpl_file in template_files:
         assert tmpl_file.exists(), f"{tmpl_file.name} must exist"

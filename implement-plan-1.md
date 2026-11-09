@@ -191,7 +191,7 @@ Ensure network failures save a timestamped cache entry:
   - Create `docs/development/` (`development-guide.md`).
   - Create `docs/decisions/` (`ADR-001.md`).
   - Automatically migrate legacy `.agents/context/` files (`routes.md` $\to$ `api-design.md`, `schema.md` $\to$ `database-schema.md`, `gotchas.md` $\to$ `development-guide.md`).
-- [ ] **Implement Subagent Persona Directory (`.agents/agents/`):**
+- [x] **Implement Subagent Persona Directory (`.agents/agents/`):**
   - Add CLI command: `init-context agent <role-name>` (e.g. `init-context agent architect`).
   - Scaffold default Antigravity subagent role templates:
     - `architect.md` (System design & architectural trade-offs).

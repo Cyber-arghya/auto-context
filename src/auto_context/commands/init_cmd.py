@@ -323,6 +323,14 @@ def init(
     # ── Standard docs/ Knowledge Architecture ────────────────────────────────
     _scaffold_docs_layout(project_dir, templates, variables, force=force, dry_run=dry_run)
 
+    # ── Subagent Personas (.agents/agents/) ──────────────────────────────────
+    agents_dest = project_dir / AGENTS_SUBDIR / "agents"
+    agents_tmpl_dir = templates / "agents"
+    if agents_tmpl_dir.exists():
+        for agent_file in sorted(agents_tmpl_dir.glob("*.md")):
+            content = _render(agent_file, variables)
+            _write_if_missing(agents_dest / agent_file.name, content, force=force, dry_run=dry_run)
+
     # ── Legacy Cleanup ─────────────────────────────────────────────────────────
     legacy_local = project_dir / "context.local.md"
     if legacy_local.exists() and not dry_run:
@@ -599,18 +607,82 @@ def new_skill(
     ))
 
 
+# ── agent command ─────────────────────────────────────────────────────────────
+
+def new_agent(
+    name: Annotated[str, typer.Argument(help="Subagent persona role name (e.g. architect, code-reviewer).")],
+    description: Annotated[Optional[str], typer.Option("--desc", help="Short subagent description.")] = None,
+    target: Annotated[Optional[Path], typer.Option("--target", "-t")] = None,
+    global_: Annotated[bool, typer.Option("--global", "-g")] = False,
+    force: Annotated[bool, typer.Option("--force", "-f")] = False,
+    dry_run: Annotated[bool, typer.Option("--dry-run", "-d")] = False,
+) -> None:
+    """Scaffold a specialized AI subagent persona for Antigravity."""
+    clean_name = name.lower().replace(" ", "-").replace("_", "-").removesuffix(".md")
+    role_title = clean_name.replace("-", " ").title()
+
+    dest_dir = (
+        config.GLOBAL_PLUGIN_DIR / "agents"
+        if global_
+        else (target or Path.cwd()).resolve() / AGENTS_SUBDIR / "agents"
+    )
+    dest_file = dest_dir / f"{clean_name}.md"
+
+    if dest_file.exists() and not force:
+        console.print(f"[yellow][!] Subagent persona already exists:[/] {dest_file}\n    Use --force to overwrite.")
+        raise typer.Exit(1)
+
+    templates = get_templates_dir()
+    predefined_tmpl = templates / "agents" / f"{clean_name}.md"
+    project_dir = (target or Path.cwd()).resolve()
+    variables = {
+        "PROJECT_NAME": project_dir.name,
+        "AGENT_NAME": clean_name,
+        "AGENT_ROLE": role_title,
+        "AGENT_DESCRIPTION": description or f"Specialized AI subagent persona for {role_title}.",
+    }
+
+    if predefined_tmpl.exists():
+        content = _render(predefined_tmpl, variables)
+    else:
+        tmpl = templates / "agent.template.md"
+        if tmpl.exists():
+            content = _render(tmpl, variables)
+        else:
+            content = (
+                f"---\nname: {clean_name}\ndescription: {variables['AGENT_DESCRIPTION']}\n"
+                f"tools:\n  - read_file\n  - run_command\n---\n\n"
+                f"# Role: {role_title}\n\n## Objective\n\n## Responsibilities\n"
+            )
+
+    _write_if_missing(dest_file, content, force=force, dry_run=dry_run)
+    if global_ and config.MEMORY_DIR.exists():
+        mem_dest = config.MEMORY_DIR / "agents" / f"{clean_name}.md"
+        _write_if_missing(mem_dest, content, force=force, dry_run=dry_run)
+
+    scope = "GLOBAL Plugin & Central Memory" if global_ else f"LOCAL ({dest_dir})"
+    console.print(Panel(
+        f"[bold green]✨ New Subagent Persona Created![/]\n"
+        f"[yellow]   Role:[/]  {clean_name}\n"
+        f"[cyan]   Scope:[/] {scope}\n"
+        f"[green]   File: [/] {dest_file}",
+        border_style="cyan",
+    ))
+
+
 # ── promote command ───────────────────────────────────────────────────────────
 
 def promote(
-    name: Annotated[str, typer.Argument(help="Rule or skill name to promote to Central Memory.")],
+    name: Annotated[str, typer.Argument(help="Rule, skill, or agent name to promote to Central Memory.")],
     target: Annotated[Optional[Path], typer.Option("--target", "-t")] = None,
 ) -> None:
-    """Promote a local workspace rule or skill to Central Memory and global scope."""
+    """Promote a local workspace rule, skill, or subagent to Central Memory and global scope."""
     project_dir = (target or Path.cwd()).resolve()
     clean_name = name.lower().replace(" ", "-").replace("_", "-").removesuffix(".md")
 
     local_rule = project_dir / AGENTS_SUBDIR / "rules" / f"{clean_name}.md"
     local_skill = project_dir / AGENTS_SUBDIR / "skills" / clean_name / "SKILL.md"
+    local_agent = project_dir / AGENTS_SUBDIR / "agents" / f"{clean_name}.md"
 
     promoted = False
     if local_rule.exists():
@@ -633,8 +705,18 @@ def promote(
         console.print(f"[bold green][✓] Promoted local skill '{clean_name}' to Global Plugin and Central Memory![/]")
         promoted = True
 
+    if local_agent.exists():
+        content = local_agent.read_text(encoding="utf-8")
+        (config.GLOBAL_PLUGIN_DIR / "agents").mkdir(parents=True, exist_ok=True)
+        (config.GLOBAL_PLUGIN_DIR / "agents" / f"{clean_name}.md").write_text(content, encoding="utf-8")
+        if config.MEMORY_DIR.exists():
+            (config.MEMORY_DIR / "agents").mkdir(parents=True, exist_ok=True)
+            (config.MEMORY_DIR / "agents" / f"{clean_name}.md").write_text(content, encoding="utf-8")
+        console.print(f"[bold green][✓] Promoted local subagent '{clean_name}' to Global Plugin and Central Memory![/]")
+        promoted = True
+
     if not promoted:
-        console.print(f"[red][✗] Rule or skill '{clean_name}' not found in local workspace ({project_dir}).[/]")
+        console.print(f"[red][✗] Rule, skill, or agent '{clean_name}' not found in local workspace ({project_dir}).[/]")
         raise typer.Exit(1)
 
     console.print("   [cyan]💡 Run 'init-context memory push' to push changes to your private GitHub repo.[/]\n")

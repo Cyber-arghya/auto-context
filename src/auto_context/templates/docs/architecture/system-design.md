@@ -22,3 +22,4 @@ flowchart TD
 ## Architectural Guidelines
 1. **Separation of Concerns:** Keep core domain logic strictly decoupled from transport or command parsers.
 2. **Defensive Boundaries:** Validate all incoming parameters and handle edge cases gracefully with early returns.
+

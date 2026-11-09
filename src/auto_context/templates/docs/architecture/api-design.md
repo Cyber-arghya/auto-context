@@ -11,3 +11,4 @@ API route contracts, endpoints inventory, and input/output interfaces for {{PROJ
 ## API Standards
 1. **Response Envelope:** Use standard JSON schemas with deterministic error payloads: `{"error": "<message>", "code": "<ERROR_CODE>"}`.
 2. **Input Validation:** Reject malformed request payloads at ingress boundaries prior to service invocation.
+

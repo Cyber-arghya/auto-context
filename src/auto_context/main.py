@@ -29,6 +29,7 @@ app.add_typer(mcp.app, name="mcp", help="MCP tool registry management.")
 app.command("init")(init_cmd.init)
 app.command("rule")(init_cmd.new_rule)
 app.command("skill")(init_cmd.new_skill)
+app.command("agent")(init_cmd.new_agent)
 app.command("promote")(init_cmd.promote)
 app.command("share")(share.share)
 app.command("import")(import_cmd.import_item)
@@ -41,6 +42,7 @@ def root(
     target: Annotated[Optional[Path], typer.Option("--target", "-t", help="Target project directory.")] = None,
     new_rule: Annotated[Optional[str], typer.Option("--new-rule", "-r", help="Scaffold a new agent rule.")] = None,
     new_skill: Annotated[Optional[str], typer.Option("--new-skill", "-s", help="Scaffold a new agent skill.")] = None,
+    new_agent: Annotated[Optional[str], typer.Option("--new-agent", help="Scaffold a new agent persona.")] = None,
     add_mcp: Annotated[Optional[str], typer.Option("--add-mcp", help="Add or update an MCP server.")] = None,
     remove_mcp: Annotated[Optional[str], typer.Option("--remove-mcp", help="Remove an MCP server.")] = None,
     list_mcp: Annotated[bool, typer.Option("--list-mcp", help="List registered MCP servers.")] = False,
@@ -83,6 +85,10 @@ def root(
 
     if new_skill:
         init_cmd.new_skill(name=new_skill, target=target, global_=global_, force=force, dry_run=dry_run)
+        return
+
+    if new_agent:
+        init_cmd.new_agent(name=new_agent, target=target, global_=global_, force=force, dry_run=dry_run)
         return
 
     if list_mcp:
