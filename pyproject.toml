@@ -7,10 +7,10 @@ requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Arghya Biswas", email = "" }]
 dependencies = [
-    "typer>=0.12",
-    "rich>=13",
-    "python-dotenv>=1",
-    "httpx>=0.27",
+    "typer>=0.12.0,<1.0.0",
+    "rich>=13.0.0,<14.0.0",
+    "python-dotenv>=1.0.0,<2.0.0",
+    "httpx>=0.27.0,<1.0.0",
 ]
 
 [project.scripts]
@@ -37,6 +37,9 @@ include = [
 
 [dependency-groups]
 dev = [
-    "pytest>=8",
-    "pytest-mock>=3",
+    "pytest>=8.0.0,<9.0.0",
+    "pytest-cov>=5.0.0",
+    "pytest-mock>=3.12.0",
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
 ]
