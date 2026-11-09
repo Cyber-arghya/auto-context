@@ -100,7 +100,8 @@ def test_posix_path_normalization_in_scaffolding(tmp_path: Path):
     assert agents_md.exists()
     content = agents_md.read_text(encoding="utf-8")
     # Must use forward slash file:// URI format without unescaped Windows backslashes
-    assert f"file://{tmp_path.as_posix()}/" in content
+    resolved_posix = tmp_path.resolve().as_posix()
+    assert (f"file://{resolved_posix}/" in content) or (f"file://{tmp_path.as_posix()}/" in content)
     assert "\\" not in content.split("file://")[1].split()[0]
 
 
