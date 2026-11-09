@@ -437,22 +437,23 @@ def new_rule(
     dest_file = dest_dir / f"{clean_name}.md"
     registry_file = dest_dir / "registry.json"
 
-    if dest_file.exists() and not force:
+    if dest_file.exists():
         if append or guideline:
             text_to_append = guideline or "New domain constraint and best practice."
 
-            # Check duplicate against registry
-            dup = _find_duplicate_rule(_load_registry(registry_file), text_to_append)
-            if dup:
-                dup_domain, dup_title, dup_file = dup
-                console.print(Panel(
-                    f"[bold yellow]⚠️ Duplicate Rule Detected — Skipped![/]\n"
-                    f"[white]The guideline '[cyan]{text_to_append}[/]' matches existing rule:\n"
-                    f"[green]'{dup_title}'[/] inside [yellow]{dup_file}[/] (Domain: [cyan]{dup_domain}[/]).\n\n"
-                    f"[dim]Registry checked: {registry_file}[/]",
-                    border_style="yellow",
-                ))
-                return
+            # Check duplicate against registry unless --force is explicitly provided
+            if not force:
+                dup = _find_duplicate_rule(_load_registry(registry_file), text_to_append)
+                if dup:
+                    dup_domain, dup_title, dup_file = dup
+                    console.print(Panel(
+                        f"[bold yellow]⚠️ Duplicate Rule Detected — Skipped![/]\n"
+                        f"[white]The guideline '[cyan]{text_to_append}[/]' matches existing rule:\n"
+                        f"[green]'{dup_title}'[/] inside [yellow]{dup_file}[/] (Domain: [cyan]{dup_domain}[/]).\n\n"
+                        f"[dim]Use --force to append anyway. Registry: {registry_file}[/]",
+                        border_style="yellow",
+                    ))
+                    return
 
             if not dry_run:
                 _append_guideline_to_file(dest_file, text_to_append)
@@ -471,8 +472,10 @@ def new_rule(
                 border_style="green",
             ))
             return
-        console.print(f"[yellow][!] Rule already exists:[/] {dest_file}\n    Use --append (-a) with --guideline to add to this domain, or --force to overwrite.")
-        raise typer.Exit(1)
+
+        if not force:
+            console.print(f"[yellow][!] Rule already exists:[/] {dest_file}\n    Use --append (-a) with --guideline to add to this domain, or --force to overwrite.")
+            raise typer.Exit(1)
 
     tmpl = get_templates_dir() / "rule.template.md"
     if tmpl.exists():

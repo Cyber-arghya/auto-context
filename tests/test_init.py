@@ -51,6 +51,37 @@ def test_rule_append_guideline(tmp_path: Path):
     assert "Always use type annotations for public APIs." in content
 
 
+def test_rule_append_with_force_preserves_content(tmp_path: Path):
+    """Test that passing --force with --append does NOT wipe out existing guidelines."""
+    init_cmd.new_rule(name="code-standards", target=tmp_path)
+    rule_file = tmp_path / ".agents" / "rules" / "code-standards.md"
+    assert rule_file.exists()
+
+    # Append first guideline
+    init_cmd.new_rule(
+        name="code-standards",
+        target=tmp_path,
+        append=True,
+        guideline="Initial guideline that must be preserved.",
+    )
+    initial_content = rule_file.read_text(encoding="utf-8")
+    assert "Initial guideline that must be preserved." in initial_content
+
+    # Append second guideline WITH force=True (simulates user forcing an append or duplicate override)
+    init_cmd.new_rule(
+        name="code-standards",
+        target=tmp_path,
+        append=True,
+        guideline="Second guideline added with force.",
+        force=True,
+    )
+    updated_content = rule_file.read_text(encoding="utf-8")
+
+    # Both guidelines MUST exist and existing content must NOT be wiped!
+    assert "Initial guideline that must be preserved." in updated_content, "Initial content was wiped out!"
+    assert "Second guideline added with force." in updated_content, "Second guideline was not appended!"
+
+
 def test_skill_creation_and_collision_guard(tmp_path: Path):
     """Test creating an operational skill and verifying duplicate collision prevention."""
     init_cmd.new_skill(name="deploy-k8s", target=tmp_path)
