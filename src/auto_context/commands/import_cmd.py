@@ -16,6 +16,7 @@ import urllib.request
 from pathlib import Path
 from typing import Annotated, Optional
 from urllib.error import URLError
+from urllib.parse import urlparse
 
 import typer
 from rich.console import Console
@@ -26,18 +27,26 @@ from auto_context.config import AGENTS_SUBDIR
 console = Console()
 
 # Regex: https://gist.github.com/<user>/<id>
-_GIST_HTML_RE = re.compile(r"^https?://gist\.github\.com/([^/]+)/([a-f0-9]+)$")
+_GIST_HTML_RE = re.compile(r"^https?://gist\.github\.com/([^/]+)/([a-f0-9]+)", re.IGNORECASE)
+_GIST_ID_RE = re.compile(r"^[a-f0-9]+$", re.IGNORECASE)
 # Frontmatter field matchers
 _NAME_RE   = re.compile(r"(?m)^name:\s*[\"']?([a-zA-Z0-9_\-]+)")
 _SKILL_RE  = re.compile(r"(?m)^triggers\s*:")
 
 
 def _resolve_url(url: str) -> str:
-    """Convert a Gist HTML URL to its raw content URL."""
-    m = _GIST_HTML_RE.match(url.strip())
-    if m:
-        return f"https://gist.githubusercontent.com/{m.group(1)}/{m.group(2)}/raw"
-    return url
+    """Convert a Gist HTML URL to its raw content URL, stripping fragments, query params, and trailing slashes."""
+    stripped = url.strip()
+    try:
+        parsed = urlparse(stripped)
+        if parsed.netloc.lower() in ("gist.github.com", "www.gist.github.com"):
+            parts = [p for p in parsed.path.strip("/").split("/") if p]
+            if len(parts) >= 2 and _GIST_ID_RE.match(parts[1]):
+                if len(parts) == 2 or (len(parts) >= 3 and parts[2].lower() == "raw"):
+                    return f"https://gist.githubusercontent.com/{parts[0]}/{parts[1]}/raw"
+    except Exception:
+        pass
+    return stripped
 
 
 def _fetch(url: str) -> str:

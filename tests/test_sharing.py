@@ -26,10 +26,30 @@ def test_find_item_resolution(tmp_path: Path):
 
 
 def test_resolve_gist_url():
-    """Test converting GitHub Gist web URL to raw content endpoint."""
+    """Test converting GitHub Gist web URL to raw content endpoint with resilient anchor/query/slash handling."""
     web_url = "https://gist.github.com/myuser/1234567890abcdef"
     raw_url = import_cmd._resolve_url(web_url)
     assert raw_url == "https://gist.githubusercontent.com/myuser/1234567890abcdef/raw"
+
+    # With trailing slash
+    trailing_slash_url = "https://gist.github.com/myuser/1234567890abcdef/"
+    assert import_cmd._resolve_url(trailing_slash_url) == "https://gist.githubusercontent.com/myuser/1234567890abcdef/raw"
+
+    # With anchor/fragment
+    anchor_url = "https://gist.github.com/myuser/1234567890abcdef#file-my-rule-md"
+    assert import_cmd._resolve_url(anchor_url) == "https://gist.githubusercontent.com/myuser/1234567890abcdef/raw"
+
+    # With trailing slash and anchor
+    slash_anchor_url = "https://gist.github.com/myuser/1234567890abcdef/#file-my-rule-md"
+    assert import_cmd._resolve_url(slash_anchor_url) == "https://gist.githubusercontent.com/myuser/1234567890abcdef/raw"
+
+    # With query parameter
+    query_url = "https://gist.github.com/myuser/1234567890abcdef?ts=123"
+    assert import_cmd._resolve_url(query_url) == "https://gist.githubusercontent.com/myuser/1234567890abcdef/raw"
+
+    # With query parameter, slash and anchor
+    complex_url = "https://gist.github.com/myuser/1234567890abcdef/?ts=123#file-my-rule-md"
+    assert import_cmd._resolve_url(complex_url) == "https://gist.githubusercontent.com/myuser/1234567890abcdef/raw"
 
     direct_url = "https://example.com/raw/rule.md"
     assert import_cmd._resolve_url(direct_url) == direct_url
