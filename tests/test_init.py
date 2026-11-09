@@ -35,6 +35,19 @@ def test_rule_creation_and_collision_guard(tmp_path: Path):
     assert raised, "Expected typer.Exit when recreating existing rule without --force"
 
 
+def test_new_rule_registers_in_registry(tmp_path: Path):
+    """Test that creating a new rule automatically registers domain in registry.json."""
+    import json
+    init_cmd.new_rule(name="security-policies", target=tmp_path)
+    registry_file = tmp_path / ".agents" / "rules" / "registry.json"
+    assert registry_file.exists()
+
+    data = json.loads(registry_file.read_text(encoding="utf-8"))
+    assert "security-policies" in data["domains"]
+    assert data["domains"]["security-policies"]["file"] == "security-policies.md"
+    assert len(data["domains"]["security-policies"]["rules"]) > 0
+
+
 def test_rule_append_guideline(tmp_path: Path):
     """Test appending a new guideline to an existing rule domain."""
     init_cmd.new_rule(name="code-standards", target=tmp_path)

@@ -571,9 +571,20 @@ def new_rule(
         )
 
     _write_if_missing(dest_file, content, force=force, dry_run=dry_run)
+    if not dry_run:
+        rule_desc = guideline or f"Domain rule definition for {title}."
+        if guideline:
+            _append_guideline_to_file(dest_file, guideline)
+        _register_rule_in_registry(registry_file, clean_name, rule_desc, dest_file.name)
+        if global_ and config.MEMORY_DIR.exists():
+            mem_registry = config.MEMORY_DIR / "rules" / "registry.json"
+            _register_rule_in_registry(mem_registry, clean_name, rule_desc, dest_file.name)
+
     if global_ and config.MEMORY_DIR.exists():
         mem_dest = config.MEMORY_DIR / "rules" / f"{clean_name}.md"
         _write_if_missing(mem_dest, content, force=force, dry_run=dry_run)
+        if not dry_run and guideline:
+            _append_guideline_to_file(mem_dest, guideline)
     scope = "GLOBAL Plugin & Central Memory" if global_ else f"LOCAL ({dest_dir})"
     console.print(Panel(
         f"[bold green]✨ New Rule Created![/]\n"

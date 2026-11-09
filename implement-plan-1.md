@@ -208,7 +208,7 @@ Ensure network failures save a timestamped cache entry:
     - `CLAUDE.md` (Claude Code cross-agent interoperable mirror).
 - [x] **Recursive Multi-File Skill Tree Sync:** Replace `shutil.copy2` with `shutil.copytree` in [`commands/init_cmd.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/commands/init_cmd.py) and [`commands/memory.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/commands/memory.py).
 - [x] **Resilient Gist URL Resolution:** Handle anchors (`#file-...`) and trailing slashes in [`commands/import_cmd.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/commands/import_cmd.py).
-- [ ] **Auto-Register Newly Scaffolded Rules:** Call `_register_rule_in_registry` on initial rule creation.
+- [x] **Auto-Register Newly Scaffolded Rules:** Call `_register_rule_in_registry` on initial rule creation.
 - [ ] **Filter Stop-Words in Duplicate Checker:** Refine `_find_duplicate_rule()` with threshold $\ge 3$.
 - [ ] **Normalize Windows Path URIs:** Pass `project_dir.as_posix()` into template variables.
 - [ ] **Guard MCP JSON Config Handlers:** Prevent `KeyError` on empty dictionaries and iterate all active MCP files.
