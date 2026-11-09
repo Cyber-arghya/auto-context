@@ -10,6 +10,7 @@ Commands exposed:
 from __future__ import annotations
 
 import json
+import os
 import shutil
 from datetime import date
 from pathlib import Path
@@ -330,6 +331,21 @@ def init(
         for agent_file in sorted(agents_tmpl_dir.glob("*.md")):
             content = _render(agent_file, variables)
             _write_if_missing(agents_dest / agent_file.name, content, force=force, dry_run=dry_run)
+
+    # ── Lifecycle Hooks (.agents/hooks/) ─────────────────────────────────────
+    hooks_dest = project_dir / AGENTS_SUBDIR / "hooks"
+    hooks_tmpl_dir = templates / "hooks"
+    if hooks_tmpl_dir.exists():
+        for hook_file in sorted(hooks_tmpl_dir.iterdir()):
+            if hook_file.is_file():
+                content = _render(hook_file, variables)
+                dest_hook = hooks_dest / hook_file.name
+                _write_if_missing(dest_hook, content, force=force, dry_run=dry_run)
+                if not dry_run and hasattr(os, "chmod") and hook_file.suffix == ".sh":
+                    try:
+                        os.chmod(dest_hook, 0o755)
+                    except Exception:
+                        pass
 
     # ── Legacy Cleanup ─────────────────────────────────────────────────────────
     legacy_local = project_dir / "context.local.md"

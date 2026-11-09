@@ -69,6 +69,13 @@ def test_canonical_templates_integrity():
         agent_file = agents_dir / expected
         assert agent_file.exists(), f"Missing required subagent persona: {expected}"
 
+    # 6. Deterministic Lifecycle Hooks
+    hooks_dir = TEMPLATES_DIR / "hooks"
+    assert hooks_dir.is_dir(), "templates/hooks/ directory must exist"
+    for expected in ("format.sh", "format.ps1", "validate.sh", "validate.ps1"):
+        hook_file = hooks_dir / expected
+        assert hook_file.exists(), f"Missing required lifecycle hook template: {expected}"
+
 
 def test_template_variable_rendering():
     """Ensure all core markdown templates render cleanly without unpopulated placeholders."""
@@ -96,6 +103,9 @@ def test_template_variable_rendering():
     agents_dir = TEMPLATES_DIR / "agents"
     if agents_dir.exists():
         template_files.extend(agents_dir.rglob("*.md"))
+    hooks_dir = TEMPLATES_DIR / "hooks"
+    if hooks_dir.exists():
+        template_files.extend(f for f in hooks_dir.iterdir() if f.is_file())
 
     for tmpl_file in template_files:
         assert tmpl_file.exists(), f"{tmpl_file.name} must exist"

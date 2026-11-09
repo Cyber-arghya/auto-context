@@ -197,7 +197,7 @@ Ensure network failures save a timestamped cache entry:
     - `architect.md` (System design & architectural trade-offs).
     - `code-reviewer.md` (PR review, static analysis & quality gate).
     - `security-auditor.md` (Secret scan, auth boundaries & vulnerability check).
-- [ ] **Implement Deterministic Lifecycle Hooks (`.agents/hooks/`):**
+- [x] **Implement Deterministic Lifecycle Hooks (`.agents/hooks/`):**
   - Scaffold cross-platform executable hooks:
     - `format.sh` / `format.ps1` (Deterministic code formatter).
     - `validate.sh` / `validate.ps1` (Pre-commit / Pre-verification test gate).
