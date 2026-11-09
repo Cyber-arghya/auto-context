@@ -259,7 +259,7 @@ def update_global_plugin() -> int:
     agents_tmpl = tmpl_dir / "AGENTS.template.md"
     if agents_tmpl.exists():
         content = agents_tmpl.read_text(encoding="utf-8")
-        content = content.replace("{{PROJECT_NAME}}", "Global").replace("{{PROJECT_DIR}}", str(Path.home()))
+        content = content.replace("{{PROJECT_NAME}}", "Global").replace("{{PROJECT_DIR}}", Path.home().as_posix())
         (rules_dir / "AGENTS.md").write_text(content, encoding="utf-8")
         updated_count += 1
 
@@ -302,7 +302,7 @@ def update_workspace(target_dir: Path, force: bool = False) -> int:
 
     variables = {
         "PROJECT_NAME": target_dir.name,
-        "PROJECT_DIR": str(target_dir),
+        "PROJECT_DIR": target_dir.as_posix(),
     }
 
     # Clean up legacy meta-rules from .agents/rules to enforce DRY

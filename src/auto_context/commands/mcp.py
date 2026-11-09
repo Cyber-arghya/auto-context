@@ -125,11 +125,13 @@ def _detect_runtime(project_dir: Path) -> str:
 # ── JSON config helpers ───────────────────────────────────────────────────────
 
 def _load_mcp_config(path: Path) -> dict:
-    """Load mcp_config.json, returning an empty mcpServers dict on failure."""
+    """Load mcp_config.json, returning an empty mcpServers dict on failure or null/missing values."""
     if path.exists():
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
             if isinstance(data, dict):
+                if not isinstance(data.get("mcpServers"), dict):
+                    data["mcpServers"] = {}
                 return data
         except json.JSONDecodeError as exc:
             import shutil
@@ -231,6 +233,8 @@ def add_mcp(
     # Write to all target config files
     for cfg_path in _mcp_paths(project_dir, global_):
         data = _load_mcp_config(cfg_path)
+        if not isinstance(data.get("mcpServers"), dict):
+            data["mcpServers"] = {}
         data["mcpServers"][server_name] = server_cfg
         _save_mcp_config(cfg_path, data)
 
@@ -259,8 +263,9 @@ def remove_mcp(
         if not cfg_path.exists():
             continue
         data = _load_mcp_config(cfg_path)
-        if name in data.get("mcpServers", {}):
-            del data["mcpServers"][name]
+        servers = data.get("mcpServers")
+        if isinstance(servers, dict) and name in servers:
+            del servers[name]
             _save_mcp_config(cfg_path, data)
             removed_from.append(cfg_path)
 
@@ -279,14 +284,15 @@ def list_mcp(
     target: Annotated[Optional[Path], typer.Option("--target", "-t")] = None,
     global_: Annotated[bool, typer.Option("--global", "-g")] = False,
 ) -> None:
-    """List all registered MCP servers."""
+    """List all registered MCP servers across active configs."""
     project_dir = (target or Path.cwd()).resolve()
 
+    found_any = False
     for cfg_path in _mcp_paths(project_dir, global_):
         if not cfg_path.exists():
             continue
         data = _load_mcp_config(cfg_path)
-        servers = data.get("mcpServers", {})
+        servers = data.get("mcpServers") if isinstance(data.get("mcpServers"), dict) else {}
         if not servers:
             continue
 
@@ -296,6 +302,8 @@ def list_mcp(
         table.add_column("Endpoint / Command", style="white")
 
         for sname, cfg in servers.items():
+            if not isinstance(cfg, dict):
+                continue
             if "url" in cfg:
                 table.add_row(sname, "http", cfg["url"])
             else:
@@ -305,7 +313,8 @@ def list_mcp(
                 table.add_row(sname, "stdio", cmd_str)
 
         console.print(table)
-        return
+        found_any = True
 
-    console.print("[yellow][!] No MCP configuration found. Run:[/] init-context mcp add <name>")
+    if not found_any:
+        console.print("[yellow][!] No MCP configuration found. Run:[/] init-context mcp add <name>")
 

@@ -263,7 +263,7 @@ def init(
 
     variables = {
         "PROJECT_NAME": project_name,
-        "PROJECT_DIR":  str(project_dir),
+        "PROJECT_DIR":  project_dir.as_posix(),
         "STACK":        stack,
         "FRAMEWORK":    framework,
         "DATE_NOW":     date_now,

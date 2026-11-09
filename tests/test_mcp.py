@@ -59,3 +59,49 @@ def test_cli_flag_args_capital_a(tmp_path: Path):
     assert "custom-flag" in data["mcpServers"]
     assert "--port" in data["mcpServers"]["custom-flag"]["args"]
 
+
+def test_mcp_config_guards_null_and_empty(tmp_path: Path):
+    """Test that _load_mcp_config, add_mcp, and remove_mcp handle empty and null mcpServers safely."""
+    gemini_cfg = tmp_path / ".gemini" / "mcp_config.json"
+    agents_cfg = tmp_path / ".agents" / "mcp_config.json"
+    gemini_cfg.parent.mkdir(parents=True)
+    agents_cfg.parent.mkdir(parents=True)
+
+    # 1. Config with empty dict {}
+    gemini_cfg.write_text("{}", encoding="utf-8")
+    # 2. Config with {"mcpServers": null}
+    agents_cfg.write_text('{"mcpServers": null}', encoding="utf-8")
+
+    # Loading both must yield a safe dict with mcpServers as dict
+    assert isinstance(mcp._load_mcp_config(gemini_cfg)["mcpServers"], dict)
+    assert isinstance(mcp._load_mcp_config(agents_cfg)["mcpServers"], dict)
+
+    # Adding an MCP server must succeed without KeyError or TypeError
+    mcp.add_mcp(
+        name="test-server",
+        target=tmp_path,
+        command="test-cmd",
+    )
+    data1 = json.loads(gemini_cfg.read_text(encoding="utf-8"))
+    data2 = json.loads(agents_cfg.read_text(encoding="utf-8"))
+    assert "test-server" in data1["mcpServers"]
+    assert "test-server" in data2["mcpServers"]
+
+    # Removing an MCP server must succeed safely
+    mcp.remove_mcp(name="test-server", target=tmp_path)
+    data1_after = json.loads(gemini_cfg.read_text(encoding="utf-8"))
+    assert "test-server" not in data1_after["mcpServers"]
+
+
+def test_posix_path_normalization_in_scaffolding(tmp_path: Path):
+    """Test that project_dir in AGENTS.md uses POSIX forward slashes instead of Windows backslashes."""
+    from auto_context.commands import init_cmd
+    init_cmd.init(target=tmp_path)
+    agents_md = tmp_path / "AGENTS.md"
+    assert agents_md.exists()
+    content = agents_md.read_text(encoding="utf-8")
+    # Must use forward slash file:// URI format without unescaped Windows backslashes
+    assert f"file://{tmp_path.as_posix()}/" in content
+    assert "\\" not in content.split("file://")[1].split()[0]
+
+
