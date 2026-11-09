@@ -57,6 +57,23 @@ def test_secret_patterns_detected(tmp_path: Path):
         assert any(v.pattern == pattern_name for v in violations)
 
 
+def test_secret_redaction_assignment_masking(tmp_path: Path):
+    # Standalone masking tests
+    assert security._mask("password = 'short'") == "password = '****'"
+    assert security._mask('secret_key: "super_secret_value_12345"') == 'secret_key: "supe****************2345"'
+    assert security._mask("AKIA1234567890ABCDEF") == "AKIA************CDEF"
+
+    # File audit test
+    f = tmp_path / "app_config.py"
+    f.write_text('password = "my_super_secret_password_12345"\n', encoding="utf-8")
+    violations = security.audit_path(f, single_file=True)
+    assert len(violations) == 1
+    assert violations[0].pattern == "Hardcoded Secret/Password"
+    assert violations[0].preview.startswith('password = "my_s')
+    assert violations[0].preview.endswith('2345"')
+    assert "super_secret_password" not in violations[0].preview
+
+
 def test_template_env_var_not_flagged(tmp_path: Path):
     tmpl_file = tmp_path / "config.json"
     tmpl_file.write_text(

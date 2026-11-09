@@ -73,6 +73,18 @@ class Violation:
 
 def _mask(token: str) -> str:
     """Return a partially-masked token for safe display."""
+    # If the token is an assignment statement (e.g. key = 'secret' or key: 'secret'),
+    # mask the secret value rather than masking across key and value boundaries.
+    m = re.match(r'^(.*?[:=]\s*[\'"])(.+)([\'"])$', token, flags=re.IGNORECASE)
+    if m:
+        prefix, val, quote = m.groups()
+        return f"{prefix}{_mask(val)}{quote}"
+
+    m2 = re.match(r'^(.*?[:=]\s*)(\S+)$', token, flags=re.IGNORECASE)
+    if m2:
+        prefix, val = m2.groups()
+        return f"{prefix}{_mask(val)}"
+
     if len(token) <= 8:
         return "****"
     return token[:4] + "*" * (len(token) - 8) + token[-4:]

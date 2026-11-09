@@ -97,7 +97,7 @@ gantt
 - [x] **Resolve CLI Short Flag Collision:** Change `--args` short flag from `-a` to `-A` in [`src/auto_context/main.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/main.py#L50).
 - [x] **Handle Git Pull Subprocess Crashes Gracefully:** Catch `subprocess.CalledProcessError` in [`src/auto_context/commands/memory.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/commands/memory.py#L360-L375).
 - [x] **Fix Case-Insensitive Secret Scanner Bypass:** Normalize filenames with `.lower()` in [`src/auto_context/security.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/security.py#L88).
-- [ ] **Prevent Secret Redaction Leakage in Reports:** Mask assigned secret values rather than the entire assignment statement in [`src/auto_context/security.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/security.py#L74-L78).
+- [x] **Prevent Secret Redaction Leakage in Reports:** Mask assigned secret values rather than the entire assignment statement in [`src/auto_context/security.py`](file:///c:/Users/worka/Desktop/test/auto-context/src/auto_context/security.py#L74-L78).
 
 #### Technical Implementation Guide
 
