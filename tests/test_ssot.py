@@ -47,6 +47,20 @@ def test_canonical_templates_integrity():
         skill_file = skills_dir / expected / "SKILL.md"
         assert skill_file.exists(), f"Missing required operational skill: {expected}/SKILL.md"
 
+    # 4. Standard docs/ Layout Templates
+    docs_dir = TEMPLATES_DIR / "docs"
+    assert docs_dir.is_dir(), "templates/docs/ directory must exist"
+    expected_docs = [
+        "architecture/system-design.md",
+        "architecture/database-schema.md",
+        "architecture/api-design.md",
+        "development/development-guide.md",
+        "decisions/ADR-001.md",
+    ]
+    for doc_rel in expected_docs:
+        doc_path = docs_dir / doc_rel
+        assert doc_path.exists(), f"Missing required docs template: {doc_rel}"
+
 
 def test_template_variable_rendering():
     """Ensure all core markdown templates render cleanly without unpopulated placeholders."""
@@ -59,11 +73,19 @@ def test_template_variable_rendering():
     }
     placeholder_pattern = re.compile(r"\{\{[A-Z0-9_]+\}\}")
 
-    for template_name in ("context.template.md", "AGENTS.template.md", "project-goal.template.md"):
-        tmpl_file = TEMPLATES_DIR / template_name
-        assert tmpl_file.exists(), f"{template_name} must exist"
+    template_files = [
+        TEMPLATES_DIR / "context.template.md",
+        TEMPLATES_DIR / "AGENTS.template.md",
+        TEMPLATES_DIR / "project-goal.template.md",
+    ]
+    docs_dir = TEMPLATES_DIR / "docs"
+    if docs_dir.exists():
+        template_files.extend(docs_dir.rglob("*.md"))
+
+    for tmpl_file in template_files:
+        assert tmpl_file.exists(), f"{tmpl_file.name} must exist"
         rendered = _render(tmpl_file, dummy_vars)
 
         leftovers = placeholder_pattern.findall(rendered)
-        assert not leftovers, f"{template_name} contains unrendered placeholders: {leftovers}"
+        assert not leftovers, f"{tmpl_file.name} contains unrendered placeholders: {leftovers}"
         assert "my-test-app" in rendered

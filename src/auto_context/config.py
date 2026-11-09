@@ -42,6 +42,7 @@ RULES_SUBDIR = "rules"
 SKILLS_SUBDIR = "skills"
 AGENTS_SUBDIR = ".agents"
 GEMINI_SUBDIR = ".gemini"
+DOCS_SUBDIR = "docs"
 
 # ── Stack detection: indicator files → (stack_label, framework_hint_key) ──────
 STACK_INDICATORS: list[tuple[str, str, str]] = [

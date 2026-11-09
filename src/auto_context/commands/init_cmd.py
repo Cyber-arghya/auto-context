@@ -188,6 +188,54 @@ def _untrack_zero_footprint_files(project_dir: Path, patterns: list[str]) -> Non
         pass
 
 
+# ── docs/ knowledge layout ────────────────────────────────────────────────────
+
+DOCS_SUBDIRS = [
+    "architecture",
+    "development",
+    "decisions",
+]
+
+
+def _scaffold_docs_layout(
+    project_dir: Path,
+    templates: Path,
+    variables: dict[str, str],
+    *,
+    force: bool,
+    dry_run: bool,
+) -> None:
+    """Scaffold standard docs/ knowledge layout and migrate legacy .agents/context/ satellites."""
+    docs_root = project_dir / "docs"
+    templates_docs = templates / "docs"
+
+    for sub in DOCS_SUBDIRS:
+        if not dry_run:
+            (docs_root / sub).mkdir(parents=True, exist_ok=True)
+
+    # Legacy migration: .agents/context/ -> docs/
+    legacy_context = project_dir / AGENTS_SUBDIR / "context"
+    if legacy_context.exists():
+        legacy_mappings = [
+            (legacy_context / "routes.md", docs_root / "architecture" / "api-design.md"),
+            (legacy_context / "schema.md", docs_root / "architecture" / "database-schema.md"),
+            (legacy_context / "gotchas.md", docs_root / "development" / "development-guide.md"),
+        ]
+        for src, dest in legacy_mappings:
+            if src.exists() and not dest.exists() and not dry_run:
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dest)
+                console.print(f"  [green][✓] Migrated:[/] {src} -> {dest}")
+
+    # Scaffold templates
+    if templates_docs.exists():
+        for tmpl_path in sorted(templates_docs.rglob("*.md")):
+            rel_path = tmpl_path.relative_to(templates_docs)
+            dest_path = docs_root / rel_path
+            content = _render(tmpl_path, variables)
+            _write_if_missing(dest_path, content, force=force, dry_run=dry_run)
+
+
 # ── init command ──────────────────────────────────────────────────────────────
 
 def init(
@@ -271,6 +319,9 @@ def init(
             console.print(f"  [green][✓] Migrated:[/] context.md -> .agents/context.md")
         else:
             _write_if_missing(hub_dest, hub_content, force=force, dry_run=dry_run)
+
+    # ── Standard docs/ Knowledge Architecture ────────────────────────────────
+    _scaffold_docs_layout(project_dir, templates, variables, force=force, dry_run=dry_run)
 
     # ── Legacy Cleanup ─────────────────────────────────────────────────────────
     legacy_local = project_dir / "context.local.md"

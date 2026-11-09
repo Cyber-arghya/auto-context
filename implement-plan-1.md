@@ -186,7 +186,7 @@ Ensure network failures save a timestamped cache entry:
 * **Primary Goal:** Transition from `.agents/context/` to standard `docs/`, implement Antigravity subagent scaffolding (`.agents/agents/`), automated lifecycle hooks (`.agents/hooks/`), and triple instruction harmonization (`GEMINI.md`, `AGENTS.md`, `CLAUDE.md`).
 
 #### Action Items (Checklist)
-- [ ] **Scaffold Standard `docs/` Knowledge Layout:**
+- [x] **Scaffold Standard `docs/` Knowledge Layout:**
   - Create `docs/architecture/` (`system-design.md`, `database-schema.md`, `api-design.md`).
   - Create `docs/development/` (`development-guide.md`).
   - Create `docs/decisions/` (`ADR-001.md`).
